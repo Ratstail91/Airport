@@ -1,8 +1,8 @@
 CC=gcc
 
-IDIR+=. ../Toy/source
+IDIR+=. ../Toy/source ../core
 CFLAGS+=$(addprefix -I,$(IDIR)) -DSDL_MAIN_HANDLED -g -Wall -W -pedantic -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable
-LIBS+=-lSDL2 -ltoy
+LIBS+=-lSDL2 -ltoy -lcore
 
 ODIR = obj
 SRC = $(wildcard *.c)

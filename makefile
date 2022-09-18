@@ -1,13 +1,17 @@
 export OUTDIR = out
 export LIBDIR = lib
 export TOY_OUTDIR = ../$(LIBDIR)
+export CORE_OUTDIR = ../$(LIBDIR)
 
-all: $(OUTDIR) $(LIBDIR) toy
+all: $(OUTDIR) $(LIBDIR) toy core
 	$(MAKE) -C source
 	cp $(LIBDIR)/*.dll $(OUTDIR)
 
 toy: $(LIBDIR)
 	$(MAKE) -C Toy/source
+
+core: $(LIBDIR)
+	$(MAKE) -C core
 
 $(OUTDIR):
 	mkdir $(OUTDIR)
