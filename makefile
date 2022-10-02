@@ -5,7 +5,13 @@ export CORE_OUTDIR = ../$(LIBDIR)
 
 all: $(OUTDIR) $(LIBDIR) toy core
 	$(MAKE) -C source
+ifeq ($(findstring CYGWIN, $(shell uname)),CYGWIN)
 	cp $(LIBDIR)/*.dll $(OUTDIR)
+else ifeq ($(shell uname),Linux)
+	cp $(LIBDIR)/*.so $(OUTDIR)
+else ifeq ($(OS),Windows_NT)
+	cp $(LIBDIR)/*.dll $(OUTDIR)
+endif
 
 toy: $(LIBDIR)
 	$(MAKE) -C Toy/source

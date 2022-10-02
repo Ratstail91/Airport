@@ -11,7 +11,7 @@ OBJ = $(addprefix $(ODIR)/,$(SRC:.c=.o))
 OUT=../$(OUTDIR)/airport
 
 all: $(OBJ)
-	$(CC) $(CFLAGS) -o $(OUT) $(OBJ) -L../$(LIBDIR) $(LIBS)
+	$(CC) $(CFLAGS) -o $(OUT) $(OBJ) -Wl,-rpath,. -L../$(LIBDIR) $(LIBS)
 
 $(OBJ): | $(ODIR)
 

@@ -14,11 +14,13 @@ OBJ = $(addprefix $(ODIR)/,$(TARGETS:../core/%.c=%.o)) $(addprefix $(ODIR)/,$(TE
 all: $(OBJ) $(TESTS:%.c=../$(OUTDIR)/%.exe)
 
 ../$(OUTDIR)/%.exe: $(ODIR)/%.o
-	@$(CC) -o $@ $< $(TARGETS:../core/%.c=$(ODIR)/%.o) $(CFLAGS) -L../$(LIBDIR) $(LIBS)
-	cp ../$(LIBDIR)/*.dll ../$(OUTDIR)
 ifeq ($(shell uname),Linux)
+	@$(CC) -o $@ $< $(TARGETS:../core/%.c=$(ODIR)/%.o) $(CFLAGS) -Wl,-rpath,../out -L../$(LIBDIR) $(LIBS)
+	cp ../$(LIBDIR)/*.so ../$(OUTDIR)
 	valgrind --leak-check=full --track-origins=yes $@
 else
+	@$(CC) -o $@ $< $(TARGETS:../core/%.c=$(ODIR)/%.o) $(CFLAGS) -L../$(LIBDIR) $(LIBS)
+	cp ../$(LIBDIR)/*.dll ../$(OUTDIR)
 	$@
 endif
 

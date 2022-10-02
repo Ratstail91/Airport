@@ -10,6 +10,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+//suppress the print keyword
+static void noPrintFn(const char* output) {
+	//NO OP
+}
+
 //compilation functions
 char* readFile(char* path, size_t* fileSize) {
 	FILE* file = fopen(path, "rb");
@@ -87,6 +92,7 @@ int main() {
 		//setup interpreter
 		Interpreter interpreter;
 		initInterpreter(&interpreter);
+		setInterpreterPrint(&interpreter, noPrintFn);
 
 		size_t size = 0;
 
@@ -113,6 +119,7 @@ int main() {
 		//setup interpreter
 		Interpreter interpreter;
 		initInterpreter(&interpreter);
+		setInterpreterPrint(&interpreter, noPrintFn);
 
 		size_t size = 0;
 
@@ -134,6 +141,8 @@ int main() {
 			resetInterpreter(&interpreter);
 
 			pushEngineNode(&node, &child);
+
+			free((void*)source);
 		}
 
 		//test the calls
