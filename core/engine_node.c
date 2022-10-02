@@ -102,7 +102,7 @@ static void callEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, Li
 		freeLiteral(fn);
 	}
 
-	//recurse to the (non-tomstone) children
+	//recurse to the (non-tombstone) children
 	for (int i = 0; i < node->count; i++) {
 		if (node->children[i].functions != NULL) {
 			callEngineNodeLiteral(&node->children[i], interpreter, key);
