@@ -77,9 +77,8 @@ void freeEngineNode(EngineNode* node) {
 
 	if (node->functions != NULL) {
 		freeLiteralDictionary(node->functions);
+		FREE(LiteralDictionary, node->functions);
 	}
-
-	FREE(LiteralDictionary, node->functions);
 
 	node->children = NULL;
 	node->capacity = -1;
