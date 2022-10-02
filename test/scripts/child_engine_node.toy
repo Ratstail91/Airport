@@ -1,0 +1,14 @@
+var tally: int = 0;
+
+fn onInit() {
+	print "child init called";
+}
+
+fn onStep() {
+	print "child step called";
+	print ++tally;
+}
+
+fn onFree() {
+	print "child free called";
+}

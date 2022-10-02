@@ -1,7 +1,7 @@
 CC=gcc
 
 IDIR+=. ../Toy/source ../core
-CFLAGS+=$(addprefix -I,$(IDIR)) -DSDL_MAIN_HANDLED -g -Wall -W -pedantic -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable
+CFLAGS+=$(addprefix -I,$(IDIR)) -DSDL_MAIN_HANDLED -g -Wall -W -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable
 LIBS+=-lSDL2 -ltoy -lcore
 
 ODIR = obj

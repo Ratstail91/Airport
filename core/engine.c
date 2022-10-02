@@ -68,7 +68,9 @@ static void execStep(Engine* engine) {
 			case SDL_WINDOWEVENT: {
 				switch(event.window.event) {
 					case SDL_WINDOWEVENT_RESIZED:
-						SDL_RenderSetLogicalSize(engine->renderer, event.window.data1, event.window.data2);
+						engine->screenWidth = event.window.data1;
+						engine->screenHeight = event.window.data2;
+						SDL_RenderSetLogicalSize(engine->renderer, engine->screenWidth, engine->screenHeight);
 					break;
 				}
 			}

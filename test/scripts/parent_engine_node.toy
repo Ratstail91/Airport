@@ -1,0 +1,11 @@
+fn onInit() {
+	print "init called";
+}
+
+fn onStep() {
+	print "step called";
+}
+
+fn onFree() {
+	print "free called";
+}

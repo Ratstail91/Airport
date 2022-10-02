@@ -13,6 +13,9 @@ toy: $(LIBDIR)
 core: $(LIBDIR)
 	$(MAKE) -C core
 
+test: clean $(OUTDIR) toy core
+	$(MAKE) -C test
+
 $(OUTDIR):
 	mkdir $(OUTDIR)
 

@@ -1,8 +1,8 @@
 CC=gcc
 
-IDIR+=.
-CFLAGS+=$(addprefix -I,$(IDIR)) -DSDL_MAIN_HANDLED -g -Wall -W -pedantic -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable
-LIBS+=-lSDL2
+IDIR+=. ../Toy/source
+CFLAGS+=$(addprefix -I,$(IDIR)) -DSDL_MAIN_HANDLED -g -Wall -W -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable
+LIBS+=-lSDL2 -ltoy
 
 ODIR = obj
 SRC = $(wildcard *.c)
@@ -24,10 +24,10 @@ else
 endif
 
 library: $(OBJ)
-	$(CC) -DCORE_EXPORT $(CFLAGS) -shared -o $(OUT) $(LIBLINE) $(LIBS)
+	$(CC) -DCORE_EXPORT $(CFLAGS) -shared -o $(OUT) $(LIBLINE) -L../$(LIBDIR) $(LIBS)
 
 static: $(OBJ)
-	ar crs $(CORE_OUTDIR)/lib$(OUTNAME).a $(OBJ) $(LIBS)
+	ar crs $(CORE_OUTDIR)/lib$(OUTNAME).a $(OBJ) -L../$(LIBDIR) $(LIBS)
 
 $(OBJ): | $(ODIR)
 
