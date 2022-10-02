@@ -138,6 +138,11 @@ static int nativeInitWindow(Interpreter* interpreter, LiteralArray* arguments) {
 	//only run with a window
 	engine.running = true;
 
+	freeLiteral(caption);
+	freeLiteral(screenWidth);
+	freeLiteral(screenHeight);
+	freeLiteral(fscreen);
+
 	return 0;
 }
 
