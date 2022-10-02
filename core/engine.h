@@ -2,6 +2,7 @@
 
 #include "common.h"
 #include "engine_node.h"
+#include "interpreter.h"
 
 #include <SDL2/SDL.h>
 
@@ -10,10 +11,13 @@
 //the base engine object, which represents the state of the game
 typedef struct _engine {
 	//engine stuff
-	EngineNode* root;
+	EngineNode* rootNode;
 	struct timeval simTime;
 	struct timeval realTime;
 	bool running;
+
+	//Toy stuff
+	Interpreter interpreter;
 
 	//SDL stuff
 	SDL_Window* window;
@@ -22,9 +26,11 @@ typedef struct _engine {
 	int screenHeight;
 } Engine;
 
-//APIs for initializing the engine
-CORE_API void initEngine(Engine* engine);
-CORE_API void freeEngine(Engine* engine);
+//extern singleton
+extern Engine engine;
 
-CORE_API void execEngine(Engine* engine);
+//APIs for running the engine in main()
+CORE_API void initEngine();
+CORE_API void execEngine();
+CORE_API void freeEngine();
 

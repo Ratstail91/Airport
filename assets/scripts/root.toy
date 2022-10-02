@@ -1,0 +1,14 @@
+//root node can load the whole scene, and essentially act as the scene object
+fn onInit() {
+	print "root.toy:onInit() called";
+}
+
+fn onStep() {
+	import standard;
+	print "root.toy:onStep() called";
+	print clock();
+}
+
+fn onFree() {
+	print "root.toy:onFree() called";
+}

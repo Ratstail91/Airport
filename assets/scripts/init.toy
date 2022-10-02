@@ -1,0 +1,5 @@
+import engine;
+
+initWindow("Airport Game", 800, 600, false);
+
+loadRootNode("assets/scripts/root.toy");
