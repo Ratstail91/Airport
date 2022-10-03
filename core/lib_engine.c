@@ -180,13 +180,16 @@ static int nativeLoadRootNode(Interpreter* interpreter, LiteralArray* arguments)
 
 	engine.rootNode = ALLOCATE(EngineNode, 1);
 
-	//BUGFIX: use an inner-interpreter here, otherwise it'll mess up the original's length value by calling run within a native function
-	Interpreter inner;
-	initInterpreter(&inner);
-
-	initEngineNode(engine.rootNode, &inner, tb, size);
-
-	freeInterpreter(&inner);
+	//BUGFIX
+	unsigned char* originalTb = engine.interpreter.bytecode;
+	size_t originalSize = engine.interpreter.length;
+	int originalCount = engine.interpreter.count;
+	int originalCodeStart = engine.interpreter.codeStart;
+	initEngineNode(engine.rootNode, &engine.interpreter, tb, size);
+	engine.interpreter.bytecode = originalTb;
+	engine.interpreter.length = originalSize;
+	engine.interpreter.count = originalCount;
+	engine.interpreter.codeStart = originalCodeStart;
 
 	//init the new node
 	callEngineNode(engine.rootNode, &engine.interpreter, "onInit");

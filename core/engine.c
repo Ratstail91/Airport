@@ -206,8 +206,8 @@ void execEngine() {
 		}
 
 		//render the world
-		SDL_SetRenderDrawColor(engine.renderer, 0, 0, 0, 255); //NOTE: This line can be disabled later
-		SDL_RenderClear(engine.renderer); //NOTE: This line can be disabled later
-		SDL_RenderPresent(engine.renderer);
+	//	SDL_SetRenderDrawColor(engine.renderer, 0, 0, 0, 255); //NOTE: This line can be disabled later
+	//	SDL_RenderClear(engine.renderer); //NOTE: This line can be disabled later
+		// SDL_RenderPresent(engine.renderer);
 	}
 }
