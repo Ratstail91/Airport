@@ -126,11 +126,17 @@ static int nativeInitWindow(Interpreter* interpreter, LiteralArray* arguments) {
 	}
 
 	//init the renderer
+	// SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
 	engine.renderer = SDL_CreateRenderer(engine.window, -1, 0);
 
 	if (engine.renderer == NULL) {
 		fatalError("Failed to initialize the renderer\n");
 	}
+
+	SDL_RendererInfo rendererInfo;
+	SDL_GetRendererInfo(engine.renderer, &rendererInfo);
+
+	printf("Renderer: %s\n", rendererInfo.name);
 
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
 	SDL_RenderSetLogicalSize(engine.renderer, engine.screenWidth, engine.screenHeight);

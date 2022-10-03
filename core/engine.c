@@ -190,10 +190,19 @@ void execEngine() {
 		//calc the time passed
 		gettimeofday(&engine.realTime, NULL);
 
+		// printf("real time: %ld.%ld   sim time: %ld.%ld    + (delta: %ld.%ld)\n",
+		// 	engine.realTime.tv_sec,
+		// 	engine.realTime.tv_usec,
+		// 	engine.simTime.tv_sec,
+		// 	engine.simTime.tv_usec,
+		// 	delta.tv_sec,
+		// 	delta.tv_usec
+		// );
+
 		//if not enough time has passed
-		if (engine.simTime.tv_sec < engine.realTime.tv_sec && engine.simTime.tv_usec < engine.realTime.tv_usec) {
+		if (timercmp(&engine.simTime, &engine.realTime, <)) {
 			//while not enough time has passed
-			while(engine.simTime.tv_sec < engine.realTime.tv_sec && engine.simTime.tv_usec < engine.realTime.tv_usec) {
+			while(timercmp(&engine.simTime, &engine.realTime, <)) {
 				//simulate the world
 				execStep();
 
@@ -206,8 +215,8 @@ void execEngine() {
 		}
 
 		//render the world
-	//	SDL_SetRenderDrawColor(engine.renderer, 0, 0, 0, 255); //NOTE: This line can be disabled later
-	//	SDL_RenderClear(engine.renderer); //NOTE: This line can be disabled later
-		// SDL_RenderPresent(engine.renderer);
+		SDL_SetRenderDrawColor(engine.renderer, 0, 0, 0, 255); //NOTE: This line can be disabled later
+		SDL_RenderClear(engine.renderer); //NOTE: This line can be disabled later
+		SDL_RenderPresent(engine.renderer);
 	}
 }
