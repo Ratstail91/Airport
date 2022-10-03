@@ -146,7 +146,9 @@ void freeEngine() {
 
 static void execStep() {
 	//call onStep
-	callEngineNode(engine.rootNode, &engine.interpreter, "onStep");
+	if (engine.rootNode != NULL) {
+		callEngineNode(engine.rootNode, &engine.interpreter, "onStep");
+	}
 
 	//poll events
 	SDL_Event event;

@@ -1,5 +1,6 @@
 import engine;
 
+//this function must always be called, or the engine won't run
 initWindow("Airport Game", 800, 600, false);
 
 loadRootNode("assets/scripts/root.toy");

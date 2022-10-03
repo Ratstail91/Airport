@@ -191,7 +191,9 @@ static int nativeLoadRootNode(Interpreter* interpreter, LiteralArray* arguments)
 	size_t originalSize = engine.interpreter.length;
 	int originalCount = engine.interpreter.count;
 	int originalCodeStart = engine.interpreter.codeStart;
+
 	initEngineNode(engine.rootNode, &engine.interpreter, tb, size);
+
 	engine.interpreter.bytecode = originalTb;
 	engine.interpreter.length = originalSize;
 	engine.interpreter.count = originalCount;
