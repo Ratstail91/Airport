@@ -1,0 +1,11 @@
+fn onInit(node: opaque) {
+	print "child.toy:onInit() called";
+}
+
+fn onStep(node: opaque) {
+	print "child.toy:onStep()";
+}
+
+fn onFree(node: opaque) {
+	print "child.toy:onFree() called";
+}

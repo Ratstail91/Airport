@@ -1,14 +1,34 @@
 import standard;
+import engine;
 
-//root node can load the whole scene, and essentially act as the scene object
-fn onInit() {
-	print "root.toy:onInit() called";
+fn makeChild(parent: opaque, fname: string, init: bool) {
+	var child: opaque = loadNode(fname);
+
+	if (init) {
+		initNode(child);
+	}
+
+	pushNode(parent, child);
 }
 
-fn onStep() {
+//root node can load the whole scene, and essentially act as the scene object
+fn onInit(node: opaque) {
+	print "root.toy:onInit() called";
+
+	//make a child
+	makeChild(node, "assets/scripts/child.toy", true); //indicate whether to call "init" on the new node or not
+	makeChild(node, "assets/scripts/child.toy", false);
+	makeChild(node, "assets/scripts/child.toy", false);
+
+	//actually, grab that first node and free it
+	var o: opaque = getNode(node, 0);
+	freeNode(o);
+}
+
+fn onStep(node: opaque) {
 	print clock();
 }
 
-fn onFree() {
+fn onFree(node: opaque) {
 	print "root.toy:onFree() called";
 }

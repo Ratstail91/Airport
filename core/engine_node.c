@@ -90,14 +90,21 @@ static void callEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, Li
 	//if this fn exists
 	if (existsLiteralDictionary(node->functions, key)) {
 		Literal fn = getLiteralDictionary(node->functions, key);
+		Literal n = TO_OPAQUE_LITERAL(node, -1);
 
-		LiteralArray dummyArray;
-		initLiteralArray(&dummyArray);
+		LiteralArray arguments;
+		LiteralArray returns;
+		initLiteralArray(&arguments);
+		initLiteralArray(&returns);
 
-		callLiteralFn(interpreter, fn, &dummyArray, &dummyArray);
+		pushLiteralArray(&arguments, n);
 
-		freeLiteralArray(&dummyArray);
+		callLiteralFn(interpreter, fn, &arguments, &returns);
 
+		freeLiteralArray(&arguments);
+		freeLiteralArray(&returns);
+
+		freeLiteral(n);
 		freeLiteral(fn);
 	}
 

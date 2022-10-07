@@ -74,6 +74,7 @@ static int nativeInitWindow(Interpreter* interpreter, LiteralArray* arguments) {
 	return 0;
 }
 
+//TODO: perhaps a returns argument would be better?
 static int nativeLoadRootNode(Interpreter* interpreter, LiteralArray* arguments) {
 	if (arguments->count != 1) {
 		interpreter->errorOutput("Incorrect number of arguments passed to loadRootNode\n");
@@ -82,6 +83,11 @@ static int nativeLoadRootNode(Interpreter* interpreter, LiteralArray* arguments)
 
 	//extract the arguments
 	Literal fname = popLiteralArray(arguments);
+
+	Literal fnameIdn = fname;
+	if (IS_IDENTIFIER(fname) && parseIdentifierToValue(interpreter, &fname)) {
+		freeLiteral(fnameIdn);
+	}
 
 	//check argument types
 	if (!IS_STRING(fname)) {
@@ -108,26 +114,263 @@ static int nativeLoadRootNode(Interpreter* interpreter, LiteralArray* arguments)
 
 	engine.rootNode = ALLOCATE(EngineNode, 1);
 
-	//BUGFIX
-	unsigned char* originalTb = engine.interpreter.bytecode;
-	size_t originalSize = engine.interpreter.length;
-	int originalCount = engine.interpreter.count;
-	int originalCodeStart = engine.interpreter.codeStart;
+	//BUGFIX: make an inner-interpreter
+	Interpreter inner;
 
-	initEngineNode(engine.rootNode, &engine.interpreter, tb, size);
+	//init the inner interpreter manually
+	initLiteralArray(&inner.literalCache);
+	inner.scope = pushScope(NULL);
+	inner.bytecode = tb;
+	inner.length = size;
+	inner.count = 0;
+	inner.codeStart = -1;
+	inner.depth = interpreter->depth + 1;
+	inner.panic = false;
+	initLiteralArray(&inner.stack);
+	inner.exports = interpreter->exports;
+	inner.exportTypes = interpreter->exportTypes;
+	inner.hooks = interpreter->hooks;
+	setInterpreterPrint(&inner, interpreter->printOutput);
+	setInterpreterAssert(&inner, interpreter->assertOutput);
+	setInterpreterError(&inner, interpreter->errorOutput);
 
-	engine.interpreter.bytecode = originalTb;
-	engine.interpreter.length = originalSize;
-	engine.interpreter.count = originalCount;
-	engine.interpreter.codeStart = originalCodeStart;
+	initEngineNode(engine.rootNode, &inner, tb, size);
 
 	//init the new node
 	callEngineNode(engine.rootNode, &engine.interpreter, "onInit");
 
 	//cleanup
+	freeLiteralArray(&inner.stack);
+	freeLiteralArray(&inner.literalCache);
 	freeLiteral(fname);
 
 	return 0;
+}
+
+static int nativeLoadNode(Interpreter* interpreter, LiteralArray* arguments) {
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments passed to loadNode\n");
+		return -1;
+	}
+
+	//extract the arguments
+	Literal fname = popLiteralArray(arguments);
+
+	Literal fnameIdn = fname;
+	if (IS_IDENTIFIER(fname) && parseIdentifierToValue(interpreter, &fname)) {
+		freeLiteral(fnameIdn);
+	}
+
+	//check argument types
+	if (!IS_STRING(fname)) {
+		interpreter->errorOutput("Incorrect argument type passed to loadNode\n");
+		freeLiteral(fname);
+		return -1;
+	}
+
+	//load the new node
+	size_t size = 0;
+	char* source = readFile(AS_STRING(fname), &size);
+	unsigned char* tb = compileString(source, &size);
+	free((void*)source);
+
+	EngineNode* node = ALLOCATE(EngineNode, 1);
+
+	//BUGFIX: make an inner-interpreter
+	Interpreter inner;
+
+	//init the inner interpreter manually
+	initLiteralArray(&inner.literalCache);
+	inner.scope = pushScope(NULL);
+	inner.bytecode = tb;
+	inner.length = size;
+	inner.count = 0;
+	inner.codeStart = -1;
+	inner.depth = interpreter->depth + 1;
+	inner.panic = false;
+	initLiteralArray(&inner.stack);
+	inner.exports = interpreter->exports;
+	inner.exportTypes = interpreter->exportTypes;
+	inner.hooks = interpreter->hooks;
+	setInterpreterPrint(&inner, interpreter->printOutput);
+	setInterpreterAssert(&inner, interpreter->assertOutput);
+	setInterpreterError(&inner, interpreter->errorOutput);
+
+	initEngineNode(node, &inner, tb, size);
+
+	//NOTE: initNode() must be called manually
+
+	// return the node
+	Literal nodeLiteral = TO_OPAQUE_LITERAL(node, -1);
+	pushLiteralArray(&interpreter->stack, nodeLiteral);
+
+	//cleanup
+	freeLiteralArray(&inner.stack);
+	freeLiteralArray(&inner.literalCache);
+	freeLiteral(fname);
+	freeLiteral(nodeLiteral);
+
+	return 1;
+}
+
+static int nativeInitNode(Interpreter* interpreter, LiteralArray* arguments) {
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments passed to initNode\n");
+		return -1;
+	}
+
+	Literal node = popLiteralArray(arguments);
+
+	Literal nodeIdn = node; //annoying
+
+	if (!parseIdentifierToValue(interpreter, &node)) {
+		interpreter->errorOutput("Failed to parse node identifier to value\n");
+		freeLiteral(node);
+		return -1;
+	}
+
+	freeLiteral(nodeIdn);
+
+	EngineNode* engineNode = AS_OPAQUE(node);
+
+	//init the new node
+	callEngineNode(engineNode, &engine.interpreter, "onInit");
+
+	//cleanup
+	freeLiteral(node);
+	return 0;
+}
+
+static int nativeFreeNode(Interpreter* interpreter, LiteralArray* arguments) {
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments passed to freeNode\n");
+		return -1;
+	}
+
+	Literal node = popLiteralArray(arguments);
+
+	Literal nodeIdn = node; //annoying
+
+	if (!parseIdentifierToValue(interpreter, &node)) {
+		interpreter->errorOutput("Failed to parse node identifier to value\n");
+		freeLiteral(node);
+		return -1;
+	}
+
+	freeLiteral(nodeIdn);
+
+	EngineNode* engineNode = AS_OPAQUE(node);
+
+	//free the node
+	callEngineNode(engineNode, &engine.interpreter, "onFree");
+
+	freeEngineNode(engineNode); //tombstones this node
+
+	//cleanup
+	freeLiteral(node);
+	return 0;
+}
+
+static int nativePushNode(Interpreter* interpreter, LiteralArray* arguments) {
+	//checks
+	if (arguments->count != 2) {
+		interpreter->errorOutput("Incorrect number of arguments passed to pushNode\n");
+		return -1;
+	}
+
+	Literal child = popLiteralArray(arguments);
+	Literal parent = popLiteralArray(arguments);
+
+	Literal parentIdn = parent; //annoying
+	Literal childIdn = child;
+
+	if (!parseIdentifierToValue(interpreter, &parent)) {
+		interpreter->errorOutput("Failed to parse parent identifier to value\n");
+		freeLiteral(parent);
+		freeLiteral(child);
+		return -1;
+	}
+
+	if (!parseIdentifierToValue(interpreter, &child)) {
+		interpreter->errorOutput("Failed to parse child identifier to value\n");
+		freeLiteral(parent);
+		freeLiteral(child);
+		return -1;
+	}
+
+	freeLiteral(parentIdn);
+	freeLiteral(childIdn);
+
+	if (!IS_OPAQUE(parent) || !IS_OPAQUE(child)) {
+		interpreter->errorOutput("Incorrect argument type passed to pushNode\n");
+		freeLiteral(parent);
+		freeLiteral(child);
+		return -1;
+	}
+
+	//push the node
+	EngineNode* parentNode = AS_OPAQUE(parent);
+	EngineNode* childNode = AS_OPAQUE(child);
+
+	pushEngineNode(parentNode, childNode);
+
+	//no return value
+	freeLiteral(parent);
+	freeLiteral(child);
+
+	return 0;
+}
+
+static int nativeGetNode(Interpreter* interpreter, LiteralArray* arguments) {
+	//checks
+	if (arguments->count != 2) {
+		interpreter->errorOutput("Incorrect number of arguments passed to getNode\n");
+		return -1;
+	}
+
+	Literal index = popLiteralArray(arguments);
+	Literal parent = popLiteralArray(arguments);
+
+	Literal parentIdn = parent; //annoying
+
+	if (!parseIdentifierToValue(interpreter, &parent)) {
+		interpreter->errorOutput("Failed to parse parent identifier to value\n");
+		freeLiteral(parent);
+		freeLiteral(index);
+		return -1;
+	}
+
+	freeLiteral(parentIdn);
+
+	if (!IS_OPAQUE(parent) || !IS_INTEGER(index)) {
+		interpreter->errorOutput("Incorrect argument type passed to getNode\n");
+		freeLiteral(parent);
+		freeLiteral(index);
+		return -1;
+	}
+
+	//push the node
+	EngineNode* parentNode = AS_OPAQUE(parent);
+	int intIndex = AS_INTEGER(index);
+
+	if (intIndex < 0 || intIndex >= parentNode->count) {
+		interpreter->errorOutput("index out of bounds in getNode\n");
+		freeLiteral(parent);
+		freeLiteral(index);
+		return -1;
+	}
+
+	EngineNode* childNode = &parentNode->children[intIndex];
+	Literal child = TO_OPAQUE_LITERAL(childNode, -1);
+
+	pushLiteralArray(&interpreter->stack, child);
+
+	//no return value
+	freeLiteral(parent);
+	freeLiteral(child);
+	freeLiteral(index);
+
+	return 1;
 }
 
 //call the hook
@@ -141,6 +384,11 @@ int hookEngine(Interpreter* interpreter, Literal identifier, Literal alias) {
 	Natives natives[] = {
 		{"initWindow", nativeInitWindow},
 		{"loadRootNode", nativeLoadRootNode},
+		{"loadNode", nativeLoadNode},
+		{"initNode", nativeInitNode},
+		{"freeNode", nativeFreeNode},
+		{"pushNode", nativePushNode},
+		{"getNode", nativeGetNode},
 		{NULL, NULL}
 	};
 

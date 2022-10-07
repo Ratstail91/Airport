@@ -14,6 +14,7 @@ typedef struct _engineNode {
 	EngineNode* children;
 	int capacity;
 	int count; //includes tombstones
+	//TODO: add "liveCount"
 
 	//toy functions, stored in a dict for flexibility
 	LiteralDictionary* functions;
