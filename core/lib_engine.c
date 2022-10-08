@@ -421,11 +421,11 @@ int hookEngine(Interpreter* interpreter, Literal identifier, Literal alias) {
 		{"initWindow", nativeInitWindow},
 		{"loadRootNode", nativeLoadRootNode},
 		{"loadNode", nativeLoadNode},
-		{"initNode", nativeInitNode},
+		{"_initNode", nativeInitNode},
 		// {"freeNode", nativeFreeNode},
-		{"freeChildNode", nativeFreeChildNode},
-		{"pushNode", nativePushNode},
-		{"getNode", nativeGetNode},
+		{"_freeChildNode", nativeFreeChildNode},
+		{"_pushNode", nativePushNode},
+		{"_getNode", nativeGetNode},
 		{NULL, NULL}
 	};
 
