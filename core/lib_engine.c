@@ -221,15 +221,10 @@ static int nativeInitNode(Interpreter* interpreter, LiteralArray* arguments) {
 
 	Literal node = popLiteralArray(arguments);
 
-	Literal nodeIdn = node; //annoying
-
-	if (!parseIdentifierToValue(interpreter, &node)) {
-		interpreter->errorOutput("Failed to parse node identifier to value\n");
-		freeLiteral(node);
-		return -1;
+	Literal nodeIdn = node;
+	if (IS_IDENTIFIER(node) && parseIdentifierToValue(interpreter, &node)) {
+		freeLiteral(nodeIdn);
 	}
-
-	freeLiteral(nodeIdn);
 
 	//check argument types
 	if (!IS_OPAQUE(node)) {
@@ -256,15 +251,10 @@ static int nativeFreeNode(Interpreter* interpreter, LiteralArray* arguments) {
 
 	Literal node = popLiteralArray(arguments);
 
-	Literal nodeIdn = node; //annoying
-
-	if (!parseIdentifierToValue(interpreter, &node)) {
-		interpreter->errorOutput("Failed to parse node identifier to value\n");
-		freeLiteral(node);
-		return -1;
+	Literal nodeIdn = node;
+	if (IS_IDENTIFIER(node) && parseIdentifierToValue(interpreter, &node)) {
+		freeLiteral(nodeIdn);
 	}
-
-	freeLiteral(nodeIdn);
 
 	//check argument types
 	if (!IS_OPAQUE(node)) {
@@ -277,8 +267,7 @@ static int nativeFreeNode(Interpreter* interpreter, LiteralArray* arguments) {
 
 	//free the node
 	callEngineNode(engineNode, &engine.interpreter, "onFree");
-
-	freeEngineNode(engineNode); //tombstones this node
+	freeEngineNode(engineNode);
 
 	//cleanup
 	freeLiteral(node);
@@ -295,14 +284,9 @@ static int nativeFreeChildNode(Interpreter* interpreter, LiteralArray* arguments
 	Literal node = popLiteralArray(arguments);
 
 	Literal nodeIdn = node; //annoying
-
-	if (!parseIdentifierToValue(interpreter, &node)) {
-		interpreter->errorOutput("Failed to parse parent node identifier to value\n");
-		freeLiteral(node);
-		return -1;
+	if (IS_IDENTIFIER(node) && parseIdentifierToValue(interpreter, &node)) {
+		freeLiteral(nodeIdn);
 	}
-
-	freeLiteral(nodeIdn);
 
 	//check argument types
 	if (!IS_OPAQUE(node) || !IS_INTEGER(index)) {
@@ -349,25 +333,15 @@ static int nativePushNode(Interpreter* interpreter, LiteralArray* arguments) {
 	Literal child = popLiteralArray(arguments);
 	Literal parent = popLiteralArray(arguments);
 
-	Literal parentIdn = parent; //annoying
+	Literal parentIdn = parent;
+	if (IS_IDENTIFIER(parent) && parseIdentifierToValue(interpreter, &parent)) {
+		freeLiteral(parentIdn);
+	}
+
 	Literal childIdn = child;
-
-	if (!parseIdentifierToValue(interpreter, &parent)) {
-		interpreter->errorOutput("Failed to parse parent identifier to value\n");
-		freeLiteral(parent);
-		freeLiteral(child);
-		return -1;
+	if (IS_IDENTIFIER(child) && parseIdentifierToValue(interpreter, &child)) {
+		freeLiteral(childIdn);
 	}
-
-	if (!parseIdentifierToValue(interpreter, &child)) {
-		interpreter->errorOutput("Failed to parse child identifier to value\n");
-		freeLiteral(parent);
-		freeLiteral(child);
-		return -1;
-	}
-
-	freeLiteral(parentIdn);
-	freeLiteral(childIdn);
 
 	if (!IS_OPAQUE(parent) || !IS_OPAQUE(child)) {
 		interpreter->errorOutput("Incorrect argument type passed to pushNode\n");
@@ -399,16 +373,10 @@ static int nativeGetNode(Interpreter* interpreter, LiteralArray* arguments) {
 	Literal index = popLiteralArray(arguments);
 	Literal parent = popLiteralArray(arguments);
 
-	Literal parentIdn = parent; //annoying
-
-	if (!parseIdentifierToValue(interpreter, &parent)) {
-		interpreter->errorOutput("Failed to parse parent identifier to value\n");
-		freeLiteral(parent);
-		freeLiteral(index);
-		return -1;
+	Literal parentIdn = parent;
+	if (IS_IDENTIFIER(parent) && parseIdentifierToValue(interpreter, &parent)) {
+		freeLiteral(parentIdn);
 	}
-
-	freeLiteral(parentIdn);
 
 	if (!IS_OPAQUE(parent) || !IS_INTEGER(index)) {
 		interpreter->errorOutput("Incorrect argument type passed to getNode\n");
