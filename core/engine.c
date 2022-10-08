@@ -61,7 +61,6 @@ void freeEngine() {
 		callEngineNode(engine.rootNode, &engine.interpreter, "onFree");
 
 		freeEngineNode(engine.rootNode);
-		FREE(EngineNode, engine.rootNode);
 
 		engine.rootNode = NULL;
 	}

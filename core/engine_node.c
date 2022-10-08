@@ -2,12 +2,25 @@
 
 #include "memory.h"
 
+STATIC_ASSERT(sizeof(EngineNode) == 32);
+STATIC_ASSERT(sizeof(EngineNodeCallback) == 8);
+STATIC_ASSERT(sizeof(LiteralDictionary*) == 8);
+STATIC_ASSERT(sizeof(EngineNode*) == 8);
+STATIC_ASSERT(sizeof(int) == 4);
+
+static void freeMemory(void* ptr) {
+	//free this node type's memory
+	FREE(EngineNode, ptr);
+}
+
 void initEngineNode(EngineNode* node, Interpreter* interpreter, void* tb, size_t size) {
 	//init
+	node->freeMemory = freeMemory;
+	node->functions = ALLOCATE(LiteralDictionary, 1);
 	node->children = NULL;
 	node->capacity = 0;
 	node->count = 0;
-	node->functions = ALLOCATE(LiteralDictionary, 1);
+
 	initLiteralDictionary(node->functions);
 
 	//run bytecode
@@ -37,7 +50,7 @@ void pushEngineNode(EngineNode* node, EngineNode* child) {
 		int oldCapacity = node->capacity;
 
 		node->capacity = GROW_CAPACITY(oldCapacity);
-		node->children = GROW_ARRAY(EngineNode, node->children, oldCapacity, node->capacity);
+		node->children = GROW_ARRAY(EngineNode*, node->children, oldCapacity, node->capacity);
 	}
 
 	//prune tombstones (experimental)
@@ -49,41 +62,35 @@ void pushEngineNode(EngineNode* node, EngineNode* child) {
 		}
 
 		//move down
-		if (node->children[i].functions != NULL) {
+		if (node->children[i] != NULL) {
 			node->children[counter++] = node->children[i];
 		}
 	}
 
-	//zero the rest
-	while (counter < node->capacity) {
-		node->children[counter].children = NULL;
-		node->children[counter].capacity = 0;
-		node->children[counter].count = 0;
-		node->children[counter].functions = NULL;
-		counter++;
-	}
-
 	//assign
-	node->children[node->count++] = *child;
+	node->children[node->count++] = child;
 }
 
 void freeEngineNode(EngineNode* node) {
-	//free and tombstone this node
-	for (int i = 0; i < node->capacity; i++) {
-		freeEngineNode(&node->children[i]);
+	if (node == NULL) {
+		return; //NO-OP
 	}
 
-	FREE_ARRAY(EngineNode, node->children, node->capacity);
+	//free and tombstone this node
+	for (int i = 0; i < node->count; i++) {
+		freeEngineNode(node->children[i]);
+	}
+
+	//free the pointer array to the children
+	FREE_ARRAY(EngineNode*, node->children, node->capacity);
 
 	if (node->functions != NULL) {
 		freeLiteralDictionary(node->functions);
 		FREE(LiteralDictionary, node->functions);
 	}
 
-	node->children = NULL;
-	node->capacity = -1;
-	node->count = -1;
-	node->functions = NULL;
+	//free this node's memory
+	node->freeMemory(node);
 }
 
 static void callEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, Literal key) {
@@ -110,8 +117,8 @@ static void callEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, Li
 
 	//recurse to the (non-tombstone) children
 	for (int i = 0; i < node->count; i++) {
-		if (node->children[i].functions != NULL) {
-			callEngineNodeLiteral(&node->children[i], interpreter, key);
+		if (node->children[i] != NULL) {
+			callEngineNodeLiteral(node->children[i], interpreter, key);
 		}
 	}
 }

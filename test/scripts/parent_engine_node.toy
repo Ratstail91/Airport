@@ -1,11 +1,11 @@
-fn onInit() {
+fn onInit(node) {
 	print "init called";
 }
 
-fn onStep() {
+fn onStep(node) {
 	print "step called";
 }
 
-fn onFree() {
+fn onFree(node) {
 	print "free called";
 }

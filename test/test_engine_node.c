@@ -6,6 +6,7 @@
 #include "interpreter.h"
 #include "repl_tools.h"
 #include "console_colors.h"
+#include "memory.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,15 +30,15 @@ int main() {
 		unsigned char* tb = compileString(source, &size);
 
 		//create and test the engine node
-		EngineNode node;
+		EngineNode* node = ALLOCATE(EngineNode, 1);
 
-		initEngineNode(&node, &interpreter, tb, size);
+		initEngineNode(node, &interpreter, tb, size);
 
-		callEngineNode(&node, &interpreter, "onInit");
-		callEngineNode(&node, &interpreter, "onStep");
-		callEngineNode(&node, &interpreter, "onFree");
+		callEngineNode(node, &interpreter, "onInit");
+		callEngineNode(node, &interpreter, "onStep");
+		callEngineNode(node, &interpreter, "onFree");
 
-		freeEngineNode(&node);
+		freeEngineNode(node);
 
 		//free
 		free((void*)source);
@@ -56,35 +57,35 @@ int main() {
 		unsigned char* tb = compileString(source, &size);
 
 		//create and test the engine node
-		EngineNode node;
+		EngineNode* node = ALLOCATE(EngineNode, 1);
 
-		initEngineNode(&node, &interpreter, tb, size);
+		initEngineNode(node, &interpreter, tb, size);
 		resetInterpreter(&interpreter);
 
 		for (int i = 0; i < 10; i++) {
 			char* source = readFile("./scripts/child_engine_node.toy", &size);
 			unsigned char* tb = compileString(source, &size);
 
-			EngineNode child;
-			initEngineNode(&child, &interpreter, tb, size);
+			EngineNode* child = ALLOCATE(EngineNode, 1);
+			initEngineNode(child, &interpreter, tb, size);
 			resetInterpreter(&interpreter);
 
-			pushEngineNode(&node, &child);
+			pushEngineNode(node, child);
 
 			free((void*)source);
 		}
 
 		//test the calls
-		callEngineNode(&node, &interpreter, "onInit");
+		callEngineNode(node, &interpreter, "onInit");
 
 		for (int i = 0; i < 10; i++) {
-			callEngineNode(&node, &interpreter, "onStep");
+			callEngineNode(node, &interpreter, "onStep");
 		}
 
-		callEngineNode(&node, &interpreter, "onFree");
+		callEngineNode(node, &interpreter, "onFree");
 
 		//free
-		freeEngineNode(&node);
+		freeEngineNode(node);
 		free((void*)source);
 		freeInterpreter(&interpreter);
 	}

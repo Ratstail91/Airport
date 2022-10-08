@@ -8,16 +8,20 @@
 //forward declare
 typedef struct _engineNode EngineNode;
 
+typedef void (*EngineNodeCallback)(void*);
+
 //the node object, which forms a tree
 typedef struct _engineNode {
-	//use Toy's memory model
-	EngineNode* children;
-	int capacity;
-	int count; //includes tombstones
-	//TODO: add "liveCount"
+	//function for releasing memory
+	EngineNodeCallback freeMemory;
 
 	//toy functions, stored in a dict for flexibility
 	LiteralDictionary* functions;
+
+	//use Toy's memory model
+	EngineNode** children;
+	int capacity;
+	int count; //includes tombstones
 } EngineNode;
 
 CORE_API void initEngineNode(EngineNode* node, Interpreter* interpreter, void* tb, size_t size); //run bytecode, then grab all top-level function literals

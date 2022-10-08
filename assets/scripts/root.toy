@@ -21,8 +21,7 @@ fn onInit(node: opaque) {
 	makeChild(node, "assets/scripts/child.toy", false);
 
 	//actually, grab that first node and free it
-	var o: opaque = getNode(node, 0);
-	freeNode(o);
+	freeChildNode(node, 0); //must be done from the parent node, so it's pointer can be nullified
 }
 
 fn onStep(node: opaque) {

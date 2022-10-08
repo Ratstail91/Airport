@@ -1,14 +1,14 @@
 var tally: int = 0;
 
-fn onInit() {
+fn onInit(node) {
 	print "child init called";
 }
 
-fn onStep() {
+fn onStep(node) {
 	print "child step called";
 	print ++tally;
 }
 
-fn onFree() {
+fn onFree(node) {
 	print "child free called";
 }

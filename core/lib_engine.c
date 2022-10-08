@@ -231,6 +231,13 @@ static int nativeInitNode(Interpreter* interpreter, LiteralArray* arguments) {
 
 	freeLiteral(nodeIdn);
 
+	//check argument types
+	if (!IS_OPAQUE(node)) {
+		interpreter->errorOutput("Incorrect argument type passed to initNode\n");
+		freeLiteral(node);
+		return -1;
+	}
+
 	EngineNode* engineNode = AS_OPAQUE(node);
 
 	//init the new node
@@ -259,6 +266,13 @@ static int nativeFreeNode(Interpreter* interpreter, LiteralArray* arguments) {
 
 	freeLiteral(nodeIdn);
 
+	//check argument types
+	if (!IS_OPAQUE(node)) {
+		interpreter->errorOutput("Incorrect argument type passed to freeNode\n");
+		freeLiteral(node);
+		return -1;
+	}
+
 	EngineNode* engineNode = AS_OPAQUE(node);
 
 	//free the node
@@ -268,6 +282,60 @@ static int nativeFreeNode(Interpreter* interpreter, LiteralArray* arguments) {
 
 	//cleanup
 	freeLiteral(node);
+	return 0;
+}
+
+static int nativeFreeChildNode(Interpreter* interpreter, LiteralArray* arguments) {
+	if (arguments->count != 2) {
+		interpreter->errorOutput("Incorrect number of arguments passed to freeChildNode\n");
+		return -1;
+	}
+
+	Literal index = popLiteralArray(arguments);
+	Literal node = popLiteralArray(arguments);
+
+	Literal nodeIdn = node; //annoying
+
+	if (!parseIdentifierToValue(interpreter, &node)) {
+		interpreter->errorOutput("Failed to parse parent node identifier to value\n");
+		freeLiteral(node);
+		return -1;
+	}
+
+	freeLiteral(nodeIdn);
+
+	//check argument types
+	if (!IS_OPAQUE(node) || !IS_INTEGER(index)) {
+		interpreter->errorOutput("Incorrect argument type passed to freeChildNode\n");
+		freeLiteral(node);
+		return -1;
+	}
+
+	EngineNode* parentNode = AS_OPAQUE(node);
+	int idx = AS_INTEGER(index);
+
+	//check bounds
+	if (idx < 0 || idx >= parentNode->count) {
+		interpreter->errorOutput("Node index out of bounds in freeChildNode\n");
+		freeLiteral(node);
+		freeLiteral(index);
+		return -1;
+	}
+
+	//get the child node
+	EngineNode* childNode = parentNode->children[idx];
+
+	//free the node
+	if (childNode != NULL) {
+		callEngineNode(childNode, &engine.interpreter, "onFree");
+		freeEngineNode(childNode);
+	}
+
+	parentNode->children[idx] = NULL;
+
+	//cleanup
+	freeLiteral(node);
+	freeLiteral(index);
 	return 0;
 }
 
@@ -360,7 +428,7 @@ static int nativeGetNode(Interpreter* interpreter, LiteralArray* arguments) {
 		return -1;
 	}
 
-	EngineNode* childNode = &parentNode->children[intIndex];
+	EngineNode* childNode = parentNode->children[intIndex];
 	Literal child = TO_OPAQUE_LITERAL(childNode, -1);
 
 	pushLiteralArray(&interpreter->stack, child);
@@ -386,7 +454,8 @@ int hookEngine(Interpreter* interpreter, Literal identifier, Literal alias) {
 		{"loadRootNode", nativeLoadRootNode},
 		{"loadNode", nativeLoadNode},
 		{"initNode", nativeInitNode},
-		{"freeNode", nativeFreeNode},
+		// {"freeNode", nativeFreeNode},
+		{"freeChildNode", nativeFreeChildNode},
 		{"pushNode", nativePushNode},
 		{"getNode", nativeGetNode},
 		{NULL, NULL}
