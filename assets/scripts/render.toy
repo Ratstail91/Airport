@@ -1,0 +1,17 @@
+import render;
+
+fn onInit(node: opaque) {
+	node.loadTextureRenderNode("assets/sprites/character.png");
+}
+
+fn onStep(node: opaque) {
+	//
+}
+
+fn onFree(node: opaque) {
+	node.freeTextureRenderNode();
+}
+
+fn onDraw(node: opaque) {
+	node.drawRenderNode(50, 50);
+}

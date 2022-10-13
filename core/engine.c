@@ -1,6 +1,7 @@
 #include "engine.h"
 
 #include "lib_engine.h"
+#include "lib_render.h"
 #include "lib_standard.h"
 #include "repl_tools.h"
 
@@ -41,6 +42,7 @@ void initEngine() {
 	//init Toy
 	initInterpreter(&engine.interpreter);
 	injectNativeHook(&engine.interpreter, "engine", hookEngine);
+	injectNativeHook(&engine.interpreter, "render", hookRender);
 	injectNativeHook(&engine.interpreter, "standard", hookStandard);
 
 	size_t size = 0;
@@ -146,6 +148,9 @@ void execEngine() {
 		//render the world
 		SDL_SetRenderDrawColor(engine.renderer, 0, 0, 0, 255); //NOTE: This line can be disabled later
 		SDL_RenderClear(engine.renderer); //NOTE: This line can be disabled later
+
+		callEngineNode(engine.rootNode, &engine.interpreter, "onDraw");
+
 		SDL_RenderPresent(engine.renderer);
 	}
 }

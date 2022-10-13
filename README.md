@@ -19,4 +19,4 @@ Make sure the program can see the `assets` folder (symbolic links can help).
 ## Dependencies
 
 * SDL2
-
+* SDL2_image
