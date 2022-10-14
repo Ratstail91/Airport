@@ -19,6 +19,8 @@ void initRenderNode(RenderNode* node, Interpreter* interpreter, void* tb, size_t
 	//init
 	node->freeMemory = freeMemory;
 	node->functions = ALLOCATE(LiteralDictionary, 1);
+	node->parent = NULL;
+	node->tag = OPAQUE_TAG_RENDER_NODE;
 	node->children = NULL;
 	node->capacity = 0;
 	node->count = 0;

@@ -61,7 +61,7 @@ static int nativeLoadRenderNode(Interpreter* interpreter, LiteralArray* argument
 	//NOTE: initNode() must be called manually
 
 	// return the node
-	Literal nodeLiteral = TO_OPAQUE_LITERAL(node, -1);
+	Literal nodeLiteral = TO_OPAQUE_LITERAL(node, node->tag);
 	pushLiteralArray(&interpreter->stack, nodeLiteral);
 
 	//cleanup

@@ -2,7 +2,7 @@
 
 #include "memory.h"
 
-STATIC_ASSERT(sizeof(EngineNode) == 32);
+STATIC_ASSERT(sizeof(EngineNode) == 48);
 STATIC_ASSERT(sizeof(EngineNodeCallback) == 8);
 STATIC_ASSERT(sizeof(LiteralDictionary*) == 8);
 STATIC_ASSERT(sizeof(EngineNode*) == 8);
@@ -17,6 +17,8 @@ void initEngineNode(EngineNode* node, Interpreter* interpreter, void* tb, size_t
 	//init
 	node->freeMemory = freeMemory;
 	node->functions = ALLOCATE(LiteralDictionary, 1);
+	node->parent = NULL;
+	node->tag = OPAQUE_TAG_ENGINE_NODE;
 	node->children = NULL;
 	node->capacity = 0;
 	node->count = 0;
@@ -69,6 +71,9 @@ void pushEngineNode(EngineNode* node, EngineNode* child) {
 
 	//assign
 	node->children[node->count++] = child;
+
+	//reverse-assign
+	child->parent = node;
 }
 
 void freeEngineNode(EngineNode* node) {
@@ -97,7 +102,7 @@ static void callEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, Li
 	//if this fn exists
 	if (existsLiteralDictionary(node->functions, key)) {
 		Literal fn = getLiteralDictionary(node->functions, key);
-		Literal n = TO_OPAQUE_LITERAL(node, -1);
+		Literal n = TO_OPAQUE_LITERAL(node, node->tag);
 
 		LiteralArray arguments;
 		LiteralArray returns;

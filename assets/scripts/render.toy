@@ -1,3 +1,4 @@
+import engine;
 import render;
 
 fn onInit(node: opaque) {
@@ -5,7 +6,8 @@ fn onInit(node: opaque) {
 }
 
 fn onStep(node: opaque) {
-	//
+	print node.getNodeTag();
+	print node.getNodeParent().getNodeTag();
 }
 
 fn onFree(node: opaque) {
@@ -13,5 +15,5 @@ fn onFree(node: opaque) {
 }
 
 fn onDraw(node: opaque) {
-	node.drawRenderNode(50, 50);
+	node.drawRenderNode(50, 50, 100, 100);
 }

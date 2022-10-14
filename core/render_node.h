@@ -7,12 +7,21 @@
 
 #include <SDL2/SDL.h>
 
+#define OPAQUE_TAG_RENDER_NODE 2
+
 typedef struct _renderNode {
 	//function for releasing memory
 	EngineNodeCallback freeMemory;
 
 	//toy functions, stored in a dict for flexibility
 	LiteralDictionary* functions;
+
+	//point to the parent
+	EngineNode* parent;
+
+	//my opaque type tag
+	int tag;
+	int _unused;
 
 	//use Toy's memory model
 	EngineNode** children;

@@ -201,7 +201,7 @@ static int nativeLoadNode(Interpreter* interpreter, LiteralArray* arguments) {
 	//NOTE: initNode() must be called manually
 
 	// return the node
-	Literal nodeLiteral = TO_OPAQUE_LITERAL(node, -1);
+	Literal nodeLiteral = TO_OPAQUE_LITERAL(node, node->tag);
 	pushLiteralArray(&interpreter->stack, nodeLiteral);
 
 	//cleanup
@@ -397,7 +397,7 @@ static int nativeGetNode(Interpreter* interpreter, LiteralArray* arguments) {
 	}
 
 	EngineNode* childNode = parentNode->children[intIndex];
-	Literal child = TO_OPAQUE_LITERAL(childNode, -1);
+	Literal child = TO_OPAQUE_LITERAL(childNode, childNode->tag);
 
 	pushLiteralArray(&interpreter->stack, child);
 
@@ -405,6 +405,76 @@ static int nativeGetNode(Interpreter* interpreter, LiteralArray* arguments) {
 	freeLiteral(parent);
 	freeLiteral(child);
 	freeLiteral(index);
+
+	return 1;
+}
+
+static int nativeGetNodeParent(Interpreter* interpreter, LiteralArray* arguments) {
+	//checks
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments passed to getNodeParent\n");
+		return -1;
+	}
+
+	Literal nodeLiteral = popLiteralArray(arguments);
+
+	Literal nodeIdn = nodeLiteral;
+	if (IS_IDENTIFIER(nodeLiteral) && parseIdentifierToValue(interpreter, &nodeLiteral)) {
+		freeLiteral(nodeIdn);
+	}
+
+	if (!IS_OPAQUE(nodeLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to getNodeParent\n");
+		freeLiteral(nodeLiteral);
+		return -1;
+	}
+
+	//push the node
+	EngineNode* node = AS_OPAQUE(nodeLiteral);
+	EngineNode* parent = node->parent;
+
+	Literal parentLiteral = TO_NULL_LITERAL;
+	if (parent != NULL) {
+		parentLiteral = TO_OPAQUE_LITERAL(parent, parent->tag);
+	}
+
+	pushLiteralArray(&interpreter->stack, parentLiteral);
+
+	//cleanup
+	freeLiteral(parentLiteral);
+	freeLiteral(nodeLiteral);
+
+	return 1;
+}
+
+static int nativeGetNodeTag(Interpreter* interpreter, LiteralArray* arguments) {
+	//checks
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments passed to getNodeTag\n");
+		return -1;
+	}
+
+	Literal nodeLiteral = popLiteralArray(arguments);
+
+	Literal nodeIdn = nodeLiteral;
+	if (IS_IDENTIFIER(nodeLiteral) && parseIdentifierToValue(interpreter, &nodeLiteral)) {
+		freeLiteral(nodeIdn);
+	}
+
+	if (!IS_OPAQUE(nodeLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to getNodeTag\n");
+		freeLiteral(nodeLiteral);
+		return -1;
+	}
+
+	//push the tag
+	Literal tagLiteral = TO_INTEGER_LITERAL( ((EngineNode*)AS_OPAQUE(nodeLiteral))->tag );
+
+	pushLiteralArray(&interpreter->stack, tagLiteral);
+
+	//cleanup
+	freeLiteral(nodeLiteral);
+	freeLiteral(tagLiteral);
 
 	return 1;
 }
@@ -426,6 +496,8 @@ int hookEngine(Interpreter* interpreter, Literal identifier, Literal alias) {
 		{"_freeChildNode", nativeFreeChildNode},
 		{"_pushNode", nativePushNode},
 		{"_getNode", nativeGetNode},
+		{"_getNodeParent", nativeGetNodeParent},
+		{"_getNodeTag", nativeGetNodeTag},
 		{NULL, NULL}
 	};
 

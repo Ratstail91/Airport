@@ -5,9 +5,10 @@
 #include "literal_dictionary.h"
 #include "interpreter.h"
 
+#define OPAQUE_TAG_ENGINE_NODE 1
+
 //forward declare
 typedef struct _engineNode EngineNode;
-
 typedef void (*EngineNodeCallback)(void*);
 
 //the node object, which forms a tree
@@ -17,6 +18,13 @@ typedef struct _engineNode {
 
 	//toy functions, stored in a dict for flexibility
 	LiteralDictionary* functions;
+
+	//point to the parent
+	EngineNode* parent;
+
+	//my opaque type tag
+	int tag;
+	int _unused;
 
 	//use Toy's memory model
 	EngineNode** children;
