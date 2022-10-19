@@ -58,8 +58,6 @@ static int nativeLoadRenderNode(Interpreter* interpreter, LiteralArray* argument
 
 	initRenderNode(node, &inner, tb, size);
 
-	//NOTE: initNode() must be called manually
-
 	// return the node
 	Literal nodeLiteral = TO_OPAQUE_LITERAL(node, node->tag);
 	pushLiteralArray(&interpreter->stack, nodeLiteral);
@@ -196,10 +194,10 @@ static int nativeSetRectRenderNode(Interpreter* interpreter, LiteralArray* argum
 	if (!IS_OPAQUE(nodeLiteral) || !IS_INTEGER(x) || !IS_INTEGER(y) || !IS_INTEGER(w) || !IS_INTEGER(h)) {
 		interpreter->errorOutput("Incorrect argument type passed to setRectRenderNode\n");
 		freeLiteral(nodeLiteral);
-		freeLiteral(xi);
-		freeLiteral(yi);
-		freeLiteral(wi);
-		freeLiteral(hi);
+		freeLiteral(x);
+		freeLiteral(y);
+		freeLiteral(w);
+		freeLiteral(h);
 		return -1;
 	}
 
@@ -211,12 +209,14 @@ static int nativeSetRectRenderNode(Interpreter* interpreter, LiteralArray* argum
 
 	//cleanup
 	freeLiteral(nodeLiteral);
-	freeLiteral(xi);
-	freeLiteral(yi);
-	freeLiteral(wi);
-	freeLiteral(hi);
+	freeLiteral(x);
+	freeLiteral(y);
+	freeLiteral(w);
+	freeLiteral(h);
 	return 0;
 }
+
+//TODO: get x, y, w, h
 
 static int nativeDrawRenderNode(Interpreter* interpreter, LiteralArray* arguments) {
 	if (arguments->count != 3 && arguments->count != 5) {
@@ -264,10 +264,10 @@ static int nativeDrawRenderNode(Interpreter* interpreter, LiteralArray* argument
 	if (!IS_OPAQUE(nodeLiteral) || !IS_INTEGER(x) || !IS_INTEGER(y) || (!IS_INTEGER(w) && !IS_NULL(w)) || (!IS_INTEGER(h) && !IS_NULL(h))) {
 		interpreter->errorOutput("Incorrect argument type passed to drawRenderNode\n");
 		freeLiteral(nodeLiteral);
-		freeLiteral(xi);
-		freeLiteral(yi);
-		freeLiteral(wi);
-		freeLiteral(hi);
+		freeLiteral(x);
+		freeLiteral(y);
+		freeLiteral(w);
+		freeLiteral(h);
 		return -1;
 	}
 
@@ -288,10 +288,10 @@ static int nativeDrawRenderNode(Interpreter* interpreter, LiteralArray* argument
 
 	//cleanup
 	freeLiteral(nodeLiteral);
-	freeLiteral(xi);
-	freeLiteral(yi);
-	freeLiteral(wi);
-	freeLiteral(hi);
+	freeLiteral(x);
+	freeLiteral(y);
+	freeLiteral(w);
+	freeLiteral(h);
 	return 0;
 }
 

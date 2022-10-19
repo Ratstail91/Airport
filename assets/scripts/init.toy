@@ -1,6 +1,23 @@
 import engine;
+import input;
+
+/*
+//input settings, mapping SDL2's virtual keys to event names
+mapInputEventToKey("character_up",    "w", 0); //event, keysym, keymod
+mapInputEventToKey("character_left",  "a", 0); //event, keysym, keymod
+mapInputEventToKey("character_down",  "s", 0); //event, keysym, keymod
+mapInputEventToKey("character_right", "d", 0); //event, keysym, keymod
+
+mapInputEventToSpecial("character_up",    "arrow_up");    //event, special
+mapInputEventToSpecial("character_left",  "arrow_left");  //event, special
+mapInputEventToSpecial("character_down",  "arrow_down");  //event, special
+mapInputEventToSpecial("character_right", "arrow_right"); //event, special
+
+mapInputEventToKey("character_jump",  " ", 0); //event, keysym, keymod
+*/
 
 //this function must always be called, or the engine won't run
 initWindow("Airport Game", 800, 600, false);
 
+//kick off the logic of the scene graph
 loadRootNode("assets/scripts/root.toy");

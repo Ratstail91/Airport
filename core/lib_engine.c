@@ -198,8 +198,6 @@ static int nativeLoadNode(Interpreter* interpreter, LiteralArray* arguments) {
 
 	initEngineNode(node, &inner, tb, size);
 
-	//NOTE: initNode() must be called manually
-
 	// return the node
 	Literal nodeLiteral = TO_OPAQUE_LITERAL(node, node->tag);
 	pushLiteralArray(&interpreter->stack, nodeLiteral);

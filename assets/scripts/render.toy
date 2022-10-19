@@ -6,8 +6,8 @@ fn onInit(node: opaque) {
 }
 
 fn onStep(node: opaque) {
-	print node.getNodeTag();
-	print node.getNodeParent().getNodeTag();
+	//print node.getNodeTag();
+	//print node.getNodeParent().getNodeTag();
 }
 
 fn onFree(node: opaque) {
