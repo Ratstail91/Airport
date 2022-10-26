@@ -2,7 +2,7 @@ CC=gcc
 
 IDIR+=. ../Toy/source ../core
 CFLAGS+=$(addprefix -I,$(IDIR)) -g -Wall -W -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable
-LIBS+=-lSDL2 -ltoy -lcore
+LIBS+=-lSDL2 -lSDL2_image -ltoy -lcore
 
 ODIR = obj
 TARGETS = $(wildcard ../core/*.c)
