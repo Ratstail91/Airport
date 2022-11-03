@@ -1,19 +1,18 @@
 import engine;
-import render;
+import node;
 
 fn onInit(node: opaque) {
-	node.loadTextureRenderNode("assets/sprites/character.png");
+	node.loadTextureEngineNode("assets/sprites/character.png");
 }
 
 fn onStep(node: opaque) {
-	//print node.getNodeTag();
-	//print node.getNodeParent().getNodeTag();
+	//
 }
 
 fn onFree(node: opaque) {
-	node.freeTextureRenderNode();
+	node.freeTextureEngineNode();
 }
 
 fn onDraw(node: opaque) {
-	node.drawRenderNode(50, 50, 100, 100);
+	node.drawEngineNode(50, 50, 100, 100);
 }

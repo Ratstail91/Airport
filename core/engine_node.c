@@ -1,14 +1,16 @@
 #include "engine_node.h"
 
+#include "engine.h"
+
 #include "memory.h"
 
-STATIC_ASSERT(sizeof(EngineNode) == 48);
-STATIC_ASSERT(sizeof(EngineNodeCallback) == 8);
-STATIC_ASSERT(sizeof(LiteralDictionary*) == 8);
-STATIC_ASSERT(sizeof(EngineNode*) == 8);
-STATIC_ASSERT(sizeof(int) == 4);
+STATIC_ASSERT(sizeof(EngineNode) == 72);
 
 static void freeMemory(void* ptr) {
+	EngineNode* node = (EngineNode*)ptr;
+	//SDL stuff
+	SDL_DestroyTexture(node->texture);
+
 	//free this node type's memory
 	FREE(EngineNode, ptr);
 }
@@ -22,13 +24,14 @@ void initEngineNode(EngineNode* node, Interpreter* interpreter, void* tb, size_t
 	node->children = NULL;
 	node->capacity = 0;
 	node->count = 0;
+	node->texture = NULL;
 
 	initLiteralDictionary(node->functions);
 
 	//run bytecode
 	runInterpreter(interpreter, tb, size);
 
-	//grab all top-level function literals
+	//grab all top-level functions from the dirty interpreter
 	LiteralDictionary* variablesPtr = &interpreter->scope->variables;
 
 	for (int i = 0; i < variablesPtr->capacity; i++) {
@@ -135,4 +138,42 @@ void callEngineNode(EngineNode* node, Interpreter* interpreter, char* fnName) {
 	callEngineNodeLiteral(node, interpreter, key);
 
 	freeLiteral(key);
+}
+
+int loadTextureEngineNode(EngineNode* node, char* fname) {
+	SDL_Surface* surface = IMG_Load(fname);
+
+	if (surface == NULL) {
+		return -1;
+	}
+
+	node->texture = SDL_CreateTextureFromSurface(engine.renderer, surface);
+
+	if (node->texture == NULL) {
+		return -2;
+	}
+
+	SDL_FreeSurface(surface);
+
+	int w, h;
+	SDL_QueryTexture(node->texture, NULL, NULL, &w, &h);
+	SDL_Rect r = { 0, 0, w, h };
+	setRectEngineNode(node, r);
+
+	return 0;
+}
+
+void freeTextureEngineNode(EngineNode* node) {
+	if (node->texture != NULL) {
+		SDL_DestroyTexture(node->texture);
+		node->texture = NULL;
+	}
+}
+
+void setRectEngineNode(EngineNode* node, SDL_Rect rect) {
+	node->rect = rect;
+}
+
+void drawEngineNode(EngineNode* node, SDL_Rect dest) {
+	SDL_RenderCopy(engine.renderer, node->texture, &node->rect, &dest);
 }

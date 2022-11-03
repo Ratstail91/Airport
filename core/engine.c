@@ -1,8 +1,8 @@
 #include "engine.h"
 
 #include "lib_engine.h"
-#include "lib_render.h"
 #include "lib_input.h"
+#include "lib_node.h"
 #include "lib_standard.h"
 #include "repl_tools.h"
 
@@ -43,7 +43,7 @@ void initEngine() {
 	//init Toy
 	initInterpreter(&engine.interpreter);
 	injectNativeHook(&engine.interpreter, "engine", hookEngine);
-	injectNativeHook(&engine.interpreter, "render", hookRender);
+	injectNativeHook(&engine.interpreter, "node", hookNode);
 	injectNativeHook(&engine.interpreter, "input", hookInput);
 	injectNativeHook(&engine.interpreter, "standard", hookStandard);
 

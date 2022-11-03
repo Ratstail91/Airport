@@ -5,6 +5,9 @@
 #include "literal_dictionary.h"
 #include "interpreter.h"
 
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+
 #define OPAQUE_TAG_ENGINE_NODE 1
 
 //forward declare
@@ -24,16 +27,29 @@ typedef struct _engineNode {
 
 	//my opaque type tag
 	int tag;
-	int _unused;
+	int _unused0;
 
 	//use Toy's memory model
 	EngineNode** children;
 	int capacity;
 	int count; //includes tombstones
+
+	//rendering-specific features
+	SDL_Texture* texture;
+	SDL_Rect rect;
+	//TODO: depth
 } EngineNode;
 
 CORE_API void initEngineNode(EngineNode* node, Interpreter* interpreter, void* tb, size_t size); //run bytecode, then grab all top-level function literals
 CORE_API void pushEngineNode(EngineNode* node, EngineNode* child); //push to the array (prune tombstones when expanding/copying)
 CORE_API void freeEngineNode(EngineNode* node); //free and tombstone this node
 
+//TODO: replace calling system with a better version
 CORE_API void callEngineNode(EngineNode* node, Interpreter* interpreter, char* fnName); //call "fnName" on this node, and all children, if it exists
+
+CORE_API int loadTextureEngineNode(EngineNode* node, char* fname);
+CORE_API void freeTextureEngineNode(EngineNode* node);
+
+CORE_API void setRectEngineNode(EngineNode* node, SDL_Rect rect);
+//TODO: getRect
+CORE_API void drawEngineNode(EngineNode* node, SDL_Rect dest);
