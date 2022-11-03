@@ -4,7 +4,7 @@ export TOY_OUTDIR = ../$(LIBDIR)
 export CORE_OUTDIR = ../$(LIBDIR)
 
 all: $(OUTDIR) $(LIBDIR) toy core
-	$(MAKE) -C source
+	$(MAKE) -j8 -C source
 ifeq ($(findstring CYGWIN, $(shell uname)),CYGWIN)
 	cp $(LIBDIR)/*.dll $(OUTDIR)
 else ifeq ($(shell uname),Linux)
@@ -13,14 +13,14 @@ else ifeq ($(OS),Windows_NT)
 	cp $(LIBDIR)/*.dll $(OUTDIR)
 endif
 
-toy: $(LIBDIR)
-	$(MAKE) -C Toy/source
-
-core: $(LIBDIR)
-	$(MAKE) -C core
-
 test: clean $(OUTDIR) toy core
 	$(MAKE) -C test
+
+toy: $(LIBDIR)
+	$(MAKE) -j8 -C Toy/source
+
+core: $(LIBDIR)
+	$(MAKE) -j8 -C core
 
 $(OUTDIR):
 	mkdir $(OUTDIR)
