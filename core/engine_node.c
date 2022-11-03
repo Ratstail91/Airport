@@ -101,7 +101,47 @@ void freeEngineNode(EngineNode* node) {
 	node->freeMemory(node);
 }
 
-static void callEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, Literal key) {
+Literal callEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, Literal key) {
+	Literal ret = TO_NULL_LITERAL;
+
+	//if this fn exists
+	if (existsLiteralDictionary(node->functions, key)) {
+		Literal fn = getLiteralDictionary(node->functions, key);
+		Literal n = TO_OPAQUE_LITERAL(node, node->tag);
+
+		LiteralArray arguments;
+		LiteralArray returns;
+		initLiteralArray(&arguments);
+		initLiteralArray(&returns);
+
+		pushLiteralArray(&arguments, n);
+
+		callLiteralFn(interpreter, fn, &arguments, &returns);
+
+		ret = popLiteralArray(&returns);
+
+		freeLiteralArray(&arguments);
+		freeLiteralArray(&returns);
+
+		freeLiteral(n);
+		freeLiteral(fn);
+	}
+
+	return ret;
+}
+
+Literal callEngineNode(EngineNode* node, Interpreter* interpreter, char* fnName) {
+	//call "fnName" on this node, and all children, if it exists
+	Literal key = TO_IDENTIFIER_LITERAL(copyString(fnName, strlen(fnName)), strlen(fnName));
+
+	Literal ret = callEngineNodeLiteral(node, interpreter, key);
+
+	freeLiteral(key);
+
+	return ret;
+}
+
+void callRecursiveEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, Literal key) {
 	//if this fn exists
 	if (existsLiteralDictionary(node->functions, key)) {
 		Literal fn = getLiteralDictionary(node->functions, key);
@@ -126,16 +166,16 @@ static void callEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, Li
 	//recurse to the (non-tombstone) children
 	for (int i = 0; i < node->count; i++) {
 		if (node->children[i] != NULL) {
-			callEngineNodeLiteral(node->children[i], interpreter, key);
+			callRecursiveEngineNodeLiteral(node->children[i], interpreter, key);
 		}
 	}
 }
 
-void callEngineNode(EngineNode* node, Interpreter* interpreter, char* fnName) {
+void callRecursiveEngineNode(EngineNode* node, Interpreter* interpreter, char* fnName) {
 	//call "fnName" on this node, and all children, if it exists
 	Literal key = TO_IDENTIFIER_LITERAL(copyString(fnName, strlen(fnName)), strlen(fnName));
 
-	callEngineNodeLiteral(node, interpreter, key);
+	callRecursiveEngineNodeLiteral(node, interpreter, key);
 
 	freeLiteral(key);
 }

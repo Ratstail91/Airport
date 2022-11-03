@@ -95,7 +95,7 @@ static int nativeInitNode(Interpreter* interpreter, LiteralArray* arguments) {
 
 	EngineNode* engineNode = AS_OPAQUE(node);
 
-	//init the new node
+	//init the new node (and ONLY this node)
 	callEngineNode(engineNode, &engine.interpreter, "onInit");
 
 	//cleanup
@@ -140,7 +140,7 @@ static int nativeFreeChildNode(Interpreter* interpreter, LiteralArray* arguments
 
 	//free the node
 	if (childNode != NULL) {
-		callEngineNode(childNode, &engine.interpreter, "onFree");
+		callRecursiveEngineNode(childNode, &engine.interpreter, "onFree");
 		freeEngineNode(childNode);
 	}
 
@@ -276,7 +276,7 @@ static int nativeGetNodeParent(Interpreter* interpreter, LiteralArray* arguments
 	return 1;
 }
 
-static int nativeLoadTextureEngineNode(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeLoadTexture(Interpreter* interpreter, LiteralArray* arguments) {
 	if (arguments->count != 2) {
 		interpreter->errorOutput("Incorrect number of arguments passed to loadTextureEngineNode\n");
 		return -1;
@@ -324,7 +324,7 @@ static int nativeLoadTextureEngineNode(Interpreter* interpreter, LiteralArray* a
 	return 0;
 }
 
-static int nativeFreeTextureEngineNode(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeFreeTexture(Interpreter* interpreter, LiteralArray* arguments) {
 	if (arguments->count != 1) {
 		interpreter->errorOutput("Incorrect number of arguments passed to freeTextureEngineNode\n");
 		return -1;
@@ -357,7 +357,7 @@ static int nativeFreeTextureEngineNode(Interpreter* interpreter, LiteralArray* a
 	return 0;
 }
 
-static int nativeSetRectEngineNode(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeSetRect(Interpreter* interpreter, LiteralArray* arguments) {
 	if (arguments->count != 5) {
 		interpreter->errorOutput("Incorrect number of arguments passed to setRectEngineNode\n");
 		return -1;
@@ -423,7 +423,7 @@ static int nativeSetRectEngineNode(Interpreter* interpreter, LiteralArray* argum
 
 //TODO: get x, y, w, h
 
-static int nativeDrawEngineNode(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeDrawNode(Interpreter* interpreter, LiteralArray* arguments) {
 	if (arguments->count != 3 && arguments->count != 5) {
 		interpreter->errorOutput("Incorrect number of arguments passed to drawEngineNode\n");
 		return -1;
@@ -532,6 +532,46 @@ static int nativeGetNodeTag(Interpreter* interpreter, LiteralArray* arguments) {
 	return 1;
 }
 
+static int nativeCallNode(Interpreter* interpreter, LiteralArray* arguments) {
+	//checks
+	if (arguments->count != 2) {
+		interpreter->errorOutput("Incorrect number of arguments passed to callEngineNode\n");
+		return -1;
+	}
+
+	Literal fnName = popLiteralArray(arguments);
+	Literal nodeLiteral = popLiteralArray(arguments);
+
+	Literal nodeIdn = nodeLiteral;
+	if (IS_IDENTIFIER(nodeLiteral) && parseIdentifierToValue(interpreter, &nodeLiteral)) {
+		freeLiteral(nodeIdn);
+	}
+
+	Literal fnNameIdn = fnName;
+	if (IS_IDENTIFIER(fnName) && parseIdentifierToValue(interpreter, &fnName)) {
+		freeLiteral(fnNameIdn);
+	}
+
+	if (!IS_OPAQUE(nodeLiteral) || !IS_STRING(fnName)) {
+		interpreter->errorOutput("Incorrect argument type passed to callEngineNode\n");
+		freeLiteral(nodeLiteral);
+		freeLiteral(fnName);
+		return -1;
+	}
+
+	//call the function
+	Literal result = callEngineNodeLiteral(AS_OPAQUE(nodeLiteral), interpreter, fnName);
+
+	// pushLiteralArray(&interpreter->stack, result);
+
+	//cleanup
+	freeLiteral(nodeLiteral);
+	freeLiteral(fnName);
+	freeLiteral(result);
+
+	return 1;
+}
+
 //call the hook
 typedef struct Natives {
 	char* name;
@@ -547,10 +587,11 @@ int hookNode(Interpreter* interpreter, Literal identifier, Literal alias) {
 		{"_pushNode", nativePushNode},
 		{"_getNodeChild", nativeGetNodeChild},
 		{"_getNodeParent", nativeGetNodeParent},
-		{"_loadTextureEngineNode", nativeLoadTextureEngineNode},
-		{"_freeTextureEngineNode", nativeFreeTextureEngineNode},
-		{"_setRectEngineNode", nativeSetRectEngineNode},
-		{"_drawEngineNode", nativeDrawEngineNode},
+		{"_loadTexture", nativeLoadTexture},
+		{"_freeTexture", nativeFreeTexture},
+		{"_setRect", nativeSetRect},
+		{"_drawNode", nativeDrawNode},
+		{"_callNode", nativeCallNode},
 		// {"getNodeTag", nativeGetNodeTag}, //not needed if there's only one node type
 		{NULL, NULL},
 	};

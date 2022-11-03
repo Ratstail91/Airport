@@ -2,14 +2,10 @@
 import engine;
 import node;
 
-fn _makeChild(parent: opaque, fname: string, init: bool) {
+fn _makeChild(parent: opaque, fname: string) {
 	var child: opaque = loadNode(fname);
-
-	if (init) {
-		child.initNode();
-	}
-
 	parent.pushNode(child);
+	child.initNode();
 }
 
 //root node can load the whole scene, and essentially act as the scene object
@@ -17,16 +13,17 @@ fn onInit(node: opaque) {
 	print "root.toy:onInit() called";
 
 	//make a child
-	node.makeChild("assets/scripts/child.toy", true); //indicate whether to call "init" on the new node or not
-	node.makeChild("assets/scripts/child.toy", false);
-	node.makeChild("assets/scripts/child.toy", false);
+//	node.makeChild("assets/scripts/child.toy");
+//	node.makeChild("assets/scripts/child.toy");
+	node.makeChild("assets/scripts/render.toy");
 
-	//actually, grab that first node and free it
-	node.freeChildNode(0); //must be done from the parent node, so it's pointer can be nullified
+	print node;
+	print node.getNodeChild(0);
 
-	var r = loadNode("assets/scripts/render.toy");
+	var o = node.getNodeChild(0);
+	print o.callNode("getX");
 
-	node.pushNode(r);
+	print node.getNodeChild(0).callNode("getX");
 }
 
 fn onStep(node: opaque) {

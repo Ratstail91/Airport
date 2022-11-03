@@ -62,7 +62,7 @@ void freeEngine() {
 
 	//clear existing root node
 	if (engine.rootNode != NULL) {
-		callEngineNode(engine.rootNode, &engine.interpreter, "onFree");
+		callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onFree");
 
 		freeEngineNode(engine.rootNode);
 
@@ -78,7 +78,7 @@ void freeEngine() {
 static void execStep() {
 	//call onStep
 	if (engine.rootNode != NULL) {
-		callEngineNode(engine.rootNode, &engine.interpreter, "onStep");
+		callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onStep");
 	}
 
 	//poll events
@@ -151,7 +151,7 @@ void execEngine() {
 		SDL_SetRenderDrawColor(engine.renderer, 0, 0, 0, 255); //NOTE: This line can be disabled later
 		SDL_RenderClear(engine.renderer); //NOTE: This line can be disabled later
 
-		callEngineNode(engine.rootNode, &engine.interpreter, "onDraw");
+		callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onDraw");
 
 		SDL_RenderPresent(engine.renderer);
 	}

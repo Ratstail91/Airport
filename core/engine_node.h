@@ -44,8 +44,11 @@ CORE_API void initEngineNode(EngineNode* node, Interpreter* interpreter, void* t
 CORE_API void pushEngineNode(EngineNode* node, EngineNode* child); //push to the array (prune tombstones when expanding/copying)
 CORE_API void freeEngineNode(EngineNode* node); //free and tombstone this node
 
-//TODO: replace calling system with a better version
-CORE_API void callEngineNode(EngineNode* node, Interpreter* interpreter, char* fnName); //call "fnName" on this node, and all children, if it exists
+CORE_API Literal callEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, Literal key);
+CORE_API Literal callEngineNode(EngineNode* node, Interpreter* interpreter, char* fnName); //call "fnName" on this node, and only this node, if it exists
+
+CORE_API void callRecursiveEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, Literal key);
+CORE_API void callRecursiveEngineNode(EngineNode* node, Interpreter* interpreter, char* fnName); //call "fnName" on this node, and all children, if it exists
 
 CORE_API int loadTextureEngineNode(EngineNode* node, char* fname);
 CORE_API void freeTextureEngineNode(EngineNode* node);
