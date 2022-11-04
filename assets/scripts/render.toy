@@ -6,12 +6,12 @@ var x: int = 50;
 var y: int = 50;
 
 //accessors
-fn getX() {
+fn getX(node: opaque) {
 	print "Called getX";
 	return x;
 }
 
-fn getY() {
+fn getY(node: opaque) {
 	return y;
 }
 
@@ -37,7 +37,7 @@ fn onFree(node: opaque) {
 }
 
 fn onDraw(node: opaque) {
-	//print "render.toy:onDraw() called";
+	print "render.toy:onDraw() called";
 
 	var px = parent.callNode("getX");
 	var py = parent.callNode("getY");

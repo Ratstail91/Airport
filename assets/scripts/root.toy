@@ -17,13 +17,7 @@ fn onInit(node: opaque) {
 //	node.makeChild("assets/scripts/child.toy");
 	node.makeChild("assets/scripts/render.toy");
 
-	print node;
-	print node.getNodeChild(0);
-
-	var o = node.getNodeChild(0);
-	print o.callNode("getX");
-
-	print node.getNodeChild(0).callNode("getX");
+	node.getNodeChild(0).makeChild("assets/scripts/render.toy");
 }
 
 fn onStep(node: opaque) {

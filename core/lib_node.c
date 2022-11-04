@@ -559,10 +559,13 @@ static int nativeCallNode(Interpreter* interpreter, LiteralArray* arguments) {
 		return -1;
 	}
 
-	//call the function
-	Literal result = callEngineNodeLiteral(AS_OPAQUE(nodeLiteral), interpreter, fnName);
+	char* strptr = AS_STRING(fnName);
+	Literal fnNameIdentifier = TO_IDENTIFIER_LITERAL(copyString(strptr, strlen(strptr)), strlen(strptr));
 
-	// pushLiteralArray(&interpreter->stack, result);
+	//call the function
+	Literal result = callEngineNodeLiteral(AS_OPAQUE(nodeLiteral), interpreter, fnNameIdentifier);
+
+	pushLiteralArray(&interpreter->stack, result);
 
 	//cleanup
 	freeLiteral(nodeLiteral);
