@@ -126,6 +126,11 @@ static void execEvents() {
 
 			//input
 			case SDL_KEYDOWN: {
+				//bugfix: ignore repeat messages
+				if (event.key.repeat) {
+					break;
+				}
+
 				//determine the given keycode
 				Literal keycodeLiteral = TO_INTEGER_LITERAL( (int)(event.key.keysym.sym) );
 				if (!existsLiteralDictionary(&engine.symKeyDownEvents, keycodeLiteral)) {
@@ -141,6 +146,11 @@ static void execEvents() {
 			break;
 
 			case SDL_KEYUP: {
+				//bugfix: ignore repeat messages
+				if (event.key.repeat) {
+					break;
+				}
+
 				//determine the given keycode
 				Literal keycodeLiteral = TO_INTEGER_LITERAL( (int)(event.key.keysym.sym) );
 				if (!existsLiteralDictionary(&engine.symKeyUpEvents, keycodeLiteral)) {
