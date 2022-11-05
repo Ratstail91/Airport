@@ -98,7 +98,7 @@ static int nativeLoadRootNode(Interpreter* interpreter, LiteralArray* arguments)
 
 	//clear existing root node
 	if (engine.rootNode != NULL) {
-		callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onFree");
+		callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onFree", NULL);
 
 		freeEngineNode(engine.rootNode);
 		FREE(EngineNode, engine.rootNode);
@@ -137,7 +137,7 @@ static int nativeLoadRootNode(Interpreter* interpreter, LiteralArray* arguments)
 	initEngineNode(engine.rootNode, &inner, tb, size);
 
 	//init the new node (and ONLY this node)
-	callEngineNode(engine.rootNode, &engine.interpreter, "onInit");
+	callEngineNode(engine.rootNode, &engine.interpreter, "onInit", NULL);
 
 	//cleanup
 	freeLiteralArray(&inner.stack);

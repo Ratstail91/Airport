@@ -1,20 +1,27 @@
 import engine;
-//import input;
+import input;
 
-/*
+
 //input settings, mapping SDL2's virtual keys to event names
-mapInputEventToKey("character_up",    "w", 0); //event, keysym, keymod
-mapInputEventToKey("character_left",  "a", 0); //event, keysym, keymod
-mapInputEventToKey("character_down",  "s", 0); //event, keysym, keymod
-mapInputEventToKey("character_right", "d", 0); //event, keysym, keymod
+mapInputEventToKeyDown("character_up",    "w"); //event, keysym
+mapInputEventToKeyDown("character_left",  "a"); //event, keysym
+mapInputEventToKeyDown("character_down",  "s"); //event, keysym
+mapInputEventToKeyDown("character_right", "d"); //event, keysym
 
-mapInputEventToSpecial("character_up",    "arrow_up");    //event, special
-mapInputEventToSpecial("character_left",  "arrow_left");  //event, special
-mapInputEventToSpecial("character_down",  "arrow_down");  //event, special
-mapInputEventToSpecial("character_right", "arrow_right"); //event, special
+mapInputEventToKeyUp("character_up",    "w"); //event, keysym
+mapInputEventToKeyUp("character_left",  "a"); //event, keysym
+mapInputEventToKeyUp("character_down",  "s"); //event, keysym
+mapInputEventToKeyUp("character_right", "d"); //event, keysym
 
-mapInputEventToKey("character_jump",  " ", 0); //event, keysym, keymod
-*/
+mapInputEventToKeyDown("character_up",    "up"); //event, keysym
+mapInputEventToKeyDown("character_left",  "left"); //event, keysym
+mapInputEventToKeyDown("character_down",  "down"); //event, keysym
+mapInputEventToKeyDown("character_right", "right"); //event, keysym
+
+mapInputEventToKeyUp("character_up",    "up"); //event, keysym
+mapInputEventToKeyUp("character_left",  "left"); //event, keysym
+mapInputEventToKeyUp("character_down",  "down"); //event, keysym
+mapInputEventToKeyUp("character_right", "right"); //event, keysym
 
 //this function must always be called, or the engine won't run
 initWindow("Airport Game", 800, 600, false);

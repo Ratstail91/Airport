@@ -11,6 +11,8 @@
 #include "parser.h"
 #include "compiler.h"
 #include "interpreter.h"
+#include "literal_array.h"
+#include "literal_dictionary.h"
 
 #include "console_colors.h"
 
@@ -40,6 +42,12 @@ void initEngine() {
 		fatalError("Failed to initialize SDL2");
 	}
 
+	//init events
+	initLiteralArray(&engine.keyDownEvents);
+	initLiteralDictionary(&engine.symKeyDownEvents);
+	initLiteralArray(&engine.keyUpEvents);
+	initLiteralDictionary(&engine.symKeyUpEvents);
+
 	//init Toy
 	initInterpreter(&engine.interpreter);
 	injectNativeHook(&engine.interpreter, "engine", hookEngine);
@@ -56,13 +64,9 @@ void initEngine() {
 }
 
 void freeEngine() {
-	SDL_DestroyRenderer(engine.renderer);
-	SDL_DestroyWindow(engine.window);
-	SDL_Quit();
-
 	//clear existing root node
 	if (engine.rootNode != NULL) {
-		callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onFree");
+		callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onFree", NULL);
 
 		freeEngineNode(engine.rootNode);
 
@@ -71,14 +75,31 @@ void freeEngine() {
 
 	freeInterpreter(&engine.interpreter);
 
+	//free events
+	freeLiteralArray(&engine.keyDownEvents);
+	freeLiteralDictionary(&engine.symKeyDownEvents);
+	freeLiteralArray(&engine.keyUpEvents);
+	freeLiteralDictionary(&engine.symKeyUpEvents);
+
+	//free SDL
+	SDL_DestroyRenderer(engine.renderer);
+	SDL_DestroyWindow(engine.window);
+	SDL_Quit();
+
 	engine.renderer = NULL;
 	engine.window = NULL;
 }
 
-static void execStep() {
-	//call onStep
-	if (engine.rootNode != NULL) {
-		callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onStep");
+static void execEvents() {
+	//clear event lists
+	if (engine.keyDownEvents.count > 0) {
+		freeLiteralArray(&engine.keyDownEvents);
+		//NOTE: this is likely memory intensive - a more bespoke linked list designed for this task would be better
+		//NOTE: alternatively - manual memory-wipes, skipping the free step could be better
+	}
+
+	if (engine.keyUpEvents.count > 0) {
+		freeLiteralArray(&engine.keyUpEvents);
 	}
 
 	//poll events
@@ -103,8 +124,65 @@ static void execStep() {
 			}
 			break;
 
-			//TODO: input
+			//input
+			case SDL_KEYDOWN: {
+				//determine the given keycode
+				Literal keycodeLiteral = TO_INTEGER_LITERAL( (int)(event.key.keysym.sym) );
+				if (!existsLiteralDictionary(&engine.symKeyDownEvents, keycodeLiteral)) {
+					break;
+				}
+
+				//get the event name
+				Literal eventLiteral = getLiteralDictionary(&engine.symKeyDownEvents, keycodeLiteral);
+
+				//push to the event list
+				pushLiteralArray(&engine.keyDownEvents, eventLiteral);
+			}
+			break;
+
+			case SDL_KEYUP: {
+				//determine the given keycode
+				Literal keycodeLiteral = TO_INTEGER_LITERAL( (int)(event.key.keysym.sym) );
+				if (!existsLiteralDictionary(&engine.symKeyUpEvents, keycodeLiteral)) {
+					break;
+				}
+
+				//get the event name
+				Literal eventLiteral = getLiteralDictionary(&engine.symKeyUpEvents, keycodeLiteral);
+
+				//push to the event list
+				pushLiteralArray(&engine.keyUpEvents, eventLiteral);
+			}
+			break;
 		}
+	}
+
+	//callbacks
+	if (engine.rootNode != NULL) {
+		//key down events
+		for (int i = 0; i < engine.keyDownEvents.count; i++) {
+			LiteralArray args;
+			initLiteralArray(&args);
+			pushLiteralArray(&args, engine.keyDownEvents.literals[i]);
+			callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onKeyDown", &args);
+			freeLiteralArray(&args);
+		}
+
+		//key up events
+		for (int i = 0; i < engine.keyUpEvents.count; i++) {
+			LiteralArray args;
+			initLiteralArray(&args);
+			pushLiteralArray(&args, engine.keyUpEvents.literals[i]);
+			callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onKeyUp", &args);
+			freeLiteralArray(&args);
+		}
+	}
+}
+
+void execStep() {
+	if (engine.rootNode != NULL) {
+		//steps
+		callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onStep", NULL);
 	}
 }
 
@@ -120,17 +198,10 @@ void execEngine() {
 	struct timeval delta = { .tv_sec = 0, .tv_usec = 1000 * 1000 / 60 }; //60 frames per second
 
 	while (engine.running) {
+		execEvents();
+
 		//calc the time passed
 		gettimeofday(&engine.realTime, NULL);
-
-		// printf("real time: %ld.%ld   sim time: %ld.%ld    + (delta: %ld.%ld)\n",
-		// 	engine.realTime.tv_sec,
-		// 	engine.realTime.tv_usec,
-		// 	engine.simTime.tv_sec,
-		// 	engine.simTime.tv_usec,
-		// 	delta.tv_sec,
-		// 	delta.tv_usec
-		// );
 
 		//if not enough time has passed
 		if (timercmp(&engine.simTime, &engine.realTime, <)) {
@@ -151,7 +222,7 @@ void execEngine() {
 		SDL_SetRenderDrawColor(engine.renderer, 0, 0, 0, 255); //NOTE: This line can be disabled later
 		SDL_RenderClear(engine.renderer); //NOTE: This line can be disabled later
 
-		callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onDraw");
+		callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onDraw", NULL);
 
 		SDL_RenderPresent(engine.renderer);
 	}

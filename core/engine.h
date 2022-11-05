@@ -4,6 +4,9 @@
 #include "engine_node.h"
 #include "interpreter.h"
 
+#include "literal_array.h"
+#include "literal_dictionary.h"
+
 #include <SDL2/SDL.h>
 
 #include <sys/time.h>
@@ -24,6 +27,13 @@ typedef struct _engine {
 	SDL_Renderer* renderer;
 	int screenWidth;
 	int screenHeight;
+
+	//input syms mapped to events
+	LiteralArray keyDownEvents; //list of events that occurred this frame
+	LiteralDictionary symKeyDownEvents; //keysym -> event names
+
+	LiteralArray keyUpEvents; //list of events that occurred this frame
+	LiteralDictionary symKeyUpEvents; //keysym -> event names
 } Engine;
 
 //extern singleton

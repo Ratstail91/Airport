@@ -96,7 +96,7 @@ static int nativeInitNode(Interpreter* interpreter, LiteralArray* arguments) {
 	EngineNode* engineNode = AS_OPAQUE(node);
 
 	//init the new node (and ONLY this node)
-	callEngineNode(engineNode, &engine.interpreter, "onInit");
+	callEngineNode(engineNode, &engine.interpreter, "onInit", NULL);
 
 	//cleanup
 	freeLiteral(node);
@@ -140,7 +140,7 @@ static int nativeFreeChildNode(Interpreter* interpreter, LiteralArray* arguments
 
 	//free the node
 	if (childNode != NULL) {
-		callRecursiveEngineNode(childNode, &engine.interpreter, "onFree");
+		callRecursiveEngineNode(childNode, &engine.interpreter, "onFree", NULL);
 		freeEngineNode(childNode);
 	}
 
@@ -563,7 +563,7 @@ static int nativeCallNode(Interpreter* interpreter, LiteralArray* arguments) {
 	Literal fnNameIdentifier = TO_IDENTIFIER_LITERAL(copyString(strptr, strlen(strptr)), strlen(strptr));
 
 	//call the function
-	Literal result = callEngineNodeLiteral(AS_OPAQUE(nodeLiteral), interpreter, fnNameIdentifier);
+	Literal result = callEngineNodeLiteral(AS_OPAQUE(nodeLiteral), interpreter, fnNameIdentifier, NULL);
 
 	pushLiteralArray(&interpreter->stack, result);
 

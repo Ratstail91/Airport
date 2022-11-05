@@ -101,7 +101,7 @@ void freeEngineNode(EngineNode* node) {
 	node->freeMemory(node);
 }
 
-Literal callEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, Literal key) {
+Literal callEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, Literal key, LiteralArray* args) {
 	Literal ret = TO_NULL_LITERAL;
 
 	//if this fn exists
@@ -115,6 +115,12 @@ Literal callEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, Litera
 		initLiteralArray(&returns);
 
 		pushLiteralArray(&arguments, n);
+
+		if (args) {
+			for (int i = 0; i < args->count; i++) {
+				pushLiteralArray(&arguments, args->literals[i]);
+			}
+		}
 
 		callLiteralFn(interpreter, fn, &arguments, &returns);
 
@@ -130,18 +136,18 @@ Literal callEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, Litera
 	return ret;
 }
 
-Literal callEngineNode(EngineNode* node, Interpreter* interpreter, char* fnName) {
+Literal callEngineNode(EngineNode* node, Interpreter* interpreter, char* fnName, LiteralArray* args) {
 	//call "fnName" on this node, and all children, if it exists
 	Literal key = TO_IDENTIFIER_LITERAL(copyString(fnName, strlen(fnName)), strlen(fnName));
 
-	Literal ret = callEngineNodeLiteral(node, interpreter, key);
+	Literal ret = callEngineNodeLiteral(node, interpreter, key, args);
 
 	freeLiteral(key);
 
 	return ret;
 }
 
-void callRecursiveEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, Literal key) {
+void callRecursiveEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, Literal key, LiteralArray* args) {
 	//if this fn exists
 	if (existsLiteralDictionary(node->functions, key)) {
 		Literal fn = getLiteralDictionary(node->functions, key);
@@ -151,6 +157,13 @@ void callRecursiveEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, 
 		LiteralArray returns;
 		initLiteralArray(&arguments);
 		initLiteralArray(&returns);
+
+		//feed the arguments in backwards!
+		if (args) {
+			for (int i = args->count -1; i >= 0; i--) {
+				pushLiteralArray(&arguments, args->literals[i]);
+			}
+		}
 
 		pushLiteralArray(&arguments, n);
 
@@ -166,16 +179,16 @@ void callRecursiveEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, 
 	//recurse to the (non-tombstone) children
 	for (int i = 0; i < node->count; i++) {
 		if (node->children[i] != NULL) {
-			callRecursiveEngineNodeLiteral(node->children[i], interpreter, key);
+			callRecursiveEngineNodeLiteral(node->children[i], interpreter, key, args);
 		}
 	}
 }
 
-void callRecursiveEngineNode(EngineNode* node, Interpreter* interpreter, char* fnName) {
+void callRecursiveEngineNode(EngineNode* node, Interpreter* interpreter, char* fnName, LiteralArray* args) {
 	//call "fnName" on this node, and all children, if it exists
 	Literal key = TO_IDENTIFIER_LITERAL(copyString(fnName, strlen(fnName)), strlen(fnName));
 
-	callRecursiveEngineNodeLiteral(node, interpreter, key);
+	callRecursiveEngineNodeLiteral(node, interpreter, key, args);
 
 	freeLiteral(key);
 }

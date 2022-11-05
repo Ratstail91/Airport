@@ -2,7 +2,68 @@
 
 #include "memory.h"
 
-//TODO: native input calls
+#include "engine.h"
+
+#include <SDL2/SDL.h>
+
+static int nativeMapInputEventToKey(Interpreter* interpreter, LiteralArray* arguments, LiteralDictionary* symKeyEventsPtr, char* fnName) {
+	//checks
+	if (arguments->count != 2) {
+		interpreter->errorOutput("Incorrect number of arguments passed to ");
+		interpreter->errorOutput(fnName);
+		interpreter->errorOutput("\n");
+		return -1;
+	}
+
+	Literal symLiteral = popLiteralArray(arguments);
+	Literal evtLiteral = popLiteralArray(arguments);
+
+	Literal evtLiteralIdn = evtLiteral;
+	if (IS_IDENTIFIER(evtLiteral) && parseIdentifierToValue(interpreter, &evtLiteral)) {
+		freeLiteral(evtLiteralIdn);
+	}
+
+	Literal symLiteralIdn = symLiteral;
+	if (IS_IDENTIFIER(symLiteral) && parseIdentifierToValue(interpreter, &symLiteral)) {
+		freeLiteral(symLiteralIdn);
+	}
+
+	if (!IS_STRING(symLiteral) || !IS_STRING(evtLiteral)) {
+		interpreter->errorOutput("Incorrect type of arguments passed to mapInputEventToKey\n");
+		return -1;
+	}
+
+	//use the keycode for faster lookups
+	SDL_Keycode keycode = SDL_GetKeyFromName( AS_STRING(symLiteral) );
+
+	if (keycode == SDLK_UNKNOWN) {
+		interpreter->errorOutput("Unknown key found: ");
+		interpreter->errorOutput(SDL_GetError());
+		interpreter->errorOutput("\n");
+		return -1;
+	}
+
+	Literal keycodeLiteral = TO_INTEGER_LITERAL( (int)keycode );
+
+	//save the sym-event pair
+	setLiteralDictionary(symKeyEventsPtr, keycodeLiteral, evtLiteral); //I could possibly map multiple events to one sym
+
+	//cleanup
+	freeLiteral(symLiteral);
+	freeLiteral(evtLiteral);
+	freeLiteral(keycodeLiteral);
+
+	return 0;
+}
+
+//dry wrappers
+static int nativeMapInputEventToKeyDown(Interpreter* interpreter, LiteralArray* arguments) {
+	return nativeMapInputEventToKey(interpreter, arguments, &engine.symKeyDownEvents, "mapInputEventToKeyDown");
+}
+
+static int nativeMapInputEventToKeyUp(Interpreter* interpreter, LiteralArray* arguments) {
+	return nativeMapInputEventToKey(interpreter, arguments, &engine.symKeyUpEvents, "mapInputEventToKeyUp");
+}
 
 //call the hook
 typedef struct Natives {
@@ -13,9 +74,9 @@ typedef struct Natives {
 int hookInput(Interpreter* interpreter, Literal identifier, Literal alias) {
 	//build the natives list
 	Natives natives[] = {
-		// {"mapInputEventToKey", nativeMapInputEventToKey},
+		{"mapInputEventToKeyDown", nativeMapInputEventToKeyDown},
+		{"mapInputEventToKeyUp", nativeMapInputEventToKeyUp},
 		// {"mapInputEventToMouse", nativeMapInputEventToMouse},
-		// {"mapInputEventToSpecial", nativeMapInputEventToSpecial},
 		{NULL, NULL}
 	};
 
