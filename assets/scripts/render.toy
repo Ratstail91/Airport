@@ -25,10 +25,7 @@ fn onInit(node: opaque) {
 	print "render.toy:onInit() called";
 
 	node.loadTexture("assets/sprites/character.png");
-	print "loaded texture";
-
 	parent = node.getNodeParent();
-	print "accessed parent";
 }
 
 fn onKeyDown(node: opaque, event: string) {
