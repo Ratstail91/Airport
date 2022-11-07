@@ -1,13 +1,13 @@
 #pragma once
 
-#include "common.h"
+#include "core_common.h"
 #include "engine_node.h"
 #include "interpreter.h"
 
 #include "literal_array.h"
 #include "literal_dictionary.h"
 
-#include <SDL2/SDL.h>
+#include "core_common.h"
 
 #include <sys/time.h>
 

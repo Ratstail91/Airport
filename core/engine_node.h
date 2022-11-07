@@ -1,12 +1,11 @@
 #pragma once
 
-#include "common.h"
+#include "core_common.h"
 
 #include "literal_dictionary.h"
 #include "interpreter.h"
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+#include "core_common.h"
 
 #define OPAQUE_TAG_ENGINE_NODE 1
 

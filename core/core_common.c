@@ -1,4 +1,4 @@
-#include "common.h"
+#include "core_common.h"
 
 STATIC_ASSERT(sizeof(char) == 1);
 STATIC_ASSERT(sizeof(short) == 2);

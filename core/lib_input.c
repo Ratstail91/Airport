@@ -3,8 +3,7 @@
 #include "memory.h"
 
 #include "engine.h"
-
-#include <SDL2/SDL.h>
+#include "core_common.h"
 
 static int nativeMapInputEventToKey(Interpreter* interpreter, LiteralArray* arguments, LiteralDictionary* symKeyEventsPtr, char* fnName) {
 	//checks
