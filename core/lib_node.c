@@ -534,11 +534,40 @@ static int nativeGetNodeTag(Interpreter* interpreter, LiteralArray* arguments) {
 
 static int nativeCallNode(Interpreter* interpreter, LiteralArray* arguments) {
 	//checks
-	if (arguments->count != 2) {
-		interpreter->errorOutput("Incorrect number of arguments passed to callEngineNode\n");
+	if (arguments->count < 2) {
+		interpreter->errorOutput("Too few arguments passed to callEngineNode\n");
 		return -1;
 	}
 
+	LiteralArray extraArgs;
+	initLiteralArray(&extraArgs);
+
+	LiteralArray flippedExtraArgs;
+	initLiteralArray(&flippedExtraArgs);
+
+	//extract the extra arg values
+	while (arguments->count > 2) {
+		Literal tmp = popLiteralArray(arguments);
+
+		Literal idn = tmp; //there's almost certainly a better way of doing all of this stuff
+		if (IS_IDENTIFIER(tmp) && parseIdentifierToValue(interpreter, &tmp)) {
+			freeLiteral(idn);
+		}
+
+		pushLiteralArray(&flippedExtraArgs, tmp);
+		freeLiteral(tmp);
+	}
+
+	//correct the order
+	while (flippedExtraArgs.count) {
+		Literal tmp = popLiteralArray(&flippedExtraArgs);
+		pushLiteralArray(&extraArgs, tmp);
+		freeLiteral(tmp);
+	}
+
+	freeLiteralArray(&flippedExtraArgs);
+
+	//back on track
 	Literal fnName = popLiteralArray(arguments);
 	Literal nodeLiteral = popLiteralArray(arguments);
 
@@ -563,11 +592,12 @@ static int nativeCallNode(Interpreter* interpreter, LiteralArray* arguments) {
 	Literal fnNameIdentifier = TO_IDENTIFIER_LITERAL(copyString(strptr, strlen(strptr)), strlen(strptr));
 
 	//call the function
-	Literal result = callEngineNodeLiteral(AS_OPAQUE(nodeLiteral), interpreter, fnNameIdentifier, NULL);
+	Literal result = callEngineNodeLiteral(AS_OPAQUE(nodeLiteral), interpreter, fnNameIdentifier, &extraArgs);
 
 	pushLiteralArray(&interpreter->stack, result);
 
 	//cleanup
+	freeLiteralArray(&extraArgs);
 	freeLiteral(nodeLiteral);
 	freeLiteral(fnName);
 	freeLiteral(result);

@@ -28,6 +28,35 @@ fn onInit(node: opaque) {
 	parent = node.getNodeParent();
 }
 
+fn onStep(node: opaque) {
+	x += xspeed;
+	y += yspeed;
+}
+
+fn onFree(node: opaque) {
+	print "render.toy:onFree() called";
+
+	node.freeTexture();
+}
+
+fn onDraw(node: opaque) {
+//	print "render.toy:onDraw() called";
+
+	var px = parent.callNode("getX");
+	var py = parent.callNode("getY");
+
+	if (px == null) {
+		px = 0;
+	}
+
+	if (py == null) {
+		py = 0;
+	}
+
+	node.drawNode(x + px, y + py, 100, 100);
+}
+
+//event functions
 fn onKeyDown(node: opaque, event: string) {
 	if (event == "character_up") {
 		yspeed -= SPEED;
@@ -70,32 +99,4 @@ fn onKeyUp(node: opaque, event: string) {
 		xspeed = 0;
 		return;
 	}
-}
-
-fn onStep(node: opaque) {
-	x += xspeed;
-	y += yspeed;
-}
-
-fn onFree(node: opaque) {
-	print "render.toy:onFree() called";
-
-	node.freeTexture();
-}
-
-fn onDraw(node: opaque) {
-//	print "render.toy:onDraw() called";
-
-	var px = parent.callNode("getX");
-	var py = parent.callNode("getY");
-
-	if (px == null) {
-		px = 0;
-	}
-
-	if (py == null) {
-		py = 0;
-	}
-
-	node.drawNode(x + px, y + py, 100, 100);
 }

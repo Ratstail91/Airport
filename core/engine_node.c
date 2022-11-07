@@ -114,13 +114,14 @@ Literal callEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, Litera
 		initLiteralArray(&arguments);
 		initLiteralArray(&returns);
 
-		pushLiteralArray(&arguments, n);
-
+		//feed the arguments in backwards!
 		if (args) {
-			for (int i = 0; i < args->count; i++) {
+			for (int i = args->count -1; i >= 0; i--) {
 				pushLiteralArray(&arguments, args->literals[i]);
 			}
 		}
+
+		pushLiteralArray(&arguments, n);
 
 		callLiteralFn(interpreter, fn, &arguments, &returns);
 
