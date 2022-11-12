@@ -25,11 +25,15 @@ else
 	exit 1
 endif
 
-library: $(OBJ)
+library: libs $(OBJ)
 	$(CC) -DCORE_EXPORT $(CFLAGS) -shared -o $(OUT) $(LIBLINE) -L../$(LIBDIR) $(LIBS)
 
-static: $(OBJ)
+static: libs $(OBJ)
 	ar crs $(CORE_OUTDIR)/lib$(OUTNAME).a $(OBJ) -L../$(LIBDIR) $(LIBS)
+
+libs:
+	cp ../Toy/repl/lib* .
+	cp ../Toy/repl/repl_tools.* .
 
 $(OBJ): | $(ODIR)
 
