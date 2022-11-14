@@ -25,7 +25,7 @@ Engine engine;
 
 //errors here should be fatal
 static void fatalError(char* message) {
-	fprintf(stderr, message);
+	fprintf(stderr, "%s", message);
 	exit(-1);
 }
 
@@ -38,7 +38,7 @@ void initEngine() {
 	engine.renderer = NULL;
 
 	//init SDL
-	if (SDL_Init(0) != 0) {
+	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		fatalError("Failed to initialize SDL2");
 	}
 

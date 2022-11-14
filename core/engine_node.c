@@ -4,8 +4,6 @@
 
 #include "memory.h"
 
-STATIC_ASSERT(sizeof(EngineNode) == 72);
-
 static void freeMemory(void* ptr) {
 	EngineNode* node = (EngineNode*)ptr;
 	//SDL stuff

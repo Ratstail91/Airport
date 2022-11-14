@@ -8,7 +8,7 @@
 
 //errors here should be fatal
 static void fatalError(char* message) {
-	fprintf(stderr, message);
+	fprintf(stderr, "%s", message);
 	exit(-1);
 }
 

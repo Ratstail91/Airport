@@ -55,3 +55,24 @@ else
 endif
 
 rebuild: clean all
+
+
+#utils for the manual android build
+INCLUDEDIR=include
+
+SOURCEDIR=bundle
+
+$(INCLUDEDIR):
+	mkdir $(INCLUDEDIR)
+
+$(SOURCEDIR):
+	mkdir $(SOURCEDIR)
+
+sourcelist:
+	@echo $(addprefix ../airport/,$(wildcard Toy/source/*.c) $(wildcard core/*.c) $(wildcard source/*.c)) > source.list
+
+bundleincludes: $(INCLUDEDIR)
+	cp $(addprefix ../airport/,$(wildcard Toy/source/*.h) $(wildcard core/*.h) $(wildcard source/*.h)) $(INCLUDEDIR)
+
+bundlesource: $(SOURCEDIR)
+	cp $(addprefix ../airport/,$(wildcard Toy/source/*.c) $(wildcard core/*.c) $(wildcard source/*.c)) $(SOURCEDIR)
