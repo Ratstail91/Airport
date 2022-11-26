@@ -34,7 +34,7 @@ int main() {
 
 		initEngineNode(node, &interpreter, tb, size);
 
-		Literal nodeLiteral = TO_OPAQUE_LITERAL(node, 0);
+		Literal nodeLiteral = TO_OPAQUE_LITERAL(node, OPAQUE_TAG_ENGINE_NODE);
 
 		//argument list to pass in the node
 		LiteralArray arguments;

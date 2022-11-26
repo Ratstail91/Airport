@@ -5,8 +5,6 @@
 #include "literal_dictionary.h"
 #include "interpreter.h"
 
-#include "core_common.h"
-
 #define OPAQUE_TAG_ENGINE_NODE 1
 
 //forward declare
@@ -16,7 +14,7 @@ typedef void (*EngineNodeCallback)(void*);
 //the node object, which forms a tree
 typedef struct _engineNode {
 	//function for releasing memory
-	EngineNodeCallback freeMemory;
+	EngineNodeCallback freeMemory; //TODO: remove this, not needed
 
 	//toy functions, stored in a dict for flexibility
 	LiteralDictionary* functions;
