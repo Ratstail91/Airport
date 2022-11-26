@@ -9,12 +9,12 @@
 
 //forward declare
 typedef struct _engineNode EngineNode;
-typedef void (*EngineNodeCallback)(void*);
+// typedef void (*EngineNodeCallback)(void*);
 
 //the node object, which forms a tree
 typedef struct _engineNode {
-	//function for releasing memory
-	EngineNodeCallback freeMemory; //TODO: remove this, not needed
+	//function for releasing memory NOTE: removed, because it's not needed with only 1 node type - I've left them commented out because I might need them soon
+	// EngineNodeCallback freeMemory;
 
 	//toy functions, stored in a dict for flexibility
 	LiteralDictionary* functions;

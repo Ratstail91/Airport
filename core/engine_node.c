@@ -15,7 +15,7 @@ static void freeMemory(void* ptr) {
 
 void initEngineNode(EngineNode* node, Interpreter* interpreter, void* tb, size_t size) {
 	//init
-	node->freeMemory = freeMemory;
+	// node->freeMemory = freeMemory;
 	node->functions = ALLOCATE(LiteralDictionary, 1);
 	node->parent = NULL;
 	node->tag = OPAQUE_TAG_ENGINE_NODE;
@@ -96,7 +96,8 @@ void freeEngineNode(EngineNode* node) {
 	}
 
 	//free this node's memory
-	node->freeMemory(node);
+	// node->freeMemory(node);
+	freeMemory(node);
 }
 
 Literal callEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, Literal key, LiteralArray* args) {
