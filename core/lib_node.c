@@ -32,7 +32,7 @@ static int nativeLoadNode(Interpreter* interpreter, LiteralArray* arguments) {
 
 	//load the new node
 	size_t size = 0;
-	char* source = readFile(AS_STRING(fname), &size);
+	char* source = readFile(toCString(AS_STRING(fname)), &size);
 	unsigned char* tb = compileString(source, &size);
 	free((void*)source);
 
@@ -311,7 +311,7 @@ static int nativeLoadTexture(Interpreter* interpreter, LiteralArray* arguments) 
 		freeTextureEngineNode(node);
 	}
 
-	if (loadTextureEngineNode(node, AS_STRING(fname)) != 0) {
+	if (loadTextureEngineNode(node, toCString(AS_STRING(fname))) != 0) {
 		interpreter->errorOutput("Failed to load the texture into the EngineNode\n");
 		freeLiteral(fname);
 		freeLiteral(nodeLiteral);
@@ -588,8 +588,8 @@ static int nativeCallNode(Interpreter* interpreter, LiteralArray* arguments) {
 		return -1;
 	}
 
-	char* strptr = AS_STRING(fnName);
-	Literal fnNameIdentifier = TO_IDENTIFIER_LITERAL(copyString(strptr, strlen(strptr)), strlen(strptr));
+	//allow refstring to do it's magic
+	Literal fnNameIdentifier = TO_IDENTIFIER_LITERAL(copyRefString(AS_STRING(fnName)));
 
 	//call the function
 	Literal result = callEngineNodeLiteral(AS_OPAQUE(nodeLiteral), interpreter, fnNameIdentifier, &extraArgs);
@@ -644,7 +644,7 @@ int hookNode(Interpreter* interpreter, Literal identifier, Literal alias) {
 
 		//load the dict with functions
 		for (int i = 0; natives[i].name; i++) {
-			Literal name = TO_STRING_LITERAL(copyString(natives[i].name, strlen(natives[i].name)), strlen(natives[i].name));
+			Literal name = TO_STRING_LITERAL(createRefString(natives[i].name));
 			Literal func = TO_FUNCTION_LITERAL((void*)natives[i].fn, 0);
 			func.type = LITERAL_FUNCTION_NATIVE;
 

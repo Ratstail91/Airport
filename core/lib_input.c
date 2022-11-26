@@ -33,7 +33,7 @@ static int nativeMapInputEventToKey(Interpreter* interpreter, LiteralArray* argu
 	}
 
 	//use the keycode for faster lookups
-	SDL_Keycode keycode = SDL_GetKeyFromName( AS_STRING(symLiteral) );
+	SDL_Keycode keycode = SDL_GetKeyFromName( toCString(AS_STRING(symLiteral)) );
 
 	if (keycode == SDLK_UNKNOWN) {
 		interpreter->errorOutput("Unknown key found: ");
@@ -94,7 +94,7 @@ int hookInput(Interpreter* interpreter, Literal identifier, Literal alias) {
 
 		//load the dict with functions
 		for (int i = 0; natives[i].name; i++) {
-			Literal name = TO_STRING_LITERAL(copyString(natives[i].name, strlen(natives[i].name)), strlen(natives[i].name));
+			Literal name = TO_STRING_LITERAL(createRefString(natives[i].name));
 			Literal func = TO_FUNCTION_LITERAL((void*)natives[i].fn, 0);
 			func.type = LITERAL_FUNCTION_NATIVE;
 

@@ -137,7 +137,7 @@ Literal callEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, Litera
 
 Literal callEngineNode(EngineNode* node, Interpreter* interpreter, char* fnName, LiteralArray* args) {
 	//call "fnName" on this node, and all children, if it exists
-	Literal key = TO_IDENTIFIER_LITERAL(copyString(fnName, strlen(fnName)), strlen(fnName));
+	Literal key = TO_IDENTIFIER_LITERAL(createRefString(fnName));
 
 	Literal ret = callEngineNodeLiteral(node, interpreter, key, args);
 
@@ -185,7 +185,7 @@ void callRecursiveEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, 
 
 void callRecursiveEngineNode(EngineNode* node, Interpreter* interpreter, char* fnName, LiteralArray* args) {
 	//call "fnName" on this node, and all children, if it exists
-	Literal key = TO_IDENTIFIER_LITERAL(copyString(fnName, strlen(fnName)), strlen(fnName));
+	Literal key = TO_IDENTIFIER_LITERAL(createRefString(fnName));
 
 	callRecursiveEngineNodeLiteral(node, interpreter, key, args);
 

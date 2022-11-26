@@ -31,6 +31,7 @@ library: libs $(OBJ)
 static: libs $(OBJ)
 	ar crs $(CORE_OUTDIR)/lib$(OUTNAME).a $(OBJ) -L../$(LIBDIR) $(LIBS)
 
+#copy the stuff from Toy/repl that is needed
 libs:
 	cp ../Toy/repl/lib* .
 	cp ../Toy/repl/repl_tools.* .

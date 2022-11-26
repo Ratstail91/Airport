@@ -35,7 +35,7 @@ static int nativeInitWindow(Interpreter* interpreter, LiteralArray* arguments) {
 
 	//init the window
 	engine.window = SDL_CreateWindow(
-		AS_STRING(caption),
+		toCString(AS_STRING(caption)),
 		SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED,
 		engine.screenWidth = AS_INTEGER(screenWidth),
@@ -108,7 +108,7 @@ static int nativeLoadRootNode(Interpreter* interpreter, LiteralArray* arguments)
 
 	//load the new root node
 	size_t size = 0;
-	char* source = readFile(AS_STRING(fname), &size);
+	char* source = readFile(toCString(AS_STRING(fname)), &size);
 	unsigned char* tb = compileString(source, &size);
 	free((void*)source);
 
@@ -176,7 +176,7 @@ int hookEngine(Interpreter* interpreter, Literal identifier, Literal alias) {
 
 		//load the dict with functions
 		for (int i = 0; natives[i].name; i++) {
-			Literal name = TO_STRING_LITERAL(copyString(natives[i].name, strlen(natives[i].name)), strlen(natives[i].name));
+			Literal name = TO_STRING_LITERAL(createRefString(natives[i].name));
 			Literal func = TO_FUNCTION_LITERAL((void*)natives[i].fn, 0);
 			func.type = LITERAL_FUNCTION_NATIVE;
 
