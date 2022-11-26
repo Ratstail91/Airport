@@ -34,13 +34,20 @@ int main() {
 
 		initEngineNode(node, &interpreter, tb, size);
 
-		callEngineNode(node, &interpreter, "onInit");
-		callEngineNode(node, &interpreter, "onStep");
-		callEngineNode(node, &interpreter, "onFree");
+		Literal nodeLiteral = TO_OPAQUE_LITERAL(node, 0);
 
+		//argument list to pass in the node
+		LiteralArray arguments;
+		initLiteralArray(&arguments);
+
+		//call each function
+		callRecursiveEngineNode(node, &interpreter, "onInit", &arguments);
+		callRecursiveEngineNode(node, &interpreter, "onStep", &arguments);
+		callRecursiveEngineNode(node, &interpreter, "onQuit", &arguments);
+
+		//cleanup
+		freeLiteralArray(&arguments);
 		freeEngineNode(node);
-
-		//free
 		free((void*)source);
 		freeInterpreter(&interpreter);
 	}
@@ -75,17 +82,22 @@ int main() {
 			free((void*)source);
 		}
 
+		//argument list to pass in each time
+		LiteralArray arguments;
+		initLiteralArray(&arguments);
+
 		//test the calls
-		callEngineNode(node, &interpreter, "onInit");
+		callRecursiveEngineNode(node, &interpreter, "onInit", &arguments);
 
 		for (int i = 0; i < 10; i++) {
-			callEngineNode(node, &interpreter, "onStep");
+			callRecursiveEngineNode(node, &interpreter, "onStep", &arguments);
 		}
 
-		callEngineNode(node, &interpreter, "onFree");
+		callRecursiveEngineNode(node, &interpreter, "onFree", &arguments);
 
-		//free
-		freeEngineNode(node);
+		//cleanup
+		freeLiteralArray(&arguments);
+		freeEngineNode(node); //frees all children
 		free((void*)source);
 		freeInterpreter(&interpreter);
 	}
