@@ -1,4 +1,4 @@
-name: Comprehensive Tests
+name: Basic Tests
 
 on:
   push:
@@ -13,6 +13,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: clone submodules
+      run: git submodule update --init --recursive
     - name: install valgrind
       run: sudo apt install valgrind
     - name: make test
