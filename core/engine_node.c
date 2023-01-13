@@ -38,7 +38,7 @@ void initEngineNode(EngineNode* node, Interpreter* interpreter, void* tb, size_t
 			continue;
 		}
 
-		//if this variable is a function
+		//if this variable is a function (this outmodes import and export)
 		_entry* entry = &variablesPtr->entries[i];
 		if (IS_FUNCTION(entry->value)) {
 			//save a copy

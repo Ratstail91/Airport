@@ -127,8 +127,6 @@ static int nativeLoadRootNode(Interpreter* interpreter, LiteralArray* arguments)
 	inner.depth = interpreter->depth + 1;
 	inner.panic = false;
 	initLiteralArray(&inner.stack);
-	inner.exports = interpreter->exports;
-	inner.exportTypes = interpreter->exportTypes;
 	inner.hooks = interpreter->hooks;
 	setInterpreterPrint(&inner, interpreter->printOutput);
 	setInterpreterAssert(&inner, interpreter->assertOutput);
