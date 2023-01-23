@@ -36,7 +36,7 @@ typedef struct _engine {
 	LiteralDictionary symKeyUpEvents; //keysym -> event names
 } Engine;
 
-//extern singleton
+//extern singleton - used by various libraries
 extern Engine engine;
 
 //APIs for running the engine in main()

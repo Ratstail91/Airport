@@ -8,6 +8,8 @@ ODIR = obj
 SRC = $(wildcard *.c)
 OBJ = $(addprefix $(ODIR)/,$(SRC:.c=.o))
 
+TOYLIBS = $(wildcard ../Toy/repl/lib*) $(wildcard ../Toy/repl/repl_tools.*)
+
 OUTNAME=core
 
 ifeq ($(findstring CYGWIN, $(shell uname)),CYGWIN)
@@ -33,8 +35,7 @@ static: libs $(OBJ)
 
 #copy the stuff from Toy/repl that is needed
 libs:
-	cp ../Toy/repl/lib* .
-	cp ../Toy/repl/repl_tools.* .
+	cp $(TOYLIBS) .
 
 $(OBJ): | $(ODIR)
 
@@ -46,5 +47,5 @@ $(ODIR)/%.o: %.c
 
 .PHONY: clean
 
-clean:
-	$(RM) $(ODIR)
+clean-libs:
+	$(RM) $(notdir $(TOYLIBS))

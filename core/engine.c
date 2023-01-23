@@ -4,6 +4,8 @@
 #include "lib_input.h"
 #include "lib_node.h"
 #include "lib_standard.h"
+#include "lib_timer.h"
+#include "lib_runner.h"
 #include "repl_tools.h"
 
 #include "memory.h"
@@ -20,7 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-//define the engine object
+//define the extern engine object
 Engine engine;
 
 //errors here should be fatal
@@ -54,6 +56,8 @@ void initEngine() {
 	injectNativeHook(&engine.interpreter, "node", hookNode);
 	injectNativeHook(&engine.interpreter, "input", hookInput);
 	injectNativeHook(&engine.interpreter, "standard", hookStandard);
+	injectNativeHook(&engine.interpreter, "timer", hookTimer);
+	injectNativeHook(&engine.interpreter, "runner", hookRunner);
 
 	size_t size = 0;
 	char* source = readFile("./assets/scripts/init.toy", &size);
@@ -102,7 +106,7 @@ static void execEvents() {
 		freeLiteralArray(&engine.keyUpEvents);
 	}
 
-	//poll events
+	//poll all events
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
 		switch(event.type) {
@@ -167,10 +171,10 @@ static void execEvents() {
 		}
 	}
 
-	//callbacks
+	//process input events
 	if (engine.rootNode != NULL) {
 		//key down events
-		for (int i = 0; i < engine.keyDownEvents.count; i++) {
+		for (int i = 0; i < engine.keyDownEvents.count; i++) { //TODO: could pass in the whole array?
 			LiteralArray args;
 			initLiteralArray(&args);
 			pushLiteralArray(&args, engine.keyDownEvents.literals[i]);
