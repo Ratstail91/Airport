@@ -1,9 +1,9 @@
 export OUTDIR = out
 export LIBDIR = lib
 export TOY_OUTDIR = ../$(LIBDIR)
-export CORE_OUTDIR = ../$(LIBDIR)
+export BOX_OUTDIR = ../$(LIBDIR)
 
-all: $(OUTDIR) $(LIBDIR) toy core
+all: $(OUTDIR) $(LIBDIR) toy box
 	$(MAKE) -j8 -C source
 ifeq ($(findstring CYGWIN, $(shell uname)),CYGWIN)
 	cp $(LIBDIR)/*.dll $(OUTDIR)
@@ -13,14 +13,14 @@ else ifeq ($(OS),Windows_NT)
 	cp $(LIBDIR)/*.dll $(OUTDIR)
 endif
 
-test: clean $(OUTDIR) toy core
+test: clean $(OUTDIR) toy box
 	$(MAKE) -C test
 
 toy: $(LIBDIR)
 	$(MAKE) -j8 -C Toy/source
 
-core: $(LIBDIR)
-	$(MAKE) -j8 -C core
+box: $(LIBDIR)
+	$(MAKE) -j8 -C box
 
 $(OUTDIR):
 	mkdir $(OUTDIR)
@@ -69,10 +69,10 @@ $(SOURCEDIR):
 	mkdir $(SOURCEDIR)
 
 sourcelist:
-	@echo $(addprefix ../airport/,$(wildcard Toy/source/*.c) $(wildcard core/*.c) $(wildcard source/*.c)) > source.list
+	@echo $(addprefix ../airport/,$(wildcard Toy/source/*.c) $(wildcard box/*.c) $(wildcard source/*.c)) > source.list
 
 bundleincludes: $(INCLUDEDIR)
-	cp $(addprefix ../airport/,$(wildcard Toy/source/*.h) $(wildcard core/*.h) $(wildcard source/*.h)) $(INCLUDEDIR)
+	cp $(addprefix ../airport/,$(wildcard Toy/source/*.h) $(wildcard box/*.h) $(wildcard source/*.h)) $(INCLUDEDIR)
 
 bundlesource: $(SOURCEDIR)
-	cp $(addprefix ../airport/,$(wildcard Toy/source/*.c) $(wildcard core/*.c) $(wildcard source/*.c)) $(SOURCEDIR)
+	cp $(addprefix ../airport/,$(wildcard Toy/source/*.c) $(wildcard box/*.c) $(wildcard source/*.c)) $(SOURCEDIR)

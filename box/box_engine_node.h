@@ -5,7 +5,7 @@
 #include "literal_dictionary.h"
 #include "interpreter.h"
 
-#define OPAQUE_TAG_ENGINE_NODE 1
+#define OPAQUE_TAG_ENGINE_NODE 1001
 
 //forward declare
 typedef struct _engineNode EngineNode;
