@@ -1,22 +1,21 @@
-#include "engine_node.h"
+#include "box_engine_node.h"
+#include "box_engine.h"
 
-#include "engine.h"
-
-#include "memory.h"
+#include "toy_memory.h"
 
 static void freeMemory(void* ptr) {
-	EngineNode* node = (EngineNode*)ptr;
+	Box_EngineNode* node = (Box_EngineNode*)ptr;
 	//SDL stuff
 	SDL_DestroyTexture(node->texture);
 
 	//free this node type's memory
-	FREE(EngineNode, ptr);
+	TOY_FREE(Box_EngineNode, ptr);
 }
 
-void initEngineNode(EngineNode* node, Interpreter* interpreter, void* tb, size_t size) {
+void Box_initEngineNode(Box_EngineNode* node, Toy_Interpreter* interpreter, void* tb, size_t size) {
 	//init
 	// node->freeMemory = freeMemory;
-	node->functions = ALLOCATE(LiteralDictionary, 1);
+	node->functions = TOY_ALLOCATE(Toy_LiteralDictionary, 1);
 	node->parent = NULL;
 	node->tag = OPAQUE_TAG_ENGINE_NODE;
 	node->children = NULL;
@@ -24,36 +23,36 @@ void initEngineNode(EngineNode* node, Interpreter* interpreter, void* tb, size_t
 	node->count = 0;
 	node->texture = NULL;
 
-	initLiteralDictionary(node->functions);
+	Toy_initLiteralDictionary(node->functions);
 
 	//run bytecode
-	runInterpreter(interpreter, tb, size);
+	Toy_runInterpreter(interpreter, tb, size);
 
 	//grab all top-level functions from the dirty interpreter
-	LiteralDictionary* variablesPtr = &interpreter->scope->variables;
+	Toy_LiteralDictionary* variablesPtr = &interpreter->scope->variables;
 
 	for (int i = 0; i < variablesPtr->capacity; i++) {
 		//skip empties and tombstones
-		if (IS_NULL(variablesPtr->entries[i].key)) {
+		if (TOY_IS_NULL(variablesPtr->entries[i].key)) {
 			continue;
 		}
 
 		//if this variable is a function (this outmodes import and export)
-		_entry* entry = &variablesPtr->entries[i];
-		if (IS_FUNCTION(entry->value)) {
+		Toy_private_entry* entry = &variablesPtr->entries[i];
+		if (TOY_IS_FUNCTION(entry->value)) {
 			//save a copy
-			setLiteralDictionary(node->functions, entry->key, entry->value);
+			Toy_setLiteralDictionary(node->functions, entry->key, entry->value);
 		}
 	}
 }
 
-void pushEngineNode(EngineNode* node, EngineNode* child) {
+void Box_pushEngineNode(Box_EngineNode* node, Box_EngineNode* child) {
 	//push to the array (prune tombstones when expanding/copying)
 	if (node->count + 1 > node->capacity) {
 		int oldCapacity = node->capacity;
 
-		node->capacity = GROW_CAPACITY(oldCapacity);
-		node->children = GROW_ARRAY(EngineNode*, node->children, oldCapacity, node->capacity);
+		node->capacity = TOY_GROW_CAPACITY(oldCapacity);
+		node->children = TOY_GROW_ARRAY(Box_EngineNode*, node->children, oldCapacity, node->capacity);
 	}
 
 	//prune tombstones (experimental)
@@ -77,22 +76,22 @@ void pushEngineNode(EngineNode* node, EngineNode* child) {
 	child->parent = node;
 }
 
-void freeEngineNode(EngineNode* node) {
+void Box_freeEngineNode(Box_EngineNode* node) {
 	if (node == NULL) {
 		return; //NO-OP
 	}
 
 	//free and tombstone this node
 	for (int i = 0; i < node->count; i++) {
-		freeEngineNode(node->children[i]);
+		Box_freeEngineNode(node->children[i]);
 	}
 
 	//free the pointer array to the children
-	FREE_ARRAY(EngineNode*, node->children, node->capacity);
+	TOY_FREE_ARRAY(Box_EngineNode*, node->children, node->capacity);
 
 	if (node->functions != NULL) {
-		freeLiteralDictionary(node->functions);
-		FREE(LiteralDictionary, node->functions);
+		Toy_freeLiteralDictionary(node->functions);
+		TOY_FREE(Toy_LiteralDictionary, node->functions);
 	}
 
 	//free this node's memory
@@ -100,100 +99,100 @@ void freeEngineNode(EngineNode* node) {
 	freeMemory(node);
 }
 
-Literal callEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, Literal key, LiteralArray* args) {
-	Literal ret = TO_NULL_LITERAL;
+Toy_Literal Box_callEngineNodeLiteral(Box_EngineNode* node, Toy_Interpreter* interpreter, Toy_Literal key, Toy_LiteralArray* args) {
+	Toy_Literal ret = TOY_TO_NULL_LITERAL;
 
 	//if this fn exists
-	if (existsLiteralDictionary(node->functions, key)) {
-		Literal fn = getLiteralDictionary(node->functions, key);
-		Literal n = TO_OPAQUE_LITERAL(node, node->tag);
+	if (Toy_existsLiteralDictionary(node->functions, key)) {
+		Toy_Literal fn = Toy_getLiteralDictionary(node->functions, key);
+		Toy_Literal n = TOY_TO_OPAQUE_LITERAL(node, node->tag);
 
-		LiteralArray arguments;
-		LiteralArray returns;
-		initLiteralArray(&arguments);
-		initLiteralArray(&returns);
+		Toy_LiteralArray arguments;
+		Toy_LiteralArray returns;
+		Toy_initLiteralArray(&arguments);
+		Toy_initLiteralArray(&returns);
 
 		//feed the arguments in backwards!
 		if (args) {
 			for (int i = args->count -1; i >= 0; i--) {
-				pushLiteralArray(&arguments, args->literals[i]);
+				Toy_pushLiteralArray(&arguments, args->literals[i]);
 			}
 		}
 
-		pushLiteralArray(&arguments, n);
+		Toy_pushLiteralArray(&arguments, n);
 
-		callLiteralFn(interpreter, fn, &arguments, &returns);
+		Toy_callLiteralFn(interpreter, fn, &arguments, &returns);
 
-		ret = popLiteralArray(&returns);
+		ret = Toy_popLiteralArray(&returns);
 
-		freeLiteralArray(&arguments);
-		freeLiteralArray(&returns);
+		Toy_freeLiteralArray(&arguments);
+		Toy_freeLiteralArray(&returns);
 
-		freeLiteral(n);
-		freeLiteral(fn);
+		Toy_freeLiteral(n);
+		Toy_freeLiteral(fn);
 	}
 
 	return ret;
 }
 
-Literal callEngineNode(EngineNode* node, Interpreter* interpreter, char* fnName, LiteralArray* args) {
+Toy_Literal Box_callEngineNode(Box_EngineNode* node, Toy_Interpreter* interpreter, char* fnName, Toy_LiteralArray* args) {
 	//call "fnName" on this node, and all children, if it exists
-	Literal key = TO_IDENTIFIER_LITERAL(createRefString(fnName));
+	Toy_Literal key = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString(fnName));
 
-	Literal ret = callEngineNodeLiteral(node, interpreter, key, args);
+	Toy_Literal ret = Box_callEngineNodeLiteral(node, interpreter, key, args);
 
-	freeLiteral(key);
+	Toy_freeLiteral(key);
 
 	return ret;
 }
 
-void callRecursiveEngineNodeLiteral(EngineNode* node, Interpreter* interpreter, Literal key, LiteralArray* args) {
+void Box_callRecursiveEngineNodeLiteral(Box_EngineNode* node, Toy_Interpreter* interpreter, Toy_Literal key, Toy_LiteralArray* args) {
 	//if this fn exists
-	if (existsLiteralDictionary(node->functions, key)) {
-		Literal fn = getLiteralDictionary(node->functions, key);
-		Literal n = TO_OPAQUE_LITERAL(node, node->tag);
+	if (Toy_existsLiteralDictionary(node->functions, key)) {
+		Toy_Literal fn = Toy_getLiteralDictionary(node->functions, key);
+		Toy_Literal n = TOY_TO_OPAQUE_LITERAL(node, node->tag);
 
-		LiteralArray arguments;
-		LiteralArray returns;
-		initLiteralArray(&arguments);
-		initLiteralArray(&returns);
+		Toy_LiteralArray arguments;
+		Toy_LiteralArray returns;
+		Toy_initLiteralArray(&arguments);
+		Toy_initLiteralArray(&returns);
 
 		//feed the arguments in backwards!
 		if (args) {
 			for (int i = args->count -1; i >= 0; i--) {
-				pushLiteralArray(&arguments, args->literals[i]);
+				Toy_pushLiteralArray(&arguments, args->literals[i]);
 			}
 		}
 
-		pushLiteralArray(&arguments, n);
+		Toy_pushLiteralArray(&arguments, n);
 
-		callLiteralFn(interpreter, fn, &arguments, &returns);
+		Toy_callLiteralFn(interpreter, fn, &arguments, &returns);
 
-		freeLiteralArray(&arguments);
-		freeLiteralArray(&returns);
+		Toy_freeLiteralArray(&arguments);
+		Toy_freeLiteralArray(&returns);
 
-		freeLiteral(n);
-		freeLiteral(fn);
+		Toy_freeLiteral(n);
+		Toy_freeLiteral(fn);
 	}
 
 	//recurse to the (non-tombstone) children
 	for (int i = 0; i < node->count; i++) {
 		if (node->children[i] != NULL) {
-			callRecursiveEngineNodeLiteral(node->children[i], interpreter, key, args);
+			Box_callRecursiveEngineNodeLiteral(node->children[i], interpreter, key, args);
 		}
 	}
 }
 
-void callRecursiveEngineNode(EngineNode* node, Interpreter* interpreter, char* fnName, LiteralArray* args) {
+void Box_callRecursiveEngineNode(Box_EngineNode* node, Toy_Interpreter* interpreter, char* fnName, Toy_LiteralArray* args) {
 	//call "fnName" on this node, and all children, if it exists
-	Literal key = TO_IDENTIFIER_LITERAL(createRefString(fnName));
+	Toy_Literal key = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString(fnName));
 
-	callRecursiveEngineNodeLiteral(node, interpreter, key, args);
+	Box_callRecursiveEngineNodeLiteral(node, interpreter, key, args);
 
-	freeLiteral(key);
+	Toy_freeLiteral(key);
 }
 
-int loadTextureEngineNode(EngineNode* node, char* fname) {
+int Box_loadTextureEngineNode(Box_EngineNode* node, char* fname) {
 	SDL_Surface* surface = IMG_Load(fname);
 
 	if (surface == NULL) {
@@ -211,22 +210,22 @@ int loadTextureEngineNode(EngineNode* node, char* fname) {
 	int w, h;
 	SDL_QueryTexture(node->texture, NULL, NULL, &w, &h);
 	SDL_Rect r = { 0, 0, w, h };
-	setRectEngineNode(node, r);
+	Box_setRectEngineNode(node, r);
 
 	return 0;
 }
 
-void freeTextureEngineNode(EngineNode* node) {
+void Box_freeTextureEngineNode(Box_EngineNode* node) {
 	if (node->texture != NULL) {
 		SDL_DestroyTexture(node->texture);
 		node->texture = NULL;
 	}
 }
 
-void setRectEngineNode(EngineNode* node, SDL_Rect rect) {
+void Box_setRectEngineNode(Box_EngineNode* node, SDL_Rect rect) {
 	node->rect = rect;
 }
 
-void drawEngineNode(EngineNode* node, SDL_Rect dest) {
+void Box_drawEngineNode(Box_EngineNode* node, SDL_Rect dest) {
 	SDL_RenderCopy(engine.renderer, node->texture, &node->rect, &dest);
 }

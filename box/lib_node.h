@@ -1,6 +1,6 @@
 #pragma once
 
-#include "interpreter.h"
+#include "toy_interpreter.h"
 
-int hookNode(Interpreter* interpreter, Literal identifier, Literal alias);
+int Box_hookNode(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Literal alias);
 

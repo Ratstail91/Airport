@@ -1,604 +1,604 @@
 #include "lib_node.h"
 
-#include "engine.h"
-#include "engine_node.h"
-#include "repl_tools.h"
+#include "box_engine_node.h"
+#include "box_engine.h"
 
-#include "memory.h"
-#include "literal_array.h"
+#include "repl_tools.h"
+#include "toy_literal_array.h"
+#include "toy_memory.h"
 
 #include <stdlib.h>
 
-static int nativeLoadNode(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeLoadNode(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 1) {
 		interpreter->errorOutput("Incorrect number of arguments passed to loadNode\n");
 		return -1;
 	}
 
 	//extract the arguments
-	Literal fname = popLiteralArray(arguments);
+	Toy_Literal fname = Toy_popLiteralArray(arguments);
 
-	Literal fnameIdn = fname;
-	if (IS_IDENTIFIER(fname) && parseIdentifierToValue(interpreter, &fname)) {
-		freeLiteral(fnameIdn);
+	Toy_Literal fnameIdn = fname;
+	if (TOY_IS_IDENTIFIER(fname) && Toy_parseIdentifierToValue(interpreter, &fname)) {
+		Toy_freeLiteral(fnameIdn);
 	}
 
 	//check argument types
-	if (!IS_STRING(fname)) {
+	if (!TOY_IS_STRING(fname)) {
 		interpreter->errorOutput("Incorrect argument type passed to loadNode\n");
-		freeLiteral(fname);
+		Toy_freeLiteral(fname);
 		return -1;
 	}
 
 	//load the new node
 	size_t size = 0;
-	char* source = readFile(toCString(AS_STRING(fname)), &size);
-	unsigned char* tb = compileString(source, &size);
+	char* source = Toy_readFile(Toy_toCString(TOY_AS_STRING(fname)), &size);
+	unsigned char* tb = Toy_compileString(source, &size);
 	free((void*)source);
 
-	EngineNode* node = ALLOCATE(EngineNode, 1);
+	Box_EngineNode* node = TOY_ALLOCATE(Box_EngineNode, 1);
 
 	//BUGFIX: make an inner-interpreter
-	Interpreter inner;
+	Toy_Interpreter inner;
 
 	//init the inner interpreter manually
-	initLiteralArray(&inner.literalCache);
-	inner.scope = pushScope(NULL);
+	Toy_initLiteralArray(&inner.literalCache);
+	inner.scope = Toy_pushScope(NULL);
 	inner.bytecode = tb;
 	inner.length = size;
 	inner.count = 0;
 	inner.codeStart = -1;
 	inner.depth = interpreter->depth + 1;
 	inner.panic = false;
-	initLiteralArray(&inner.stack);
+	Toy_initLiteralArray(&inner.stack);
 	inner.hooks = interpreter->hooks;
-	setInterpreterPrint(&inner, interpreter->printOutput);
-	setInterpreterAssert(&inner, interpreter->assertOutput);
-	setInterpreterError(&inner, interpreter->errorOutput);
+	Toy_setInterpreterPrint(&inner, interpreter->printOutput);
+	Toy_setInterpreterAssert(&inner, interpreter->assertOutput);
+	Toy_setInterpreterError(&inner, interpreter->errorOutput);
 
-	initEngineNode(node, &inner, tb, size);
+	Box_initEngineNode(node, &inner, tb, size);
 
 	// return the node
-	Literal nodeLiteral = TO_OPAQUE_LITERAL(node, node->tag);
-	pushLiteralArray(&interpreter->stack, nodeLiteral);
+	Toy_Literal nodeLiteral = TOY_TO_OPAQUE_LITERAL(node, node->tag);
+	Toy_pushLiteralArray(&interpreter->stack, nodeLiteral);
 
 	//cleanup
-	freeLiteralArray(&inner.stack);
-	freeLiteralArray(&inner.literalCache);
-	freeLiteral(fname);
-	freeLiteral(nodeLiteral);
+	Toy_freeLiteralArray(&inner.stack);
+	Toy_freeLiteralArray(&inner.literalCache);
+	Toy_freeLiteral(fname);
+	Toy_freeLiteral(nodeLiteral);
 
 	return 1;
 }
 
-static int nativeInitNode(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeInitNode(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 1) {
 		interpreter->errorOutput("Incorrect number of arguments passed to initNode\n");
 		return -1;
 	}
 
-	Literal node = popLiteralArray(arguments);
+	Toy_Literal node = Toy_popLiteralArray(arguments);
 
-	Literal nodeIdn = node;
-	if (IS_IDENTIFIER(node) && parseIdentifierToValue(interpreter, &node)) {
-		freeLiteral(nodeIdn);
+	Toy_Literal nodeIdn = node;
+	if (TOY_IS_IDENTIFIER(node) && Toy_parseIdentifierToValue(interpreter, &node)) {
+		Toy_freeLiteral(nodeIdn);
 	}
 
 	//check argument types
-	if (!IS_OPAQUE(node)) {
+	if (!TOY_IS_OPAQUE(node)) {
 		interpreter->errorOutput("Incorrect argument type passed to initNode\n");
-		freeLiteral(node);
+		Toy_freeLiteral(node);
 		return -1;
 	}
 
-	EngineNode* engineNode = AS_OPAQUE(node);
+	Box_EngineNode* engineNode = TOY_AS_OPAQUE(node);
 
 	//init the new node (and ONLY this node)
-	callEngineNode(engineNode, &engine.interpreter, "onInit", NULL);
+	Box_callEngineNode(engineNode, &engine.interpreter, "onInit", NULL);
 
 	//cleanup
-	freeLiteral(node);
+	Toy_freeLiteral(node);
 	return 0;
 }
 
-static int nativeFreeChildNode(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeFreeChildNode(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 2) {
 		interpreter->errorOutput("Incorrect number of arguments passed to freeChildNode\n");
 		return -1;
 	}
 
-	Literal index = popLiteralArray(arguments);
-	Literal node = popLiteralArray(arguments);
+	Toy_Literal index = Toy_popLiteralArray(arguments);
+	Toy_Literal node = Toy_popLiteralArray(arguments);
 
-	Literal nodeIdn = node; //annoying
-	if (IS_IDENTIFIER(node) && parseIdentifierToValue(interpreter, &node)) {
-		freeLiteral(nodeIdn);
+	Toy_Literal nodeIdn = node; //annoying
+	if (TOY_IS_IDENTIFIER(node) && Toy_parseIdentifierToValue(interpreter, &node)) {
+		Toy_freeLiteral(nodeIdn);
 	}
 
 	//check argument types
-	if (!IS_OPAQUE(node) || !IS_INTEGER(index)) {
+	if (!TOY_IS_OPAQUE(node) || !TOY_IS_INTEGER(index)) {
 		interpreter->errorOutput("Incorrect argument type passed to freeChildNode\n");
-		freeLiteral(node);
+		Toy_freeLiteral(node);
 		return -1;
 	}
 
-	EngineNode* parentNode = AS_OPAQUE(node);
-	int idx = AS_INTEGER(index);
+	Box_EngineNode* parentNode = TOY_AS_OPAQUE(node);
+	int idx = TOY_AS_INTEGER(index);
 
 	//check bounds
 	if (idx < 0 || idx >= parentNode->count) {
 		interpreter->errorOutput("Node index out of bounds in freeChildNode\n");
-		freeLiteral(node);
-		freeLiteral(index);
+		Toy_freeLiteral(node);
+		Toy_freeLiteral(index);
 		return -1;
 	}
 
 	//get the child node
-	EngineNode* childNode = parentNode->children[idx];
+	Box_EngineNode* childNode = parentNode->children[idx];
 
 	//free the node
 	if (childNode != NULL) {
-		callRecursiveEngineNode(childNode, &engine.interpreter, "onFree", NULL);
-		freeEngineNode(childNode);
+		Box_callRecursiveEngineNode(childNode, &engine.interpreter, "onFree", NULL);
+		Box_freeEngineNode(childNode);
 	}
 
 	parentNode->children[idx] = NULL;
 
 	//cleanup
-	freeLiteral(node);
-	freeLiteral(index);
+	Toy_freeLiteral(node);
+	Toy_freeLiteral(index);
 	return 0;
 }
 
-static int nativePushNode(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativePushNode(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//checks
 	if (arguments->count != 2) {
 		interpreter->errorOutput("Incorrect number of arguments passed to pushNode\n");
 		return -1;
 	}
 
-	Literal child = popLiteralArray(arguments);
-	Literal parent = popLiteralArray(arguments);
+	Toy_Literal child = Toy_popLiteralArray(arguments);
+	Toy_Literal parent = Toy_popLiteralArray(arguments);
 
-	Literal parentIdn = parent;
-	if (IS_IDENTIFIER(parent) && parseIdentifierToValue(interpreter, &parent)) {
-		freeLiteral(parentIdn);
+	Toy_Literal parentIdn = parent;
+	if (TOY_IS_IDENTIFIER(parent) && Toy_parseIdentifierToValue(interpreter, &parent)) {
+		Toy_freeLiteral(parentIdn);
 	}
 
-	Literal childIdn = child;
-	if (IS_IDENTIFIER(child) && parseIdentifierToValue(interpreter, &child)) {
-		freeLiteral(childIdn);
+	Toy_Literal childIdn = child;
+	if (TOY_IS_IDENTIFIER(child) && Toy_parseIdentifierToValue(interpreter, &child)) {
+		Toy_freeLiteral(childIdn);
 	}
 
-	if (!IS_OPAQUE(parent) || !IS_OPAQUE(child)) {
+	if (!TOY_IS_OPAQUE(parent) || !TOY_IS_OPAQUE(child)) {
 		interpreter->errorOutput("Incorrect argument type passed to pushNode\n");
-		freeLiteral(parent);
-		freeLiteral(child);
+		Toy_freeLiteral(parent);
+		Toy_freeLiteral(child);
 		return -1;
 	}
 
 	//push the node
-	EngineNode* parentNode = AS_OPAQUE(parent);
-	EngineNode* childNode = AS_OPAQUE(child);
+	Box_EngineNode* parentNode = TOY_AS_OPAQUE(parent);
+	Box_EngineNode* childNode = TOY_AS_OPAQUE(child);
 
-	pushEngineNode(parentNode, childNode);
+	Box_pushEngineNode(parentNode, childNode);
 
 	//no return value
-	freeLiteral(parent);
-	freeLiteral(child);
+	Toy_freeLiteral(parent);
+	Toy_freeLiteral(child);
 
 	return 0;
 }
 
-static int nativeGetNodeChild(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeGetNodeChild(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//checks
 	if (arguments->count != 2) {
 		interpreter->errorOutput("Incorrect number of arguments passed to getNode\n");
 		return -1;
 	}
 
-	Literal index = popLiteralArray(arguments);
-	Literal parent = popLiteralArray(arguments);
+	Toy_Literal index = Toy_popLiteralArray(arguments);
+	Toy_Literal parent = Toy_popLiteralArray(arguments);
 
-	Literal parentIdn = parent;
-	if (IS_IDENTIFIER(parent) && parseIdentifierToValue(interpreter, &parent)) {
-		freeLiteral(parentIdn);
+	Toy_Literal parentIdn = parent;
+	if (TOY_IS_IDENTIFIER(parent) && Toy_parseIdentifierToValue(interpreter, &parent)) {
+		Toy_freeLiteral(parentIdn);
 	}
 
-	if (!IS_OPAQUE(parent) || !IS_INTEGER(index)) {
+	if (!TOY_IS_OPAQUE(parent) || !TOY_IS_INTEGER(index)) {
 		interpreter->errorOutput("Incorrect argument type passed to getNode\n");
-		freeLiteral(parent);
-		freeLiteral(index);
+		Toy_freeLiteral(parent);
+		Toy_freeLiteral(index);
 		return -1;
 	}
 
 	//push the node
-	EngineNode* parentNode = AS_OPAQUE(parent);
-	int intIndex = AS_INTEGER(index);
+	Box_EngineNode* parentNode = TOY_AS_OPAQUE(parent);
+	int intIndex = TOY_AS_INTEGER(index);
 
 	if (intIndex < 0 || intIndex >= parentNode->count) {
 		interpreter->errorOutput("index out of bounds in getNode\n");
-		freeLiteral(parent);
-		freeLiteral(index);
+		Toy_freeLiteral(parent);
+		Toy_freeLiteral(index);
 		return -1;
 	}
 
-	EngineNode* childNode = parentNode->children[intIndex];
-	Literal child = TO_OPAQUE_LITERAL(childNode, childNode->tag);
+	Box_EngineNode* childNode = parentNode->children[intIndex];
+	Toy_Literal child = TOY_TO_OPAQUE_LITERAL(childNode, childNode->tag);
 
-	pushLiteralArray(&interpreter->stack, child);
+	Toy_pushLiteralArray(&interpreter->stack, child);
 
 	//no return value
-	freeLiteral(parent);
-	freeLiteral(child);
-	freeLiteral(index);
+	Toy_freeLiteral(parent);
+	Toy_freeLiteral(child);
+	Toy_freeLiteral(index);
 
 	return 1;
 }
 
-static int nativeGetNodeParent(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeGetNodeParent(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//checks
 	if (arguments->count != 1) {
 		interpreter->errorOutput("Incorrect number of arguments passed to getNodeParent\n");
 		return -1;
 	}
 
-	Literal nodeLiteral = popLiteralArray(arguments);
+	Toy_Literal nodeLiteral = Toy_popLiteralArray(arguments);
 
-	Literal nodeIdn = nodeLiteral;
-	if (IS_IDENTIFIER(nodeLiteral) && parseIdentifierToValue(interpreter, &nodeLiteral)) {
-		freeLiteral(nodeIdn);
+	Toy_Literal nodeIdn = nodeLiteral;
+	if (TOY_IS_IDENTIFIER(nodeLiteral) && Toy_parseIdentifierToValue(interpreter, &nodeLiteral)) {
+		Toy_freeLiteral(nodeIdn);
 	}
 
-	if (!IS_OPAQUE(nodeLiteral)) {
+	if (!TOY_IS_OPAQUE(nodeLiteral)) {
 		interpreter->errorOutput("Incorrect argument type passed to getNodeParent\n");
-		freeLiteral(nodeLiteral);
+		Toy_freeLiteral(nodeLiteral);
 		return -1;
 	}
 
 	//push the node
-	EngineNode* node = AS_OPAQUE(nodeLiteral);
-	EngineNode* parent = node->parent;
+	Box_EngineNode* node = TOY_AS_OPAQUE(nodeLiteral);
+	Box_EngineNode* parent = node->parent;
 
-	Literal parentLiteral = TO_NULL_LITERAL;
+	Toy_Literal parentLiteral = TOY_TO_NULL_LITERAL;
 	if (parent != NULL) {
-		parentLiteral = TO_OPAQUE_LITERAL(parent, parent->tag);
+		parentLiteral = TOY_TO_OPAQUE_LITERAL(parent, parent->tag);
 	}
 
-	pushLiteralArray(&interpreter->stack, parentLiteral);
+	Toy_pushLiteralArray(&interpreter->stack, parentLiteral);
 
 	//cleanup
-	freeLiteral(parentLiteral);
-	freeLiteral(nodeLiteral);
+	Toy_freeLiteral(parentLiteral);
+	Toy_freeLiteral(nodeLiteral);
 
 	return 1;
 }
 
-static int nativeLoadTexture(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeLoadTexture(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 2) {
 		interpreter->errorOutput("Incorrect number of arguments passed to loadTextureEngineNode\n");
 		return -1;
 	}
 
 	//extract the arguments
-	Literal fname = popLiteralArray(arguments);
-	Literal nodeLiteral = popLiteralArray(arguments);
+	Toy_Literal fname = Toy_popLiteralArray(arguments);
+	Toy_Literal nodeLiteral = Toy_popLiteralArray(arguments);
 
-	Literal fnameIdn = fname;
-	if (IS_IDENTIFIER(fname) && parseIdentifierToValue(interpreter, &fname)) {
-		freeLiteral(fnameIdn);
+	Toy_Literal fnameIdn = fname;
+	if (TOY_IS_IDENTIFIER(fname) && Toy_parseIdentifierToValue(interpreter, &fname)) {
+		Toy_freeLiteral(fnameIdn);
 	}
 
-	Literal nodeIdn = nodeLiteral;
-	if (IS_IDENTIFIER(nodeLiteral) && parseIdentifierToValue(interpreter, &nodeLiteral)) {
-		freeLiteral(nodeIdn);
+	Toy_Literal nodeIdn = nodeLiteral;
+	if (TOY_IS_IDENTIFIER(nodeLiteral) && Toy_parseIdentifierToValue(interpreter, &nodeLiteral)) {
+		Toy_freeLiteral(nodeIdn);
 	}
 
 	//check argument types
-	if (!IS_STRING(fname) || !IS_OPAQUE(nodeLiteral)) {
+	if (!TOY_IS_STRING(fname) || !TOY_IS_OPAQUE(nodeLiteral)) {
 		interpreter->errorOutput("Incorrect argument type passed to loadTextureEngineNode\n");
-		freeLiteral(fname);
-		freeLiteral(nodeLiteral);
+		Toy_freeLiteral(fname);
+		Toy_freeLiteral(nodeLiteral);
 		return -1;
 	}
 
 	//actually load TODO: number the opaques, and check the numbers
-	EngineNode* node = (EngineNode*)AS_OPAQUE(nodeLiteral);
+	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
 
 	if (node->texture != NULL) {
-		freeTextureEngineNode(node);
+		Box_freeTextureEngineNode(node);
 	}
 
-	if (loadTextureEngineNode(node, toCString(AS_STRING(fname))) != 0) {
+	if (Box_loadTextureEngineNode(node, Toy_toCString(TOY_AS_STRING(fname))) != 0) {
 		interpreter->errorOutput("Failed to load the texture into the EngineNode\n");
-		freeLiteral(fname);
-		freeLiteral(nodeLiteral);
+		Toy_freeLiteral(fname);
+		Toy_freeLiteral(nodeLiteral);
 		return -1;
 	}
 
 	//cleanup
-	freeLiteral(fname);
-	freeLiteral(nodeLiteral);
+	Toy_freeLiteral(fname);
+	Toy_freeLiteral(nodeLiteral);
 	return 0;
 }
 
-static int nativeFreeTexture(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeFreeTexture(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 1) {
 		interpreter->errorOutput("Incorrect number of arguments passed to freeTextureEngineNode\n");
 		return -1;
 	}
 
 	//extract the arguments
-	Literal nodeLiteral = popLiteralArray(arguments);
+	Toy_Literal nodeLiteral = Toy_popLiteralArray(arguments);
 
-	Literal nodeIdn = nodeLiteral;
-	if (IS_IDENTIFIER(nodeLiteral) && parseIdentifierToValue(interpreter, &nodeLiteral)) {
-		freeLiteral(nodeIdn);
+	Toy_Literal nodeIdn = nodeLiteral;
+	if (TOY_IS_IDENTIFIER(nodeLiteral) && Toy_parseIdentifierToValue(interpreter, &nodeLiteral)) {
+		Toy_freeLiteral(nodeIdn);
 	}
 
 	//check argument types
-	if (!IS_OPAQUE(nodeLiteral)) {
+	if (!TOY_IS_OPAQUE(nodeLiteral)) {
 		interpreter->errorOutput("Incorrect argument type passed to freeTextureEngineNode\n");
-		freeLiteral(nodeLiteral);
+		Toy_freeLiteral(nodeLiteral);
 		return -1;
 	}
 
 	//actually load TODO: number the opaques, and check the numbers
-	EngineNode* node = (EngineNode*)AS_OPAQUE(nodeLiteral);
+	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
 
 	if (node->texture != NULL) {
-		freeTextureEngineNode(node);
+		Box_freeTextureEngineNode(node);
 	}
 
 	//cleanup
-	freeLiteral(nodeLiteral);
+	Toy_freeLiteral(nodeLiteral);
 	return 0;
 }
 
-static int nativeSetRect(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeSetRect(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 5) {
 		interpreter->errorOutput("Incorrect number of arguments passed to setRectEngineNode\n");
 		return -1;
 	}
 
 	//extract the arguments
-	Literal h = popLiteralArray(arguments);
-	Literal w = popLiteralArray(arguments);
-	Literal y = popLiteralArray(arguments);
-	Literal x = popLiteralArray(arguments);
-	Literal nodeLiteral = popLiteralArray(arguments);
+	Toy_Literal h = Toy_popLiteralArray(arguments);
+	Toy_Literal w = Toy_popLiteralArray(arguments);
+	Toy_Literal y = Toy_popLiteralArray(arguments);
+	Toy_Literal x = Toy_popLiteralArray(arguments);
+	Toy_Literal nodeLiteral = Toy_popLiteralArray(arguments);
 
-	Literal nodeIdn = nodeLiteral;
-	if (IS_IDENTIFIER(nodeLiteral) && parseIdentifierToValue(interpreter, &nodeLiteral)) {
-		freeLiteral(nodeIdn);
+	Toy_Literal nodeIdn = nodeLiteral;
+	if (TOY_IS_IDENTIFIER(nodeLiteral) && Toy_parseIdentifierToValue(interpreter, &nodeLiteral)) {
+		Toy_freeLiteral(nodeIdn);
 	}
 
-	Literal xi = x;
-	if (IS_IDENTIFIER(x) && parseIdentifierToValue(interpreter, &x)) {
-		freeLiteral(xi);
+	Toy_Literal xi = x;
+	if (TOY_IS_IDENTIFIER(x) && Toy_parseIdentifierToValue(interpreter, &x)) {
+		Toy_freeLiteral(xi);
 	}
 
-	Literal yi = y;
-	if (IS_IDENTIFIER(y) && parseIdentifierToValue(interpreter, &y)) {
-		freeLiteral(yi);
+	Toy_Literal yi = y;
+	if (TOY_IS_IDENTIFIER(y) && Toy_parseIdentifierToValue(interpreter, &y)) {
+		Toy_freeLiteral(yi);
 	}
 
-	Literal wi = w;
-	if (IS_IDENTIFIER(w) && parseIdentifierToValue(interpreter, &w)) {
-		freeLiteral(wi);
+	Toy_Literal wi = w;
+	if (TOY_IS_IDENTIFIER(w) && Toy_parseIdentifierToValue(interpreter, &w)) {
+		Toy_freeLiteral(wi);
 	}
 
-	Literal hi = h;
-	if (IS_IDENTIFIER(h) && parseIdentifierToValue(interpreter, &h)) {
-		freeLiteral(hi);
+	Toy_Literal hi = h;
+	if (TOY_IS_IDENTIFIER(h) && Toy_parseIdentifierToValue(interpreter, &h)) {
+		Toy_freeLiteral(hi);
 	}
 
 	//check argument types
-	if (!IS_OPAQUE(nodeLiteral) || !IS_INTEGER(x) || !IS_INTEGER(y) || !IS_INTEGER(w) || !IS_INTEGER(h)) {
+	if (!TOY_IS_OPAQUE(nodeLiteral) || !TOY_IS_INTEGER(x) || !TOY_IS_INTEGER(y) || !TOY_IS_INTEGER(w) || !TOY_IS_INTEGER(h)) {
 		interpreter->errorOutput("Incorrect argument type passed to setRectEngineNode\n");
-		freeLiteral(nodeLiteral);
-		freeLiteral(x);
-		freeLiteral(y);
-		freeLiteral(w);
-		freeLiteral(h);
+		Toy_freeLiteral(nodeLiteral);
+		Toy_freeLiteral(x);
+		Toy_freeLiteral(y);
+		Toy_freeLiteral(w);
+		Toy_freeLiteral(h);
 		return -1;
 	}
 
 	//actually set
-	EngineNode* node = (EngineNode*)AS_OPAQUE(nodeLiteral);
+	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
 
-	SDL_Rect r = {AS_INTEGER(x), AS_INTEGER(y), AS_INTEGER(w), AS_INTEGER(h)};
-	setRectEngineNode(node, r);
+	SDL_Rect r = {TOY_AS_INTEGER(x), TOY_AS_INTEGER(y), TOY_AS_INTEGER(w), TOY_AS_INTEGER(h)};
+	Box_setRectEngineNode(node, r);
 
 	//cleanup
-	freeLiteral(nodeLiteral);
-	freeLiteral(x);
-	freeLiteral(y);
-	freeLiteral(w);
-	freeLiteral(h);
+	Toy_freeLiteral(nodeLiteral);
+	Toy_freeLiteral(x);
+	Toy_freeLiteral(y);
+	Toy_freeLiteral(w);
+	Toy_freeLiteral(h);
 	return 0;
 }
 
 //TODO: get x, y, w, h
 
-static int nativeDrawNode(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeDrawNode(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 3 && arguments->count != 5) {
 		interpreter->errorOutput("Incorrect number of arguments passed to drawEngineNode\n");
 		return -1;
 	}
 
 	//extract the arguments
-	Literal w = TO_NULL_LITERAL, h = TO_NULL_LITERAL;
+	Toy_Literal w = TOY_TO_NULL_LITERAL, h = TOY_TO_NULL_LITERAL;
 	if (arguments->count == 5) {
-		h = popLiteralArray(arguments);
-		w = popLiteralArray(arguments);
+		h = Toy_popLiteralArray(arguments);
+		w = Toy_popLiteralArray(arguments);
 	}
 
-	Literal y = popLiteralArray(arguments);
-	Literal x = popLiteralArray(arguments);
-	Literal nodeLiteral = popLiteralArray(arguments);
+	Toy_Literal y = Toy_popLiteralArray(arguments);
+	Toy_Literal x = Toy_popLiteralArray(arguments);
+	Toy_Literal nodeLiteral = Toy_popLiteralArray(arguments);
 
-	Literal nodeIdn = nodeLiteral;
-	if (IS_IDENTIFIER(nodeLiteral) && parseIdentifierToValue(interpreter, &nodeLiteral)) {
-		freeLiteral(nodeIdn);
+	Toy_Literal nodeIdn = nodeLiteral;
+	if (TOY_IS_IDENTIFIER(nodeLiteral) && Toy_parseIdentifierToValue(interpreter, &nodeLiteral)) {
+		Toy_freeLiteral(nodeIdn);
 	}
 
-	Literal xi = x;
-	if (IS_IDENTIFIER(x) && parseIdentifierToValue(interpreter, &x)) {
-		freeLiteral(xi);
+	Toy_Literal xi = x;
+	if (TOY_IS_IDENTIFIER(x) && Toy_parseIdentifierToValue(interpreter, &x)) {
+		Toy_freeLiteral(xi);
 	}
 
-	Literal yi = y;
-	if (IS_IDENTIFIER(y) && parseIdentifierToValue(interpreter, &y)) {
-		freeLiteral(yi);
+	Toy_Literal yi = y;
+	if (TOY_IS_IDENTIFIER(y) && Toy_parseIdentifierToValue(interpreter, &y)) {
+		Toy_freeLiteral(yi);
 	}
 
-	Literal wi = w;
-	if (IS_IDENTIFIER(w) && parseIdentifierToValue(interpreter, &w)) {
-		freeLiteral(wi);
+	Toy_Literal wi = w;
+	if (TOY_IS_IDENTIFIER(w) && Toy_parseIdentifierToValue(interpreter, &w)) {
+		Toy_freeLiteral(wi);
 	}
 
-	Literal hi = h;
-	if (IS_IDENTIFIER(h) && parseIdentifierToValue(interpreter, &h)) {
-		freeLiteral(hi);
+	Toy_Literal hi = h;
+	if (TOY_IS_IDENTIFIER(h) && Toy_parseIdentifierToValue(interpreter, &h)) {
+		Toy_freeLiteral(hi);
 	}
 
 	//check argument types
-	if (!IS_OPAQUE(nodeLiteral) || !IS_INTEGER(x) || !IS_INTEGER(y) || (!IS_INTEGER(w) && !IS_NULL(w)) || (!IS_INTEGER(h) && !IS_NULL(h))) {
+	if (!TOY_IS_OPAQUE(nodeLiteral) || !TOY_IS_INTEGER(x) || !TOY_IS_INTEGER(y) || (!TOY_IS_INTEGER(w) && !TOY_IS_NULL(w)) || (!TOY_IS_INTEGER(h) && !TOY_IS_NULL(h))) {
 		interpreter->errorOutput("Incorrect argument type passed to drawEngineNode\n");
-		freeLiteral(nodeLiteral);
-		freeLiteral(x);
-		freeLiteral(y);
-		freeLiteral(w);
-		freeLiteral(h);
+		Toy_freeLiteral(nodeLiteral);
+		Toy_freeLiteral(x);
+		Toy_freeLiteral(y);
+		Toy_freeLiteral(w);
+		Toy_freeLiteral(h);
 		return -1;
 	}
 
 	//actually render
-	EngineNode* node = (EngineNode*)AS_OPAQUE(nodeLiteral);
+	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
 
-	SDL_Rect r = {AS_INTEGER(x), AS_INTEGER(y), 0, 0};
-	if (IS_INTEGER(w) && IS_INTEGER(h)) {
-		r.w = AS_INTEGER(w);
-		r.h = AS_INTEGER(h);
+	SDL_Rect r = {TOY_AS_INTEGER(x), TOY_AS_INTEGER(y), 0, 0};
+	if (TOY_IS_INTEGER(w) && TOY_IS_INTEGER(h)) {
+		r.w = TOY_AS_INTEGER(w);
+		r.h = TOY_AS_INTEGER(h);
 	}
 	else {
 		r.w = node->rect.w;
 		r.h = node->rect.h;
 	}
 
-	drawEngineNode(node, r);
+	Box_drawEngineNode(node, r);
 
 	//cleanup
-	freeLiteral(nodeLiteral);
-	freeLiteral(x);
-	freeLiteral(y);
-	freeLiteral(w);
-	freeLiteral(h);
+	Toy_freeLiteral(nodeLiteral);
+	Toy_freeLiteral(x);
+	Toy_freeLiteral(y);
+	Toy_freeLiteral(w);
+	Toy_freeLiteral(h);
 	return 0;
 }
 
-static int nativeGetNodeTag(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeGetNodeTag(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//checks
 	if (arguments->count != 1) {
 		interpreter->errorOutput("Incorrect number of arguments passed to getNodeTag\n");
 		return -1;
 	}
 
-	Literal nodeLiteral = popLiteralArray(arguments);
+	Toy_Literal nodeLiteral = Toy_popLiteralArray(arguments);
 
-	Literal nodeIdn = nodeLiteral;
-	if (IS_IDENTIFIER(nodeLiteral) && parseIdentifierToValue(interpreter, &nodeLiteral)) {
-		freeLiteral(nodeIdn);
+	Toy_Literal nodeIdn = nodeLiteral;
+	if (TOY_IS_IDENTIFIER(nodeLiteral) && Toy_parseIdentifierToValue(interpreter, &nodeLiteral)) {
+		Toy_freeLiteral(nodeIdn);
 	}
 
-	if (!IS_OPAQUE(nodeLiteral)) {
+	if (!TOY_IS_OPAQUE(nodeLiteral)) {
 		interpreter->errorOutput("Incorrect argument type passed to getNodeTag\n");
-		freeLiteral(nodeLiteral);
+		Toy_freeLiteral(nodeLiteral);
 		return -1;
 	}
 
 	//push the tag
-	Literal tagLiteral = TO_INTEGER_LITERAL( ((EngineNode*)AS_OPAQUE(nodeLiteral))->tag );
+	Toy_Literal tagLiteral = TOY_TO_INTEGER_LITERAL( ((Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral))->tag );
 
-	pushLiteralArray(&interpreter->stack, tagLiteral);
+	Toy_pushLiteralArray(&interpreter->stack, tagLiteral);
 
 	//cleanup
-	freeLiteral(nodeLiteral);
-	freeLiteral(tagLiteral);
+	Toy_freeLiteral(nodeLiteral);
+	Toy_freeLiteral(tagLiteral);
 
 	return 1;
 }
 
-static int nativeCallNode(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeCallNode(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//checks
 	if (arguments->count < 2) {
 		interpreter->errorOutput("Too few arguments passed to callEngineNode\n");
 		return -1;
 	}
 
-	LiteralArray extraArgs;
-	initLiteralArray(&extraArgs);
+	Toy_LiteralArray extraArgs;
+	Toy_initLiteralArray(&extraArgs);
 
-	LiteralArray flippedExtraArgs;
-	initLiteralArray(&flippedExtraArgs);
+	Toy_LiteralArray flippedExtraArgs;
+	Toy_initLiteralArray(&flippedExtraArgs);
 
 	//extract the extra arg values
 	while (arguments->count > 2) {
-		Literal tmp = popLiteralArray(arguments);
+		Toy_Literal tmp = Toy_popLiteralArray(arguments);
 
-		Literal idn = tmp; //there's almost certainly a better way of doing all of this stuff
-		if (IS_IDENTIFIER(tmp) && parseIdentifierToValue(interpreter, &tmp)) {
-			freeLiteral(idn);
+		Toy_Literal idn = tmp; //there's almost certainly a better way of doing all of this stuff
+		if (TOY_IS_IDENTIFIER(tmp) && Toy_parseIdentifierToValue(interpreter, &tmp)) {
+			Toy_freeLiteral(idn);
 		}
 
-		pushLiteralArray(&flippedExtraArgs, tmp);
-		freeLiteral(tmp);
+		Toy_pushLiteralArray(&flippedExtraArgs, tmp);
+		Toy_freeLiteral(tmp);
 	}
 
 	//correct the order
 	while (flippedExtraArgs.count) {
-		Literal tmp = popLiteralArray(&flippedExtraArgs);
-		pushLiteralArray(&extraArgs, tmp);
-		freeLiteral(tmp);
+		Toy_Literal tmp = Toy_popLiteralArray(&flippedExtraArgs);
+		Toy_pushLiteralArray(&extraArgs, tmp);
+		Toy_freeLiteral(tmp);
 	}
 
-	freeLiteralArray(&flippedExtraArgs);
+	Toy_freeLiteralArray(&flippedExtraArgs);
 
 	//back on track
-	Literal fnName = popLiteralArray(arguments);
-	Literal nodeLiteral = popLiteralArray(arguments);
+	Toy_Literal fnName = Toy_popLiteralArray(arguments);
+	Toy_Literal nodeLiteral = Toy_popLiteralArray(arguments);
 
-	Literal nodeIdn = nodeLiteral;
-	if (IS_IDENTIFIER(nodeLiteral) && parseIdentifierToValue(interpreter, &nodeLiteral)) {
-		freeLiteral(nodeIdn);
+	Toy_Literal nodeIdn = nodeLiteral;
+	if (TOY_IS_IDENTIFIER(nodeLiteral) && Toy_parseIdentifierToValue(interpreter, &nodeLiteral)) {
+		Toy_freeLiteral(nodeIdn);
 	}
 
-	Literal fnNameIdn = fnName;
-	if (IS_IDENTIFIER(fnName) && parseIdentifierToValue(interpreter, &fnName)) {
-		freeLiteral(fnNameIdn);
+	Toy_Literal fnNameIdn = fnName;
+	if (TOY_IS_IDENTIFIER(fnName) && Toy_parseIdentifierToValue(interpreter, &fnName)) {
+		Toy_freeLiteral(fnNameIdn);
 	}
 
-	if (!IS_OPAQUE(nodeLiteral) || !IS_STRING(fnName)) {
+	if (!TOY_IS_OPAQUE(nodeLiteral) || !TOY_IS_STRING(fnName)) {
 		interpreter->errorOutput("Incorrect argument type passed to callEngineNode\n");
-		freeLiteral(nodeLiteral);
-		freeLiteral(fnName);
+		Toy_freeLiteral(nodeLiteral);
+		Toy_freeLiteral(fnName);
 		return -1;
 	}
 
 	//allow refstring to do it's magic
-	Literal fnNameIdentifier = TO_IDENTIFIER_LITERAL(copyRefString(AS_STRING(fnName)));
+	Toy_Literal fnNameIdentifier = TOY_TO_IDENTIFIER_LITERAL(Toy_copyRefString(TOY_AS_STRING(fnName)));
 
 	//call the function
-	Literal result = callEngineNodeLiteral(AS_OPAQUE(nodeLiteral), interpreter, fnNameIdentifier, &extraArgs);
+	Toy_Literal result = Box_callEngineNodeLiteral(TOY_AS_OPAQUE(nodeLiteral), interpreter, fnNameIdentifier, &extraArgs);
 
-	pushLiteralArray(&interpreter->stack, result);
+	Toy_pushLiteralArray(&interpreter->stack, result);
 
 	//cleanup
-	freeLiteralArray(&extraArgs);
-	freeLiteral(nodeLiteral);
-	freeLiteral(fnName);
-	freeLiteral(result);
+	Toy_freeLiteralArray(&extraArgs);
+	Toy_freeLiteral(nodeLiteral);
+	Toy_freeLiteral(fnName);
+	Toy_freeLiteral(result);
 
 	return 1;
 }
@@ -606,10 +606,10 @@ static int nativeCallNode(Interpreter* interpreter, LiteralArray* arguments) {
 //call the hook
 typedef struct Natives {
 	char* name;
-	NativeFn fn;
+	Toy_NativeFn fn;
 } Natives;
 
-int hookNode(Interpreter* interpreter, Literal identifier, Literal alias) {
+int Box_hookNode(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Literal alias) {
 	//build the natives list
 	Natives natives[] = {
 		{"loadNode", nativeLoadNode},
@@ -628,51 +628,51 @@ int hookNode(Interpreter* interpreter, Literal identifier, Literal alias) {
 	};
 
 	//store the library in an aliased dictionary
-	if (!IS_NULL(alias)) {
+	if (!TOY_IS_NULL(alias)) {
 		//make sure the name isn't taken
-		if (isDelcaredScopeVariable(interpreter->scope, alias)) {
+		if (Toy_isDelcaredScopeVariable(interpreter->scope, alias)) {
 			interpreter->errorOutput("Can't override an existing variable\n");
-			freeLiteral(alias);
+			Toy_freeLiteral(alias);
 			return false;
 		}
 
 		//create the dictionary to load up with functions
-		LiteralDictionary* dictionary = ALLOCATE(LiteralDictionary, 1);
-		initLiteralDictionary(dictionary);
+		Toy_LiteralDictionary* dictionary = TOY_ALLOCATE(Toy_LiteralDictionary, 1);
+		Toy_initLiteralDictionary(dictionary);
 
 		//load the dict with functions
 		for (int i = 0; natives[i].name; i++) {
-			Literal name = TO_STRING_LITERAL(createRefString(natives[i].name));
-			Literal func = TO_FUNCTION_LITERAL((void*)natives[i].fn, 0);
-			func.type = LITERAL_FUNCTION_NATIVE;
+			Toy_Literal name = TOY_TO_STRING_LITERAL(Toy_createRefString(natives[i].name));
+			Toy_Literal func = TOY_TO_FUNCTION_LITERAL((void*)natives[i].fn, 0);
+			func.type = TOY_LITERAL_FUNCTION_NATIVE;
 
-			setLiteralDictionary(dictionary, name, func);
+			Toy_setLiteralDictionary(dictionary, name, func);
 
-			freeLiteral(name);
-			freeLiteral(func);
+			Toy_freeLiteral(name);
+			Toy_freeLiteral(func);
 		}
 
 		//build the type
-		Literal type = TO_TYPE_LITERAL(LITERAL_DICTIONARY, true);
-		Literal strType = TO_TYPE_LITERAL(LITERAL_STRING, true);
-		Literal fnType = TO_TYPE_LITERAL(LITERAL_FUNCTION_NATIVE, true);
-		TYPE_PUSH_SUBTYPE(&type, strType);
-		TYPE_PUSH_SUBTYPE(&type, fnType);
+		Toy_Literal type = TOY_TO_TYPE_LITERAL(TOY_LITERAL_DICTIONARY, true);
+		Toy_Literal strType = TOY_TO_TYPE_LITERAL(TOY_LITERAL_STRING, true);
+		Toy_Literal fnType = TOY_TO_TYPE_LITERAL(TOY_LITERAL_FUNCTION_NATIVE, true);
+		TOY_TYPE_PUSH_SUBTYPE(&type, strType);
+		TOY_TYPE_PUSH_SUBTYPE(&type, fnType);
 
 		//set scope
-		Literal dict = TO_DICTIONARY_LITERAL(dictionary);
-		declareScopeVariable(interpreter->scope, alias, type);
-		setScopeVariable(interpreter->scope, alias, dict, false);
+		Toy_Literal dict = TOY_TO_DICTIONARY_LITERAL(dictionary);
+		Toy_declareScopeVariable(interpreter->scope, alias, type);
+		Toy_setScopeVariable(interpreter->scope, alias, dict, false);
 
 		//cleanup
-		freeLiteral(dict);
-		freeLiteral(type);
+		Toy_freeLiteral(dict);
+		Toy_freeLiteral(type);
 		return 0;
 	}
 
 	//default
 	for (int i = 0; natives[i].name; i++) {
-		injectNativeFn(interpreter, natives[i].name, natives[i].fn);
+		Toy_injectNativeFn(interpreter, natives[i].name, natives[i].fn);
 	}
 
 	return 0;

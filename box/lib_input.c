@@ -1,11 +1,11 @@
 #include "lib_input.h"
 
-#include "memory.h"
+#include "box_common.h"
+#include "box_engine.h"
 
-#include "engine.h"
-#include "core_common.h"
+#include "toy_memory.h"
 
-static int nativeMapInputEventToKey(Interpreter* interpreter, LiteralArray* arguments, LiteralDictionary* symKeyEventsPtr, char* fnName) {
+static int nativeMapInputEventToKey(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments, Toy_LiteralDictionary* symKeyEventsPtr, char* fnName) {
 	//checks
 	if (arguments->count != 2) {
 		interpreter->errorOutput("Incorrect number of arguments passed to ");
@@ -14,26 +14,26 @@ static int nativeMapInputEventToKey(Interpreter* interpreter, LiteralArray* argu
 		return -1;
 	}
 
-	Literal symLiteral = popLiteralArray(arguments);
-	Literal evtLiteral = popLiteralArray(arguments);
+	Toy_Literal symLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal evtLiteral = Toy_popLiteralArray(arguments);
 
-	Literal evtLiteralIdn = evtLiteral;
-	if (IS_IDENTIFIER(evtLiteral) && parseIdentifierToValue(interpreter, &evtLiteral)) {
-		freeLiteral(evtLiteralIdn);
+	Toy_Literal evtLiteralIdn = evtLiteral;
+	if (TOY_IS_IDENTIFIER(evtLiteral) && Toy_parseIdentifierToValue(interpreter, &evtLiteral)) {
+		Toy_freeLiteral(evtLiteralIdn);
 	}
 
-	Literal symLiteralIdn = symLiteral;
-	if (IS_IDENTIFIER(symLiteral) && parseIdentifierToValue(interpreter, &symLiteral)) {
-		freeLiteral(symLiteralIdn);
+	Toy_Literal symLiteralIdn = symLiteral;
+	if (TOY_IS_IDENTIFIER(symLiteral) && Toy_parseIdentifierToValue(interpreter, &symLiteral)) {
+		Toy_freeLiteral(symLiteralIdn);
 	}
 
-	if (!IS_STRING(symLiteral) || !IS_STRING(evtLiteral)) {
+	if (!TOY_IS_STRING(symLiteral) || !TOY_IS_STRING(evtLiteral)) {
 		interpreter->errorOutput("Incorrect type of arguments passed to mapInputEventToKey\n");
 		return -1;
 	}
 
 	//use the keycode for faster lookups
-	SDL_Keycode keycode = SDL_GetKeyFromName( toCString(AS_STRING(symLiteral)) );
+	SDL_Keycode keycode = SDL_GetKeyFromName( Toy_toCString(TOY_AS_STRING(symLiteral)) );
 
 	if (keycode == SDLK_UNKNOWN) {
 		interpreter->errorOutput("Unknown key found: ");
@@ -42,35 +42,35 @@ static int nativeMapInputEventToKey(Interpreter* interpreter, LiteralArray* argu
 		return -1;
 	}
 
-	Literal keycodeLiteral = TO_INTEGER_LITERAL( (int)keycode );
+	Toy_Literal keycodeLiteral = TOY_TO_INTEGER_LITERAL( (int)keycode );
 
 	//save the sym-event pair
-	setLiteralDictionary(symKeyEventsPtr, keycodeLiteral, evtLiteral); //I could possibly map multiple events to one sym
+	Toy_setLiteralDictionary(symKeyEventsPtr, keycodeLiteral, evtLiteral); //I could possibly map multiple events to one sym
 
 	//cleanup
-	freeLiteral(symLiteral);
-	freeLiteral(evtLiteral);
-	freeLiteral(keycodeLiteral);
+	Toy_freeLiteral(symLiteral);
+	Toy_freeLiteral(evtLiteral);
+	Toy_freeLiteral(keycodeLiteral);
 
 	return 0;
 }
 
 //dry wrappers
-static int nativeMapInputEventToKeyDown(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeMapInputEventToKeyDown(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	return nativeMapInputEventToKey(interpreter, arguments, &engine.symKeyDownEvents, "mapInputEventToKeyDown");
 }
 
-static int nativeMapInputEventToKeyUp(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeMapInputEventToKeyUp(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	return nativeMapInputEventToKey(interpreter, arguments, &engine.symKeyUpEvents, "mapInputEventToKeyUp");
 }
 
 //call the hook
 typedef struct Natives {
 	char* name;
-	NativeFn fn;
+	Toy_NativeFn fn;
 } Natives;
 
-int hookInput(Interpreter* interpreter, Literal identifier, Literal alias) {
+int Box_hookInput(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Literal alias) {
 	//build the natives list
 	Natives natives[] = {
 		{"mapInputEventToKeyDown", nativeMapInputEventToKeyDown},
@@ -80,51 +80,51 @@ int hookInput(Interpreter* interpreter, Literal identifier, Literal alias) {
 	};
 
 	//store the library in an aliased dictionary
-	if (!IS_NULL(alias)) {
+	if (!TOY_IS_NULL(alias)) {
 		//make sure the name isn't taken
-		if (isDelcaredScopeVariable(interpreter->scope, alias)) {
+		if (Toy_isDelcaredScopeVariable(interpreter->scope, alias)) {
 			interpreter->errorOutput("Can't override an existing variable\n");
-			freeLiteral(alias);
+			Toy_freeLiteral(alias);
 			return false;
 		}
 
 		//create the dictionary to load up with functions
-		LiteralDictionary* dictionary = ALLOCATE(LiteralDictionary, 1);
-		initLiteralDictionary(dictionary);
+		Toy_LiteralDictionary* dictionary = TOY_ALLOCATE(Toy_LiteralDictionary, 1);
+		Toy_initLiteralDictionary(dictionary);
 
 		//load the dict with functions
 		for (int i = 0; natives[i].name; i++) {
-			Literal name = TO_STRING_LITERAL(createRefString(natives[i].name));
-			Literal func = TO_FUNCTION_LITERAL((void*)natives[i].fn, 0);
-			func.type = LITERAL_FUNCTION_NATIVE;
+			Toy_Literal name = TOY_TO_STRING_LITERAL(Toy_createRefString(natives[i].name));
+			Toy_Literal func = TOY_TO_FUNCTION_LITERAL((void*)natives[i].fn, 0);
+			func.type = TOY_LITERAL_FUNCTION_NATIVE;
 
-			setLiteralDictionary(dictionary, name, func);
+			Toy_setLiteralDictionary(dictionary, name, func);
 
-			freeLiteral(name);
-			freeLiteral(func);
+			Toy_freeLiteral(name);
+			Toy_freeLiteral(func);
 		}
 
 		//build the type
-		Literal type = TO_TYPE_LITERAL(LITERAL_DICTIONARY, true);
-		Literal strType = TO_TYPE_LITERAL(LITERAL_STRING, true);
-		Literal fnType = TO_TYPE_LITERAL(LITERAL_FUNCTION_NATIVE, true);
-		TYPE_PUSH_SUBTYPE(&type, strType);
-		TYPE_PUSH_SUBTYPE(&type, fnType);
+		Toy_Literal type = TOY_TO_TYPE_LITERAL(TOY_LITERAL_DICTIONARY, true);
+		Toy_Literal strType = TOY_TO_TYPE_LITERAL(TOY_LITERAL_STRING, true);
+		Toy_Literal fnType = TOY_TO_TYPE_LITERAL(TOY_LITERAL_FUNCTION_NATIVE, true);
+		TOY_TYPE_PUSH_SUBTYPE(&type, strType);
+		TOY_TYPE_PUSH_SUBTYPE(&type, fnType);
 
 		//set scope
-		Literal dict = TO_DICTIONARY_LITERAL(dictionary);
-		declareScopeVariable(interpreter->scope, alias, type);
-		setScopeVariable(interpreter->scope, alias, dict, false);
+		Toy_Literal dict = TOY_TO_DICTIONARY_LITERAL(dictionary);
+		Toy_declareScopeVariable(interpreter->scope, alias, type);
+		Toy_setScopeVariable(interpreter->scope, alias, dict, false);
 
 		//cleanup
-		freeLiteral(dict);
-		freeLiteral(type);
+		Toy_freeLiteral(dict);
+		Toy_freeLiteral(type);
 		return 0;
 	}
 
 	//default
 	for (int i = 0; natives[i].name; i++) {
-		injectNativeFn(interpreter, natives[i].name, natives[i].fn);
+		Toy_injectNativeFn(interpreter, natives[i].name, natives[i].fn);
 	}
 
 	return 0;

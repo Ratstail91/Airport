@@ -9,10 +9,10 @@
 
 //platform exports/imports
 #if defined(__linux__)
-#define CORE_API extern
+#define BOX_API extern
 
 #else
-#define CORE_API
+#define BOX_API
 
 #endif
 

@@ -1,26 +1,24 @@
 #pragma once
 
-#include "core_common.h"
-#include "engine_node.h"
-#include "interpreter.h"
+#include "box_common.h"
+#include "box_engine_node.h"
 
-#include "literal_array.h"
-#include "literal_dictionary.h"
-
-#include "core_common.h"
+#include "toy_interpreter.h"
+#include "toy_literal_array.h"
+#include "toy_literal_dictionary.h"
 
 #include <sys/time.h>
 
 //the base engine object, which represents the state of the game
-typedef struct _engine {
+typedef struct Box_private_engine {
 	//engine stuff
-	EngineNode* rootNode;
+	Box_EngineNode* rootNode;
 	struct timeval simTime;
 	struct timeval realTime;
 	bool running;
 
 	//Toy stuff
-	Interpreter interpreter;
+	Toy_Interpreter interpreter;
 
 	//SDL stuff
 	SDL_Window* window;
@@ -29,18 +27,18 @@ typedef struct _engine {
 	int screenHeight;
 
 	//input syms mapped to events
-	LiteralArray keyDownEvents; //list of events that occurred this frame
-	LiteralDictionary symKeyDownEvents; //keysym -> event names
+	Toy_LiteralArray keyDownEvents; //list of events that occurred this frame
+	Toy_LiteralDictionary symKeyDownEvents; //keysym -> event names
 
-	LiteralArray keyUpEvents; //list of events that occurred this frame
-	LiteralDictionary symKeyUpEvents; //keysym -> event names
-} Engine;
+	Toy_LiteralArray keyUpEvents; //list of events that occurred this frame
+	Toy_LiteralDictionary symKeyUpEvents; //keysym -> event names
+} Box_Engine;
 
 //extern singleton - used by various libraries
-extern Engine engine;
+extern Box_Engine engine;
 
 //APIs for running the engine in main()
-CORE_API void initEngine();
-CORE_API void execEngine();
-CORE_API void freeEngine();
+BOX_API void Box_initEngine();
+BOX_API void Box_execEngine();
+BOX_API void Box_freeEngine();
 

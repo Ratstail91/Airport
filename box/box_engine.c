@@ -1,4 +1,4 @@
-#include "engine.h"
+#include "box_engine.h"
 
 #include "lib_engine.h"
 #include "lib_input.h"
@@ -8,31 +8,31 @@
 #include "lib_runner.h"
 #include "repl_tools.h"
 
-#include "memory.h"
-#include "lexer.h"
-#include "parser.h"
-#include "compiler.h"
-#include "interpreter.h"
-#include "literal_array.h"
-#include "literal_dictionary.h"
+#include "toy_memory.h"
+#include "toy_lexer.h"
+#include "toy_parser.h"
+#include "toy_compiler.h"
+#include "toy_interpreter.h"
+#include "toy_literal_array.h"
+#include "toy_literal_dictionary.h"
 
-#include "console_colors.h"
+#include "toy_console_colors.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 //define the extern engine object
-Engine engine;
+Box_Engine engine;
 
 //errors here should be fatal
 static void fatalError(char* message) {
-	fprintf(stderr, "%s", message);
+	fprintf(stderr, TOY_CC_ERROR "%s" TOY_CC_RESET, message);
 	exit(-1);
 }
 
 //exposed functions
-void initEngine() {
+void Box_initEngine() {
 	//clear
 	engine.rootNode = NULL;
 	engine.running = false;
@@ -45,45 +45,45 @@ void initEngine() {
 	}
 
 	//init events
-	initLiteralArray(&engine.keyDownEvents);
-	initLiteralDictionary(&engine.symKeyDownEvents);
-	initLiteralArray(&engine.keyUpEvents);
-	initLiteralDictionary(&engine.symKeyUpEvents);
+	Toy_initLiteralArray(&engine.keyDownEvents);
+	Toy_initLiteralDictionary(&engine.symKeyDownEvents);
+	Toy_initLiteralArray(&engine.keyUpEvents);
+	Toy_initLiteralDictionary(&engine.symKeyUpEvents);
 
 	//init Toy
-	initInterpreter(&engine.interpreter);
-	injectNativeHook(&engine.interpreter, "engine", hookEngine);
-	injectNativeHook(&engine.interpreter, "node", hookNode);
-	injectNativeHook(&engine.interpreter, "input", hookInput);
-	injectNativeHook(&engine.interpreter, "standard", hookStandard);
-	injectNativeHook(&engine.interpreter, "timer", hookTimer);
-	injectNativeHook(&engine.interpreter, "runner", hookRunner);
+	Toy_initInterpreter(&engine.interpreter);
+	Toy_injectNativeHook(&engine.interpreter, "engine", Box_hookEngine);
+	Toy_injectNativeHook(&engine.interpreter, "node", Box_hookNode);
+	Toy_injectNativeHook(&engine.interpreter, "input", Box_hookInput);
+	Toy_injectNativeHook(&engine.interpreter, "standard", Toy_hookStandard);
+	Toy_injectNativeHook(&engine.interpreter, "timer", Toy_hookTimer);
+	Toy_injectNativeHook(&engine.interpreter, "runner", Toy_hookRunner);
 
 	size_t size = 0;
-	char* source = readFile("./assets/scripts/init.toy", &size);
-	unsigned char* tb = compileString(source, &size);
+	char* source = Toy_readFile("./assets/scripts/init.toy", &size);
+	unsigned char* tb = Toy_compileString(source, &size);
 	free((void*)source);
 
-	runInterpreter(&engine.interpreter, tb, size);
+	Toy_runInterpreter(&engine.interpreter, tb, size);
 }
 
-void freeEngine() {
+void Box_freeEngine() {
 	//clear existing root node
 	if (engine.rootNode != NULL) {
-		callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onFree", NULL);
+		Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onFree", NULL);
 
-		freeEngineNode(engine.rootNode);
+		Box_freeEngineNode(engine.rootNode);
 
 		engine.rootNode = NULL;
 	}
 
-	freeInterpreter(&engine.interpreter);
+	Toy_freeInterpreter(&engine.interpreter);
 
 	//free events
-	freeLiteralArray(&engine.keyDownEvents);
-	freeLiteralDictionary(&engine.symKeyDownEvents);
-	freeLiteralArray(&engine.keyUpEvents);
-	freeLiteralDictionary(&engine.symKeyUpEvents);
+	Toy_freeLiteralArray(&engine.keyDownEvents);
+	Toy_freeLiteralDictionary(&engine.symKeyDownEvents);
+	Toy_freeLiteralArray(&engine.keyUpEvents);
+	Toy_freeLiteralDictionary(&engine.symKeyUpEvents);
 
 	//free SDL
 	SDL_DestroyRenderer(engine.renderer);
@@ -97,13 +97,13 @@ void freeEngine() {
 static void execEvents() {
 	//clear event lists
 	if (engine.keyDownEvents.count > 0) {
-		freeLiteralArray(&engine.keyDownEvents);
+		Toy_freeLiteralArray(&engine.keyDownEvents);
 		//NOTE: this is likely memory intensive - a more bespoke linked list designed for this task would be better
 		//NOTE: alternatively - manual memory-wipes, skipping the free step could be better
 	}
 
 	if (engine.keyUpEvents.count > 0) {
-		freeLiteralArray(&engine.keyUpEvents);
+		Toy_freeLiteralArray(&engine.keyUpEvents);
 	}
 
 	//poll all events
@@ -136,16 +136,16 @@ static void execEvents() {
 				}
 
 				//determine the given keycode
-				Literal keycodeLiteral = TO_INTEGER_LITERAL( (int)(event.key.keysym.sym) );
-				if (!existsLiteralDictionary(&engine.symKeyDownEvents, keycodeLiteral)) {
+				Toy_Literal keycodeLiteral = TOY_TO_INTEGER_LITERAL( (int)(event.key.keysym.sym) );
+				if (!Toy_existsLiteralDictionary(&engine.symKeyDownEvents, keycodeLiteral)) {
 					break;
 				}
 
 				//get the event name
-				Literal eventLiteral = getLiteralDictionary(&engine.symKeyDownEvents, keycodeLiteral);
+				Toy_Literal eventLiteral = Toy_getLiteralDictionary(&engine.symKeyDownEvents, keycodeLiteral);
 
 				//push to the event list
-				pushLiteralArray(&engine.keyDownEvents, eventLiteral);
+				Toy_pushLiteralArray(&engine.keyDownEvents, eventLiteral);
 			}
 			break;
 
@@ -156,16 +156,16 @@ static void execEvents() {
 				}
 
 				//determine the given keycode
-				Literal keycodeLiteral = TO_INTEGER_LITERAL( (int)(event.key.keysym.sym) );
-				if (!existsLiteralDictionary(&engine.symKeyUpEvents, keycodeLiteral)) {
+				Toy_Literal keycodeLiteral = TOY_TO_INTEGER_LITERAL( (int)(event.key.keysym.sym) );
+				if (!Toy_existsLiteralDictionary(&engine.symKeyUpEvents, keycodeLiteral)) {
 					break;
 				}
 
 				//get the event name
-				Literal eventLiteral = getLiteralDictionary(&engine.symKeyUpEvents, keycodeLiteral);
+				Toy_Literal eventLiteral = Toy_getLiteralDictionary(&engine.symKeyUpEvents, keycodeLiteral);
 
 				//push to the event list
-				pushLiteralArray(&engine.keyUpEvents, eventLiteral);
+				Toy_pushLiteralArray(&engine.keyUpEvents, eventLiteral);
 			}
 			break;
 		}
@@ -175,20 +175,20 @@ static void execEvents() {
 	if (engine.rootNode != NULL) {
 		//key down events
 		for (int i = 0; i < engine.keyDownEvents.count; i++) { //TODO: could pass in the whole array?
-			LiteralArray args;
-			initLiteralArray(&args);
-			pushLiteralArray(&args, engine.keyDownEvents.literals[i]);
-			callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onKeyDown", &args);
-			freeLiteralArray(&args);
+			Toy_LiteralArray args;
+			Toy_initLiteralArray(&args);
+			Toy_pushLiteralArray(&args, engine.keyDownEvents.literals[i]);
+			Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onKeyDown", &args);
+			Toy_freeLiteralArray(&args);
 		}
 
 		//key up events
 		for (int i = 0; i < engine.keyUpEvents.count; i++) {
-			LiteralArray args;
-			initLiteralArray(&args);
-			pushLiteralArray(&args, engine.keyUpEvents.literals[i]);
-			callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onKeyUp", &args);
-			freeLiteralArray(&args);
+			Toy_LiteralArray args;
+			Toy_initLiteralArray(&args);
+			Toy_pushLiteralArray(&args, engine.keyUpEvents.literals[i]);
+			Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onKeyUp", &args);
+			Toy_freeLiteralArray(&args);
 		}
 	}
 }
@@ -196,12 +196,12 @@ static void execEvents() {
 void execStep() {
 	if (engine.rootNode != NULL) {
 		//steps
-		callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onStep", NULL);
+		Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onStep", NULL);
 	}
 }
 
 //the heart of the engine
-void execEngine() {
+void Box_execEngine() {
 	if (!engine.running) {
 		fatalError("Can't execute the engine (did you forget to initialize the screen?)");
 	}
@@ -236,7 +236,7 @@ void execEngine() {
 		SDL_SetRenderDrawColor(engine.renderer, 0, 0, 0, 255); //NOTE: This line can be disabled later
 		SDL_RenderClear(engine.renderer); //NOTE: This line can be disabled later
 
-		callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onDraw", NULL);
+		Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onDraw", NULL);
 
 		SDL_RenderPresent(engine.renderer);
 	}

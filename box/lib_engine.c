@@ -1,19 +1,21 @@
 #include "lib_engine.h"
 
-#include "engine.h"
-#include "repl_tools.h"
+#include "box_engine.h"
 
-#include "memory.h"
-#include "literal_array.h"
+#include "repl_tools.h"
+#include "toy_memory.h"
+#include "toy_literal_array.h"
+
+#include "toy_console_colors.h"
 
 //errors here should be fatal
 static void fatalError(char* message) {
-	fprintf(stderr, "%s", message);
+	fprintf(stderr, TOY_CC_ERROR "%s" TOY_CC_RESET, message);
 	exit(-1);
 }
 
 //native functions to be called
-static int nativeInitWindow(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeInitWindow(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (engine.window != NULL) {
 		fatalError("Can't re-initialize the window\n");
 	}
@@ -23,24 +25,24 @@ static int nativeInitWindow(Interpreter* interpreter, LiteralArray* arguments) {
 	}
 
 	//extract the arguments
-	Literal fscreen = popLiteralArray(arguments);
-	Literal screenHeight = popLiteralArray(arguments);
-	Literal screenWidth = popLiteralArray(arguments);
-	Literal caption = popLiteralArray(arguments);
+	Toy_Literal fscreen = Toy_popLiteralArray(arguments);
+	Toy_Literal screenHeight = Toy_popLiteralArray(arguments);
+	Toy_Literal screenWidth = Toy_popLiteralArray(arguments);
+	Toy_Literal caption = Toy_popLiteralArray(arguments);
 
 	//check argument types
-	if (!IS_STRING(caption) || !IS_INTEGER(screenWidth) || !IS_INTEGER(screenHeight) || !IS_BOOLEAN(fscreen)) {
+	if (!TOY_IS_STRING(caption) || !TOY_IS_INTEGER(screenWidth) || !TOY_IS_INTEGER(screenHeight) || !TOY_IS_BOOLEAN(fscreen)) {
 		fatalError("Incorrect argument type passed to initEngine\n");
 	}
 
 	//init the window
 	engine.window = SDL_CreateWindow(
-		toCString(AS_STRING(caption)),
+		Toy_toCString(TOY_AS_STRING(caption)),
 		SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED,
-		engine.screenWidth = AS_INTEGER(screenWidth),
-		engine.screenHeight = AS_INTEGER(screenHeight),
-		IS_TRUTHY(fscreen) ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_RESIZABLE
+		engine.screenWidth = TOY_AS_INTEGER(screenWidth),
+		engine.screenHeight = TOY_AS_INTEGER(screenHeight),
+		TOY_IS_TRUTHY(fscreen) ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_RESIZABLE
 	);
 
 	if (engine.window == NULL) {
@@ -66,81 +68,81 @@ static int nativeInitWindow(Interpreter* interpreter, LiteralArray* arguments) {
 	//only run with a window
 	engine.running = true;
 
-	freeLiteral(caption);
-	freeLiteral(screenWidth);
-	freeLiteral(screenHeight);
-	freeLiteral(fscreen);
+	Toy_freeLiteral(caption);
+	Toy_freeLiteral(screenWidth);
+	Toy_freeLiteral(screenHeight);
+	Toy_freeLiteral(fscreen);
 
 	return 0;
 }
 
 //TODO: perhaps a returns argument would be better?
-static int nativeLoadRootNode(Interpreter* interpreter, LiteralArray* arguments) {
+static int nativeLoadRootNode(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 1) {
 		interpreter->errorOutput("Incorrect number of arguments passed to loadRootNode\n");
 		return -1;
 	}
 
 	//extract the arguments
-	Literal fname = popLiteralArray(arguments);
+	Toy_Literal fname = Toy_popLiteralArray(arguments);
 
-	Literal fnameIdn = fname;
-	if (IS_IDENTIFIER(fname) && parseIdentifierToValue(interpreter, &fname)) {
-		freeLiteral(fnameIdn);
+	Toy_Literal fnameIdn = fname;
+	if (TOY_IS_IDENTIFIER(fname) && Toy_parseIdentifierToValue(interpreter, &fname)) {
+		Toy_freeLiteral(fnameIdn);
 	}
 
 	//check argument types
-	if (!IS_STRING(fname)) {
+	if (!TOY_IS_STRING(fname)) {
 		interpreter->errorOutput("Incorrect argument type passed to loadRootNode\n");
-		freeLiteral(fname);
+		Toy_freeLiteral(fname);
 		return -1;
 	}
 
 	//clear existing root node
 	if (engine.rootNode != NULL) {
-		callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onFree", NULL);
+		Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onFree", NULL);
 
-		freeEngineNode(engine.rootNode);
-		FREE(EngineNode, engine.rootNode);
+		Box_freeEngineNode(engine.rootNode);
+		TOY_FREE(Box_EngineNode, engine.rootNode);
 
 		engine.rootNode = NULL;
 	}
 
 	//load the new root node
 	size_t size = 0;
-	char* source = readFile(toCString(AS_STRING(fname)), &size);
-	unsigned char* tb = compileString(source, &size);
+	char* source = Toy_readFile(Toy_toCString(TOY_AS_STRING(fname)), &size);
+	unsigned char* tb = Toy_compileString(source, &size);
 	free((void*)source);
 
-	engine.rootNode = ALLOCATE(EngineNode, 1);
+	engine.rootNode = TOY_ALLOCATE(Box_EngineNode, 1);
 
 	//BUGFIX: make an inner-interpreter
-	Interpreter inner;
+	Toy_Interpreter inner;
 
 	//init the inner interpreter manually
-	initLiteralArray(&inner.literalCache);
-	inner.scope = pushScope(NULL);
+	Toy_initLiteralArray(&inner.literalCache);
+	inner.scope = Toy_pushScope(NULL);
 	inner.bytecode = tb;
 	inner.length = size;
 	inner.count = 0;
 	inner.codeStart = -1;
 	inner.depth = interpreter->depth + 1;
 	inner.panic = false;
-	initLiteralArray(&inner.stack);
+	Toy_initLiteralArray(&inner.stack);
 	inner.hooks = interpreter->hooks;
-	setInterpreterPrint(&inner, interpreter->printOutput);
-	setInterpreterAssert(&inner, interpreter->assertOutput);
-	setInterpreterError(&inner, interpreter->errorOutput);
+	Toy_setInterpreterPrint(&inner, interpreter->printOutput);
+	Toy_setInterpreterAssert(&inner, interpreter->assertOutput);
+	Toy_setInterpreterError(&inner, interpreter->errorOutput);
 
-	initEngineNode(engine.rootNode, &inner, tb, size);
+	Box_initEngineNode(engine.rootNode, &inner, tb, size);
 
 	//init the new node (and ONLY this node)
-	callEngineNode(engine.rootNode, &engine.interpreter, "onInit", NULL);
+	Box_callEngineNode(engine.rootNode, &engine.interpreter, "onInit", NULL);
 
 	//cleanup
-	freeLiteralArray(&inner.stack);
-	freeLiteralArray(&inner.literalCache);
-	freeLiteral(fname);
+	Toy_freeLiteralArray(&inner.stack);
+	Toy_freeLiteralArray(&inner.literalCache);
+	Toy_freeLiteral(fname);
 
 	return 0;
 }
@@ -148,10 +150,10 @@ static int nativeLoadRootNode(Interpreter* interpreter, LiteralArray* arguments)
 //call the hook
 typedef struct Natives {
 	char* name;
-	NativeFn fn;
+	Toy_NativeFn fn;
 } Natives;
 
-int hookEngine(Interpreter* interpreter, Literal identifier, Literal alias) {
+int Box_hookEngine(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Literal alias) {
 	//build the natives list
 	Natives natives[] = {
 		{"initWindow", nativeInitWindow},
@@ -160,51 +162,51 @@ int hookEngine(Interpreter* interpreter, Literal identifier, Literal alias) {
 	};
 
 	//store the library in an aliased dictionary
-	if (!IS_NULL(alias)) {
+	if (!TOY_IS_NULL(alias)) {
 		//make sure the name isn't taken
-		if (isDelcaredScopeVariable(interpreter->scope, alias)) {
+		if (Toy_isDelcaredScopeVariable(interpreter->scope, alias)) {
 			interpreter->errorOutput("Can't override an existing variable\n");
-			freeLiteral(alias);
+			Toy_freeLiteral(alias);
 			return false;
 		}
 
 		//create the dictionary to load up with functions
-		LiteralDictionary* dictionary = ALLOCATE(LiteralDictionary, 1);
-		initLiteralDictionary(dictionary);
+		Toy_LiteralDictionary* dictionary = TOY_ALLOCATE(Toy_LiteralDictionary, 1);
+		Toy_initLiteralDictionary(dictionary);
 
 		//load the dict with functions
 		for (int i = 0; natives[i].name; i++) {
-			Literal name = TO_STRING_LITERAL(createRefString(natives[i].name));
-			Literal func = TO_FUNCTION_LITERAL((void*)natives[i].fn, 0);
-			func.type = LITERAL_FUNCTION_NATIVE;
+			Toy_Literal name = TOY_TO_STRING_LITERAL(Toy_createRefString(natives[i].name));
+			Toy_Literal func = TOY_TO_FUNCTION_LITERAL((void*)natives[i].fn, 0);
+			func.type = TOY_LITERAL_FUNCTION_NATIVE;
 
-			setLiteralDictionary(dictionary, name, func);
+			Toy_setLiteralDictionary(dictionary, name, func);
 
-			freeLiteral(name);
-			freeLiteral(func);
+			Toy_freeLiteral(name);
+			Toy_freeLiteral(func);
 		}
 
 		//build the type
-		Literal type = TO_TYPE_LITERAL(LITERAL_DICTIONARY, true);
-		Literal strType = TO_TYPE_LITERAL(LITERAL_STRING, true);
-		Literal fnType = TO_TYPE_LITERAL(LITERAL_FUNCTION_NATIVE, true);
-		TYPE_PUSH_SUBTYPE(&type, strType);
-		TYPE_PUSH_SUBTYPE(&type, fnType);
+		Toy_Literal type = TOY_TO_TYPE_LITERAL(TOY_LITERAL_DICTIONARY, true);
+		Toy_Literal strType = TOY_TO_TYPE_LITERAL(TOY_LITERAL_STRING, true);
+		Toy_Literal fnType = TOY_TO_TYPE_LITERAL(TOY_LITERAL_FUNCTION_NATIVE, true);
+		TOY_TYPE_PUSH_SUBTYPE(&type, strType);
+		TOY_TYPE_PUSH_SUBTYPE(&type, fnType);
 
 		//set scope
-		Literal dict = TO_DICTIONARY_LITERAL(dictionary);
-		declareScopeVariable(interpreter->scope, alias, type);
-		setScopeVariable(interpreter->scope, alias, dict, false);
+		Toy_Literal dict = TOY_TO_DICTIONARY_LITERAL(dictionary);
+		Toy_declareScopeVariable(interpreter->scope, alias, type);
+		Toy_setScopeVariable(interpreter->scope, alias, dict, false);
 
 		//cleanup
-		freeLiteral(dict);
-		freeLiteral(type);
+		Toy_freeLiteral(dict);
+		Toy_freeLiteral(type);
 		return 0;
 	}
 
 	//default
 	for (int i = 0; natives[i].name; i++) {
-		injectNativeFn(interpreter, natives[i].name, natives[i].fn);
+		Toy_injectNativeFn(interpreter, natives[i].name, natives[i].fn);
 	}
 
 	return 0;
