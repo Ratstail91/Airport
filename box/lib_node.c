@@ -34,6 +34,12 @@ static int nativeLoadNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 
 	Toy_Literal filePathLiteral = Toy_getFilePathLiteral(interpreter, &drivePathLiteral);
 
+	if (!TOY_IS_STRING(filePathLiteral)) {
+		Toy_freeLiteral(drivePathLiteral);
+		Toy_freeLiteral(filePathLiteral);
+		return -1;
+	}
+
 	Toy_freeLiteral(drivePathLiteral); //not needed anymore
 
 	//load the new node
@@ -287,12 +293,12 @@ static int nativeLoadTexture(Toy_Interpreter* interpreter, Toy_LiteralArray* arg
 	}
 
 	//extract the arguments
-	Toy_Literal fname = Toy_popLiteralArray(arguments);
+	Toy_Literal drivePathLiteral = Toy_popLiteralArray(arguments);
 	Toy_Literal nodeLiteral = Toy_popLiteralArray(arguments);
 
-	Toy_Literal fnameIdn = fname;
-	if (TOY_IS_IDENTIFIER(fname) && Toy_parseIdentifierToValue(interpreter, &fname)) {
-		Toy_freeLiteral(fnameIdn);
+	Toy_Literal drivePathLiteralIdn = drivePathLiteral;
+	if (TOY_IS_IDENTIFIER(drivePathLiteral) && Toy_parseIdentifierToValue(interpreter, &drivePathLiteral)) {
+		Toy_freeLiteral(drivePathLiteralIdn);
 	}
 
 	Toy_Literal nodeIdn = nodeLiteral;
@@ -301,12 +307,22 @@ static int nativeLoadTexture(Toy_Interpreter* interpreter, Toy_LiteralArray* arg
 	}
 
 	//check argument types
-	if (!TOY_IS_STRING(fname) || !TOY_IS_OPAQUE(nodeLiteral)) {
+	if (!TOY_IS_STRING(drivePathLiteral) || !TOY_IS_OPAQUE(nodeLiteral)) {
 		interpreter->errorOutput("Incorrect argument type passed to loadTextureEngineNode\n");
-		Toy_freeLiteral(fname);
+		Toy_freeLiteral(drivePathLiteral);
 		Toy_freeLiteral(nodeLiteral);
 		return -1;
 	}
+
+	Toy_Literal filePathLiteral = Toy_getFilePathLiteral(interpreter, &drivePathLiteral);
+
+	if (!TOY_IS_STRING(filePathLiteral)) {
+		Toy_freeLiteral(drivePathLiteral);
+		Toy_freeLiteral(filePathLiteral);
+		return -1;
+	}
+
+	Toy_freeLiteral(drivePathLiteral); //not needed anymore
 
 	//actually load TODO: number the opaques, and check the numbers
 	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
@@ -315,16 +331,17 @@ static int nativeLoadTexture(Toy_Interpreter* interpreter, Toy_LiteralArray* arg
 		Box_freeTextureEngineNode(node);
 	}
 
-	if (Box_loadTextureEngineNode(node, Toy_toCString(TOY_AS_STRING(fname))) != 0) {
+	if (Box_loadTextureEngineNode(node, Toy_toCString(TOY_AS_STRING(filePathLiteral))) != 0) {
 		interpreter->errorOutput("Failed to load the texture into the EngineNode\n");
-		Toy_freeLiteral(fname);
+		Toy_freeLiteral(filePathLiteral);
 		Toy_freeLiteral(nodeLiteral);
 		return -1;
 	}
 
 	//cleanup
-	Toy_freeLiteral(fname);
+	Toy_freeLiteral(filePathLiteral);
 	Toy_freeLiteral(nodeLiteral);
+
 	return 0;
 }
 
