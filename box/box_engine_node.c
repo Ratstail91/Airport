@@ -3,15 +3,6 @@
 
 #include "toy_memory.h"
 
-static void freeMemory(void* ptr) {
-	Box_EngineNode* node = (Box_EngineNode*)ptr;
-	//SDL stuff
-	SDL_DestroyTexture(node->texture);
-
-	//free this node type's memory
-	TOY_FREE(Box_EngineNode, ptr);
-}
-
 void Box_initEngineNode(Box_EngineNode* node, Toy_Interpreter* interpreter, void* tb, size_t size) {
 	//init
 	// node->freeMemory = freeMemory;
@@ -94,9 +85,12 @@ void Box_freeEngineNode(Box_EngineNode* node) {
 		TOY_FREE(Toy_LiteralDictionary, node->functions);
 	}
 
+	if (node->texture != NULL) {
+		Box_freeTextureEngineNode(node);
+	}
+
 	//free this node's memory
-	// node->freeMemory(node);
-	freeMemory(node);
+	TOY_FREE(Box_EngineNode, node);
 }
 
 Toy_Literal Box_callEngineNodeLiteral(Box_EngineNode* node, Toy_Interpreter* interpreter, Toy_Literal key, Toy_LiteralArray* args) {

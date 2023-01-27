@@ -45,9 +45,7 @@ void Box_initEngine() {
 	}
 
 	//init events
-	Toy_initLiteralArray(&engine.keyDownEvents);
 	Toy_initLiteralDictionary(&engine.symKeyDownEvents);
-	Toy_initLiteralArray(&engine.keyUpEvents);
 	Toy_initLiteralDictionary(&engine.symKeyUpEvents);
 
 	//init Toy
@@ -80,9 +78,7 @@ void Box_freeEngine() {
 	Toy_freeInterpreter(&engine.interpreter);
 
 	//free events
-	Toy_freeLiteralArray(&engine.keyDownEvents);
 	Toy_freeLiteralDictionary(&engine.symKeyDownEvents);
-	Toy_freeLiteralArray(&engine.keyUpEvents);
 	Toy_freeLiteralDictionary(&engine.symKeyUpEvents);
 
 	//free SDL
@@ -95,19 +91,12 @@ void Box_freeEngine() {
 }
 
 static void execEvents() {
-	//clear event lists
-	if (engine.keyDownEvents.count > 0) {
-		Toy_freeLiteralArray(&engine.keyDownEvents);
-		//NOTE: this is likely memory intensive - a more bespoke linked list designed for this task would be better
-		//NOTE: alternatively - manual memory-wipes, skipping the free step could be better
-	}
-
-	if (engine.keyUpEvents.count > 0) {
-		Toy_freeLiteralArray(&engine.keyUpEvents);
-	}
+	Toy_LiteralArray args; //save some allocation by reusing this
+	Toy_initLiteralArray(&args);
 
 	//poll all events
 	SDL_Event event;
+
 	while (SDL_PollEvent(&event)) {
 		switch(event.type) {
 			//quit
@@ -138,14 +127,21 @@ static void execEvents() {
 				//determine the given keycode
 				Toy_Literal keycodeLiteral = TOY_TO_INTEGER_LITERAL( (int)(event.key.keysym.sym) );
 				if (!Toy_existsLiteralDictionary(&engine.symKeyDownEvents, keycodeLiteral)) {
+					Toy_freeLiteral(keycodeLiteral);
 					break;
 				}
 
 				//get the event name
 				Toy_Literal eventLiteral = Toy_getLiteralDictionary(&engine.symKeyDownEvents, keycodeLiteral);
 
+				//call the function
+				Toy_pushLiteralArray(&args, eventLiteral);
+				Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onKeyDown", &args);
+				Toy_popLiteralArray(&args);
+
 				//push to the event list
-				Toy_pushLiteralArray(&engine.keyDownEvents, eventLiteral);
+				Toy_freeLiteral(eventLiteral);
+				Toy_freeLiteral(keycodeLiteral);
 			}
 			break;
 
@@ -158,39 +154,174 @@ static void execEvents() {
 				//determine the given keycode
 				Toy_Literal keycodeLiteral = TOY_TO_INTEGER_LITERAL( (int)(event.key.keysym.sym) );
 				if (!Toy_existsLiteralDictionary(&engine.symKeyUpEvents, keycodeLiteral)) {
+					Toy_freeLiteral(keycodeLiteral);
 					break;
 				}
 
 				//get the event name
 				Toy_Literal eventLiteral = Toy_getLiteralDictionary(&engine.symKeyUpEvents, keycodeLiteral);
 
+				//call the function
+				Toy_pushLiteralArray(&args, eventLiteral);
+				Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onKeyUp", &args);
+				Toy_popLiteralArray(&args);
+
 				//push to the event list
-				Toy_pushLiteralArray(&engine.keyUpEvents, eventLiteral);
+				Toy_freeLiteral(eventLiteral);
+				Toy_freeLiteral(keycodeLiteral);
+			}
+			break;
+
+			//mouse motion
+			case SDL_MOUSEMOTION: {
+				Toy_Literal mouseX = TOY_TO_INTEGER_LITERAL( (int)(event.motion.x) );
+				Toy_Literal mouseY = TOY_TO_INTEGER_LITERAL( (int)(event.motion.y) );
+				Toy_Literal mouseXRel = TOY_TO_INTEGER_LITERAL( (int)(event.motion.x) );
+				Toy_Literal mouseYRel = TOY_TO_INTEGER_LITERAL( (int)(event.motion.y) );
+
+				Toy_pushLiteralArray(&args, mouseX);
+				Toy_pushLiteralArray(&args, mouseY);
+				Toy_pushLiteralArray(&args, mouseXRel);
+				Toy_pushLiteralArray(&args, mouseYRel);
+
+				Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onMouseMotion", &args);
+
+				Toy_freeLiteral(mouseX);
+				Toy_freeLiteral(mouseY);
+				Toy_freeLiteral(mouseXRel);
+				Toy_freeLiteral(mouseYRel);
+
+				//hack: manual free
+				for(int i = 0; i < args.count; i++) {
+					Toy_freeLiteral(args.literals[i]);
+				}
+				args.count = 0;
+			}
+			break;
+
+			//mouse button down
+			case SDL_MOUSEBUTTONDOWN: {
+				Toy_Literal mouseX = TOY_TO_INTEGER_LITERAL( (int)(event.button.x) );
+				Toy_Literal mouseY = TOY_TO_INTEGER_LITERAL( (int)(event.button.y) );
+				Toy_Literal mouseButton;
+
+				switch (event.button.button) {
+					case SDL_BUTTON_LEFT:
+						mouseButton = TOY_TO_STRING_LITERAL(Toy_createRefString("left"));
+						break;
+
+					case SDL_BUTTON_MIDDLE:
+						mouseButton = TOY_TO_STRING_LITERAL(Toy_createRefString("middle"));
+						break;
+
+					case SDL_BUTTON_RIGHT:
+						mouseButton = TOY_TO_STRING_LITERAL(Toy_createRefString("right"));
+						break;
+
+					case SDL_BUTTON_X1:
+						mouseButton = TOY_TO_STRING_LITERAL(Toy_createRefString("x1"));
+						break;
+
+					case SDL_BUTTON_X2:
+						mouseButton = TOY_TO_STRING_LITERAL(Toy_createRefString("x2"));
+						break;
+
+					default:
+						mouseButton = TOY_TO_STRING_LITERAL(Toy_createRefString("unknown"));
+						break;
+				}
+
+				Toy_pushLiteralArray(&args, mouseX);
+				Toy_pushLiteralArray(&args, mouseY);
+				Toy_pushLiteralArray(&args, mouseButton);
+
+				Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onMouseButtonDown", &args);
+
+				Toy_freeLiteral(mouseX);
+				Toy_freeLiteral(mouseY);
+				Toy_freeLiteral(mouseButton);
+
+				//hack: manual free
+				for(int i = 0; i < args.count; i++) {
+					Toy_freeLiteral(args.literals[i]);
+				}
+				args.count = 0;
+			}
+			break;
+
+			//mouse button up
+			case SDL_MOUSEBUTTONUP: {
+				Toy_Literal mouseX = TOY_TO_INTEGER_LITERAL( (int)(event.button.x) );
+				Toy_Literal mouseY = TOY_TO_INTEGER_LITERAL( (int)(event.button.y) );
+				Toy_Literal mouseButton;
+
+				switch (event.button.button) {
+					case SDL_BUTTON_LEFT:
+						mouseButton = TOY_TO_STRING_LITERAL(Toy_createRefString("left"));
+						break;
+
+					case SDL_BUTTON_MIDDLE:
+						mouseButton = TOY_TO_STRING_LITERAL(Toy_createRefString("middle"));
+						break;
+
+					case SDL_BUTTON_RIGHT:
+						mouseButton = TOY_TO_STRING_LITERAL(Toy_createRefString("right"));
+						break;
+
+					case SDL_BUTTON_X1:
+						mouseButton = TOY_TO_STRING_LITERAL(Toy_createRefString("x1"));
+						break;
+
+					case SDL_BUTTON_X2:
+						mouseButton = TOY_TO_STRING_LITERAL(Toy_createRefString("x2"));
+						break;
+
+					default:
+						mouseButton = TOY_TO_STRING_LITERAL(Toy_createRefString("unknown"));
+						break;
+				}
+
+				Toy_pushLiteralArray(&args, mouseX);
+				Toy_pushLiteralArray(&args, mouseY);
+				Toy_pushLiteralArray(&args, mouseButton);
+
+				Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onMouseButtonUp", &args);
+
+				Toy_freeLiteral(mouseX);
+				Toy_freeLiteral(mouseY);
+				Toy_freeLiteral(mouseButton);
+
+				//hack: manual free
+				for(int i = 0; i < args.count; i++) {
+					Toy_freeLiteral(args.literals[i]);
+				}
+				args.count = 0;
+			}
+			break; //TODO: remove copied code
+
+			//mouse wheel
+			case SDL_MOUSEWHEEL: {
+				Toy_Literal mouseX = TOY_TO_INTEGER_LITERAL( (int)(event.wheel.x) );
+				Toy_Literal mouseY = TOY_TO_INTEGER_LITERAL( (int)(event.wheel.y) );
+				Toy_pushLiteralArray(&args, mouseX);
+				Toy_pushLiteralArray(&args, mouseY);
+
+				Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onMouseWheel", &args);
+
+				Toy_freeLiteral(mouseX);
+				Toy_freeLiteral(mouseY);
+
+				//hack: manual free
+				for(int i = 0; i < args.count; i++) {
+					Toy_freeLiteral(args.literals[i]);
+				}
+				args.count = 0;
 			}
 			break;
 		}
 	}
 
-	//process input events
-	if (engine.rootNode != NULL) {
-		//key down events
-		for (int i = 0; i < engine.keyDownEvents.count; i++) { //TODO: could pass in the whole array?
-			Toy_LiteralArray args;
-			Toy_initLiteralArray(&args);
-			Toy_pushLiteralArray(&args, engine.keyDownEvents.literals[i]);
-			Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onKeyDown", &args);
-			Toy_freeLiteralArray(&args);
-		}
-
-		//key up events
-		for (int i = 0; i < engine.keyUpEvents.count; i++) {
-			Toy_LiteralArray args;
-			Toy_initLiteralArray(&args);
-			Toy_pushLiteralArray(&args, engine.keyUpEvents.literals[i]);
-			Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onKeyUp", &args);
-			Toy_freeLiteralArray(&args);
-		}
-	}
+	Toy_freeLiteralArray(&args);
 }
 
 void execStep() {

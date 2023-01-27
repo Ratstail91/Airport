@@ -100,3 +100,24 @@ fn onKeyUp(node: opaque, event: string) {
 		return;
 	}
 }
+
+fn onMouseMotion(node: opaque, x: int, y: int, xrel: int, yrel: int) {
+	print "entity.toy:onMouseMotion()";
+	//TODO: mouse motion
+}
+
+fn onMouseButtonDown(node: opaque, x: int, y: int, button: string) {
+	print "entity.toy:onMouseButtonDown()";
+	//TODO: mouse button down
+}
+
+fn onMouseButtonUp(node: opaque, x: int, y: int, button: string) {
+	print "entity.toy:onMouseButtonUp()";
+	//TODO: mouse button up
+}
+
+fn onMouseWheel(node: opaque, x: int, y: int) {
+	print "entity.toy:onMouseWheel()";
+	//TODO: mouse wheel
+}
+

@@ -75,6 +75,10 @@ static int nativeLoadNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 	Toy_pushLiteralArray(&interpreter->stack, nodeLiteral);
 
 	//cleanup
+	while (inner.scope) {
+		inner.scope = Toy_popScope(inner.scope);
+	}
+
 	Toy_freeLiteralArray(&inner.stack);
 	Toy_freeLiteralArray(&inner.literalCache);
 	Toy_freeLiteral(filePathLiteral);
@@ -375,6 +379,7 @@ static int nativeFreeTexture(Toy_Interpreter* interpreter, Toy_LiteralArray* arg
 
 	//cleanup
 	Toy_freeLiteral(nodeLiteral);
+
 	return 0;
 }
 
@@ -439,6 +444,7 @@ static int nativeSetRect(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 	Toy_freeLiteral(y);
 	Toy_freeLiteral(w);
 	Toy_freeLiteral(h);
+
 	return 0;
 }
 
@@ -518,6 +524,7 @@ static int nativeDrawNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 	Toy_freeLiteral(y);
 	Toy_freeLiteral(w);
 	Toy_freeLiteral(h);
+
 	return 0;
 }
 
@@ -619,6 +626,7 @@ static int nativeCallNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 
 	//cleanup
 	Toy_freeLiteralArray(&extraArgs);
+	Toy_freeLiteral(fnNameIdentifier);
 	Toy_freeLiteral(nodeLiteral);
 	Toy_freeLiteral(fnName);
 	Toy_freeLiteral(result);

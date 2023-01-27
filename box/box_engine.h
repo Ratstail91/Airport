@@ -27,10 +27,7 @@ typedef struct Box_private_engine {
 	int screenHeight;
 
 	//input syms mapped to events
-	Toy_LiteralArray keyDownEvents; //list of events that occurred this frame
 	Toy_LiteralDictionary symKeyDownEvents; //keysym -> event names
-
-	Toy_LiteralArray keyUpEvents; //list of events that occurred this frame
 	Toy_LiteralDictionary symKeyUpEvents; //keysym -> event names
 } Box_Engine;
 

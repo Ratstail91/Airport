@@ -151,6 +151,10 @@ static int nativeLoadRootNode(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 	Box_callEngineNode(engine.rootNode, &engine.interpreter, "onInit", NULL);
 
 	//cleanup
+	while(inner.scope) {
+		inner.scope = Toy_popScope(inner.scope);
+	}
+
 	Toy_freeLiteralArray(&inner.stack);
 	Toy_freeLiteralArray(&inner.literalCache);
 	Toy_freeLiteral(filePathLiteral);
