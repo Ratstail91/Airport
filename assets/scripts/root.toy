@@ -14,10 +14,10 @@ fn onInit(node: opaque) {
 	print "root.toy:onInit() called";
 
 	//make a child
-	node.makeChild("assets/scripts/entity.toy");
+	node.makeChild("scripts:/entity.toy");
 
 	//give the child a child
-	node.getNodeChild(0).makeChild("assets/scripts/entity.toy");
+	node.getNodeChild(0).makeChild("scripts:/entity.toy");
 }
 
 fn onStep(node: opaque) {

@@ -7,6 +7,8 @@
 #include "toy_literal_array.h"
 #include "toy_memory.h"
 
+#include "lib_runner.h"
+
 #include <stdlib.h>
 
 static int nativeLoadNode(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
@@ -16,23 +18,27 @@ static int nativeLoadNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 	}
 
 	//extract the arguments
-	Toy_Literal fname = Toy_popLiteralArray(arguments);
+	Toy_Literal drivePathLiteral = Toy_popLiteralArray(arguments);
 
-	Toy_Literal fnameIdn = fname;
-	if (TOY_IS_IDENTIFIER(fname) && Toy_parseIdentifierToValue(interpreter, &fname)) {
-		Toy_freeLiteral(fnameIdn);
+	Toy_Literal drivePathLiteralIdn = drivePathLiteral;
+	if (TOY_IS_IDENTIFIER(drivePathLiteral) && Toy_parseIdentifierToValue(interpreter, &drivePathLiteral)) {
+		Toy_freeLiteral(drivePathLiteralIdn);
 	}
 
 	//check argument types
-	if (!TOY_IS_STRING(fname)) {
+	if (!TOY_IS_STRING(drivePathLiteral)) {
 		interpreter->errorOutput("Incorrect argument type passed to loadNode\n");
-		Toy_freeLiteral(fname);
+		Toy_freeLiteral(drivePathLiteral);
 		return -1;
 	}
 
+	Toy_Literal filePathLiteral = Toy_getFilePathLiteral(interpreter, &drivePathLiteral);
+
+	Toy_freeLiteral(drivePathLiteral); //not needed anymore
+
 	//load the new node
 	size_t size = 0;
-	char* source = Toy_readFile(Toy_toCString(TOY_AS_STRING(fname)), &size);
+	char* source = Toy_readFile(Toy_toCString(TOY_AS_STRING(filePathLiteral)), &size);
 	unsigned char* tb = Toy_compileString(source, &size);
 	free((void*)source);
 
@@ -65,7 +71,7 @@ static int nativeLoadNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 	//cleanup
 	Toy_freeLiteralArray(&inner.stack);
 	Toy_freeLiteralArray(&inner.literalCache);
-	Toy_freeLiteral(fname);
+	Toy_freeLiteral(filePathLiteral);
 	Toy_freeLiteral(nodeLiteral);
 
 	return 1;

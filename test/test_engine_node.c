@@ -1,12 +1,13 @@
-#include "engine_node.h"
+#include "box_engine_node.h"
 
-#include "lexer.h"
-#include "parser.h"
-#include "compiler.h"
-#include "interpreter.h"
+#include "toy_lexer.h"
+#include "toy_parser.h"
+#include "toy_compiler.h"
+#include "toy_interpreter.h"
+#include "toy_console_colors.h"
+#include "toy_memory.h"
+
 #include "repl_tools.h"
-#include "console_colors.h"
-#include "memory.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,88 +21,90 @@ static void noPrintFn(const char* output) {
 int main() {
 	{
 		//setup interpreter
-		Interpreter interpreter;
-		initInterpreter(&interpreter);
-		setInterpreterPrint(&interpreter, noPrintFn);
+		Toy_Interpreter interpreter;
+		Toy_initInterpreter(&interpreter);
+		Toy_setInterpreterPrint(&interpreter, noPrintFn);
 
 		size_t size = 0;
 
-		char* source = readFile("./scripts/parent_engine_node.toy", &size);
-		unsigned char* tb = compileString(source, &size);
+		char* source = Toy_readFile("./scripts/parent_engine_node.toy", &size);
+		unsigned char* tb = Toy_compileString(source, &size);
 
 		//create and test the engine node
-		EngineNode* node = ALLOCATE(EngineNode, 1);
+		Box_EngineNode* node = TOY_ALLOCATE(Box_EngineNode, 1);
 
-		initEngineNode(node, &interpreter, tb, size);
+		Box_initEngineNode(node, &interpreter, tb, size);
 
-		Literal nodeLiteral = TO_OPAQUE_LITERAL(node, OPAQUE_TAG_ENGINE_NODE);
+		Toy_Literal nodeLiteral = TOY_TO_OPAQUE_LITERAL(node, OPAQUE_TAG_ENGINE_NODE);
 
 		//argument list to pass in the node
-		LiteralArray arguments;
-		initLiteralArray(&arguments);
+		Toy_LiteralArray arguments;
+		Toy_initLiteralArray(&arguments);
 
 		//call each function
-		callRecursiveEngineNode(node, &interpreter, "onInit", &arguments);
-		callRecursiveEngineNode(node, &interpreter, "onStep", &arguments);
-		callRecursiveEngineNode(node, &interpreter, "onQuit", &arguments);
+		Box_callRecursiveEngineNode(node, &interpreter, "onInit", &arguments);
+		Box_callRecursiveEngineNode(node, &interpreter, "onStep", &arguments);
+		Box_callRecursiveEngineNode(node, &interpreter, "onQuit", &arguments);
 
 		//cleanup
-		freeLiteralArray(&arguments);
-		freeEngineNode(node);
+		Toy_freeLiteralArray(&arguments);
+		Box_freeEngineNode(node);
 		free((void*)source);
-		freeInterpreter(&interpreter);
+
+		Toy_freeInterpreter(&interpreter);
 	}
 
 	{
 		//setup interpreter
-		Interpreter interpreter;
-		initInterpreter(&interpreter);
-		setInterpreterPrint(&interpreter, noPrintFn);
+		Toy_Interpreter interpreter;
+		Toy_initInterpreter(&interpreter);
+		Toy_setInterpreterPrint(&interpreter, noPrintFn);
 
 		size_t size = 0;
 
-		char* source = readFile("./scripts/parent_engine_node.toy", &size);
-		unsigned char* tb = compileString(source, &size);
+		char* source = Toy_readFile("./scripts/parent_engine_node.toy", &size);
+		unsigned char* tb = Toy_compileString(source, &size);
 
 		//create and test the engine node
-		EngineNode* node = ALLOCATE(EngineNode, 1);
+		Box_EngineNode* node = TOY_ALLOCATE(Box_EngineNode, 1);
 
-		initEngineNode(node, &interpreter, tb, size);
-		resetInterpreter(&interpreter);
+		Box_initEngineNode(node, &interpreter, tb, size);
+		Toy_resetInterpreter(&interpreter);
 
 		for (int i = 0; i < 10; i++) {
-			char* source = readFile("./scripts/child_engine_node.toy", &size);
-			unsigned char* tb = compileString(source, &size);
+			char* source = Toy_readFile("./scripts/child_engine_node.toy", &size);
+			unsigned char* tb = Toy_compileString(source, &size);
 
-			EngineNode* child = ALLOCATE(EngineNode, 1);
-			initEngineNode(child, &interpreter, tb, size);
-			resetInterpreter(&interpreter);
+			Box_EngineNode* child = TOY_ALLOCATE(Box_EngineNode, 1);
+			Box_initEngineNode(child, &interpreter, tb, size);
+			Toy_resetInterpreter(&interpreter);
 
-			pushEngineNode(node, child);
+			Box_pushEngineNode(node, child);
 
 			free((void*)source);
 		}
 
 		//argument list to pass in each time
-		LiteralArray arguments;
-		initLiteralArray(&arguments);
+		Toy_LiteralArray arguments;
+		Toy_initLiteralArray(&arguments);
 
 		//test the calls
-		callRecursiveEngineNode(node, &interpreter, "onInit", &arguments);
+		Box_callRecursiveEngineNode(node, &interpreter, "onInit", &arguments);
 
 		for (int i = 0; i < 10; i++) {
-			callRecursiveEngineNode(node, &interpreter, "onStep", &arguments);
+			Box_callRecursiveEngineNode(node, &interpreter, "onStep", &arguments);
 		}
 
-		callRecursiveEngineNode(node, &interpreter, "onFree", &arguments);
+		Box_callRecursiveEngineNode(node, &interpreter, "onFree", &arguments);
 
 		//cleanup
-		freeLiteralArray(&arguments);
-		freeEngineNode(node); //frees all children
+		Toy_freeLiteralArray(&arguments);
+		Box_freeEngineNode(node); //frees all children
 		free((void*)source);
-		freeInterpreter(&interpreter);
+
+		Toy_freeInterpreter(&interpreter);
 	}
 
-	printf(NOTICE "All good\n" RESET);
+	printf(TOY_CC_NOTICE "All good\n" TOY_CC_RESET);
 	return 0;
 }
