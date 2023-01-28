@@ -17,7 +17,7 @@ fn onInit(node: opaque) {
 	node.makeChild("scripts:/entity.toy");
 
 	//give the child a child
-	node.getNodeChild(0).makeChild("scripts:/entity.toy");
+	// node.getNodeChild(0).makeChild("scripts:/entity.toy");
 }
 
 fn onStep(node: opaque) {

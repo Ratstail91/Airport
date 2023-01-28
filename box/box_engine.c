@@ -176,8 +176,8 @@ static void execEvents() {
 			case SDL_MOUSEMOTION: {
 				Toy_Literal mouseX = TOY_TO_INTEGER_LITERAL( (int)(event.motion.x) );
 				Toy_Literal mouseY = TOY_TO_INTEGER_LITERAL( (int)(event.motion.y) );
-				Toy_Literal mouseXRel = TOY_TO_INTEGER_LITERAL( (int)(event.motion.x) );
-				Toy_Literal mouseYRel = TOY_TO_INTEGER_LITERAL( (int)(event.motion.y) );
+				Toy_Literal mouseXRel = TOY_TO_INTEGER_LITERAL( (int)(event.motion.xrel) );
+				Toy_Literal mouseYRel = TOY_TO_INTEGER_LITERAL( (int)(event.motion.yrel) );
 
 				Toy_pushLiteralArray(&args, mouseX);
 				Toy_pushLiteralArray(&args, mouseY);
