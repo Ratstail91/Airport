@@ -3,7 +3,7 @@
 
 #include "toy_memory.h"
 
-void Box_initEngineNode(Box_EngineNode* node, Toy_Interpreter* interpreter, void* tb, size_t size) {
+void Box_initEngineNode(Box_EngineNode* node, Toy_Interpreter* interpreter, const unsigned char* tb, size_t size) {
 	//init
 	// node->freeMemory = freeMemory;
 	node->functions = TOY_ALLOCATE(Toy_LiteralDictionary, 1);
@@ -129,7 +129,7 @@ Toy_Literal Box_callEngineNodeLiteral(Box_EngineNode* node, Toy_Interpreter* int
 	return ret;
 }
 
-Toy_Literal Box_callEngineNode(Box_EngineNode* node, Toy_Interpreter* interpreter, char* fnName, Toy_LiteralArray* args) {
+Toy_Literal Box_callEngineNode(Box_EngineNode* node, Toy_Interpreter* interpreter, const char* fnName, Toy_LiteralArray* args) {
 	//call "fnName" on this node, and all children, if it exists
 	Toy_Literal key = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString(fnName));
 
@@ -177,7 +177,7 @@ void Box_callRecursiveEngineNodeLiteral(Box_EngineNode* node, Toy_Interpreter* i
 	}
 }
 
-void Box_callRecursiveEngineNode(Box_EngineNode* node, Toy_Interpreter* interpreter, char* fnName, Toy_LiteralArray* args) {
+void Box_callRecursiveEngineNode(Box_EngineNode* node, Toy_Interpreter* interpreter, const char* fnName, Toy_LiteralArray* args) {
 	//call "fnName" on this node, and all children, if it exists
 	Toy_Literal key = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString(fnName));
 
@@ -186,7 +186,7 @@ void Box_callRecursiveEngineNode(Box_EngineNode* node, Toy_Interpreter* interpre
 	Toy_freeLiteral(key);
 }
 
-int Box_loadTextureEngineNode(Box_EngineNode* node, char* fname) {
+int Box_loadTextureEngineNode(Box_EngineNode* node, const char* fname) {
 	SDL_Surface* surface = IMG_Load(fname);
 
 	if (surface == NULL) {

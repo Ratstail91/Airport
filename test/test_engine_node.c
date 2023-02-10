@@ -27,8 +27,8 @@ int main() {
 
 		size_t size = 0;
 
-		char* source = Toy_readFile("./scripts/parent_engine_node.toy", &size);
-		unsigned char* tb = Toy_compileString(source, &size);
+		const char* source = Toy_readFile("./scripts/parent_engine_node.toy", &size);
+		const unsigned char* tb = Toy_compileString(source, &size);
 
 		//create and test the engine node
 		Box_EngineNode* node = TOY_ALLOCATE(Box_EngineNode, 1);
@@ -62,8 +62,8 @@ int main() {
 
 		size_t size = 0;
 
-		char* source = Toy_readFile("./scripts/parent_engine_node.toy", &size);
-		unsigned char* tb = Toy_compileString(source, &size);
+		const char* source = Toy_readFile("./scripts/parent_engine_node.toy", &size);
+		const unsigned char* tb = Toy_compileString(source, &size);
 
 		//create and test the engine node
 		Box_EngineNode* node = TOY_ALLOCATE(Box_EngineNode, 1);
@@ -72,8 +72,8 @@ int main() {
 		Toy_resetInterpreter(&interpreter);
 
 		for (int i = 0; i < 10; i++) {
-			char* source = Toy_readFile("./scripts/child_engine_node.toy", &size);
-			unsigned char* tb = Toy_compileString(source, &size);
+			const char* source = Toy_readFile("./scripts/child_engine_node.toy", &size);
+			const unsigned char* tb = Toy_compileString(source, &size);
 
 			Box_EngineNode* child = TOY_ALLOCATE(Box_EngineNode, 1);
 			Box_initEngineNode(child, &interpreter, tb, size);
