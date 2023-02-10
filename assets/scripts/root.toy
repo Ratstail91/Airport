@@ -11,7 +11,7 @@ fn _makeChild(parent: opaque, fname: string) {
 
 //NOTE: root node can load the whole scene, and essentially act as the scene object
 fn onInit(node: opaque) {
-	print "root.toy:onInit() called";
+	print "root.toy:onInit() called\n";
 
 	//make a child
 	node.makeChild("scripts:/entity.toy");
@@ -21,9 +21,9 @@ fn onInit(node: opaque) {
 }
 
 fn onStep(node: opaque) {
-	//print clock();
+	//print clock() + "\n";
 }
 
 fn onFree(node: opaque) {
-	print "root.toy:onFree() called";
+	print "root.toy:onFree() called\n";
 }
