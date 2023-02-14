@@ -4,8 +4,6 @@
 #include "lib_input.h"
 #include "lib_node.h"
 #include "lib_standard.h"
-#include "lib_compound.h"
-#include "lib_timer.h"
 #include "lib_runner.h"
 #include "repl_tools.h"
 
@@ -51,13 +49,11 @@ void Box_initEngine() {
 
 	//init Toy
 	Toy_initInterpreter(&engine.interpreter);
+	Toy_injectNativeHook(&engine.interpreter, "standard", Toy_hookStandard);
+	Toy_injectNativeHook(&engine.interpreter, "runner", Toy_hookRunner);
 	Toy_injectNativeHook(&engine.interpreter, "engine", Box_hookEngine);
 	Toy_injectNativeHook(&engine.interpreter, "node", Box_hookNode);
 	Toy_injectNativeHook(&engine.interpreter, "input", Box_hookInput);
-	Toy_injectNativeHook(&engine.interpreter, "standard", Toy_hookStandard);
-	Toy_injectNativeHook(&engine.interpreter, "compound", Toy_hookCompound);
-	Toy_injectNativeHook(&engine.interpreter, "timer", Toy_hookTimer);
-	Toy_injectNativeHook(&engine.interpreter, "runner", Toy_hookRunner);
 
 	size_t size = 0;
 	const char* source = Toy_readFile("./assets/scripts/init.toy", &size);

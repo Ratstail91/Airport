@@ -1,8 +1,6 @@
 #include "repl_tools.h"
 #include "lib_about.h"
-#include "lib_compound.h"
 #include "lib_standard.h"
-#include "lib_timer.h"
 #include "lib_runner.h"
 
 #include "toy_console_colors.h"
@@ -57,7 +55,7 @@ int Toy_writeFile(const char* path, const unsigned char* bytes, size_t size) {
 		return -1;
 	}
 
-	int written = fwrite(bytes, size, 1, file);
+	size_t written = fwrite(bytes, size, 1, file);
 
 	if (written != 1) {
 		fprintf(stderr, TOY_CC_ERROR "Could not write file \"%s\"\n" TOY_CC_RESET, path);
@@ -113,12 +111,10 @@ void Toy_runBinary(const unsigned char* tb, size_t size) {
 
 	//inject the libs
 	Toy_injectNativeHook(&interpreter, "about", Toy_hookAbout);
-	Toy_injectNativeHook(&interpreter, "compound", Toy_hookCompound);
 	Toy_injectNativeHook(&interpreter, "standard", Toy_hookStandard);
-	Toy_injectNativeHook(&interpreter, "timer", Toy_hookTimer);
 	Toy_injectNativeHook(&interpreter, "runner", Toy_hookRunner);
 
-	Toy_runInterpreter(&interpreter, tb, size);
+	Toy_runInterpreter(&interpreter, tb, (int)size);
 	Toy_freeInterpreter(&interpreter);
 }
 

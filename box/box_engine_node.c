@@ -106,14 +106,14 @@ Toy_Literal Box_callEngineNodeLiteral(Box_EngineNode* node, Toy_Interpreter* int
 		Toy_initLiteralArray(&arguments);
 		Toy_initLiteralArray(&returns);
 
-		//feed the arguments in backwards!
+		//feed the arguments in
+		Toy_pushLiteralArray(&arguments, n);
+
 		if (args) {
-			for (int i = args->count -1; i >= 0; i--) {
+			for (int i = 0; i < args->count; i++) {
 				Toy_pushLiteralArray(&arguments, args->literals[i]);
 			}
 		}
-
-		Toy_pushLiteralArray(&arguments, n);
 
 		Toy_callLiteralFn(interpreter, fn, &arguments, &returns);
 
@@ -151,14 +151,14 @@ void Box_callRecursiveEngineNodeLiteral(Box_EngineNode* node, Toy_Interpreter* i
 		Toy_initLiteralArray(&arguments);
 		Toy_initLiteralArray(&returns);
 
-		//feed the arguments in backwards!
+		//feed the arguments in
+		Toy_pushLiteralArray(&arguments, n);
+
 		if (args) {
-			for (int i = args->count -1; i >= 0; i--) {
+			for (int i = 0; i < args->count; i++) {
 				Toy_pushLiteralArray(&arguments, args->literals[i]);
 			}
 		}
-
-		Toy_pushLiteralArray(&arguments, n);
 
 		Toy_callLiteralFn(interpreter, fn, &arguments, &returns);
 

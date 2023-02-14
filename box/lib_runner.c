@@ -44,7 +44,7 @@ static int nativeLoadScript(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 
 	//use raw types - easier
 	const char* filePath = Toy_toCString(TOY_AS_STRING(filePathLiteral));
-	int filePathLength = Toy_lengthRefString(TOY_AS_STRING(filePathLiteral));
+	size_t filePathLength = Toy_lengthRefString(TOY_AS_STRING(filePathLiteral));
 
 	//load and compile the bytecode
 	size_t fileSize = 0;
@@ -138,7 +138,7 @@ static int nativeLoadScriptBytecode(Toy_Interpreter* interpreter, Toy_LiteralArr
 
 	//get the final real file path (concat) TODO: move this concat to refstring library
 	Toy_RefString* realDrive = Toy_copyRefString(TOY_AS_STRING(realDriveLiteral));
-	int realLength = Toy_lengthRefString(realDrive) + Toy_lengthRefString(path);
+	size_t realLength = Toy_lengthRefString(realDrive) + Toy_lengthRefString(path);
 
 	char* filePath = TOY_ALLOCATE(char, realLength + 1); //+1 for null
 	snprintf(filePath, realLength, "%s%s", Toy_toCString(realDrive), Toy_toCString(path));
@@ -159,7 +159,7 @@ static int nativeLoadScriptBytecode(Toy_Interpreter* interpreter, Toy_LiteralArr
 	}
 
 	//check for break-out attempts
-	for (int i = 0; i < realLength - 1; i++) {
+	for (size_t i = 0; i < realLength - 1; i++) {
 		if (filePath[i] == '.' && filePath[i + 1] == '.') {
 			interpreter->errorOutput("Parent directory access not allowed\n");
 			TOY_FREE_ARRAY(char, filePath, realLength);
@@ -200,7 +200,7 @@ static int nativeLoadScriptBytecode(Toy_Interpreter* interpreter, Toy_LiteralArr
 static int nativeRunScript(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to _runScript\n");
+		interpreter->errorOutput("Incorrect number of arguments to runScript\n");
 		return -1;
 	}
 
@@ -213,7 +213,7 @@ static int nativeRunScript(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 	}
 
 	if (TOY_GET_OPAQUE_TAG(runnerLiteral) != TOY_OPAQUE_TAG_RUNNER) {
-		interpreter->errorOutput("Unrecognized opaque literal in _runScript\n");
+		interpreter->errorOutput("Unrecognized opaque literal in runScript\n");
 		return -1;
 	}
 
@@ -241,7 +241,7 @@ static int nativeRunScript(Toy_Interpreter* interpreter, Toy_LiteralArray* argum
 static int nativeGetScriptVar(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 2) {
-		interpreter->errorOutput("Incorrect number of arguments to _getScriptVar\n");
+		interpreter->errorOutput("Incorrect number of arguments to getScriptVar\n");
 		return -1;
 	}
 
@@ -260,7 +260,7 @@ static int nativeGetScriptVar(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 	}
 
 	if (TOY_GET_OPAQUE_TAG(runnerLiteral) != TOY_OPAQUE_TAG_RUNNER) {
-		interpreter->errorOutput("Unrecognized opaque literal in _runScript\n");
+		interpreter->errorOutput("Unrecognized opaque literal in getScriptVar\n");
 		return -1;
 	}
 
@@ -292,7 +292,7 @@ static int nativeGetScriptVar(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 static int nativeCallScriptFn(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count < 2) {
-		interpreter->errorOutput("Incorrect number of arguments to _callScriptFn\n");
+		interpreter->errorOutput("Incorrect number of arguments to callScriptFn\n");
 		return -1;
 	}
 
@@ -309,14 +309,13 @@ static int nativeCallScriptFn(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 	Toy_LiteralArray rest;
 	Toy_initLiteralArray(&rest);
 
-	while (tmp.count) { //correct the order of the rest args
+	while (tmp.count > 0) { //correct the order of the rest args
 		Toy_Literal lit = Toy_popLiteralArray(&tmp);
 		Toy_pushLiteralArray(&rest, lit);
 		Toy_freeLiteral(lit);
 	}
 
 	Toy_freeLiteralArray(&tmp);
-
 
 	//get the runner object
 	Toy_Literal varName = Toy_popLiteralArray(arguments);
@@ -333,7 +332,7 @@ static int nativeCallScriptFn(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 	}
 
 	if (TOY_GET_OPAQUE_TAG(runnerLiteral) != TOY_OPAQUE_TAG_RUNNER) {
-		interpreter->errorOutput("Unrecognized opaque literal in _runScript\n");
+		interpreter->errorOutput("Unrecognized opaque literal in callScriptFn\n");
 		return -1;
 	}
 
@@ -389,7 +388,7 @@ static int nativeCallScriptFn(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 static int nativeResetScript(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to _resetScript\n");
+		interpreter->errorOutput("Incorrect number of arguments to resetScript\n");
 		return -1;
 	}
 
@@ -402,7 +401,7 @@ static int nativeResetScript(Toy_Interpreter* interpreter, Toy_LiteralArray* arg
 	}
 
 	if (TOY_GET_OPAQUE_TAG(runnerLiteral) != TOY_OPAQUE_TAG_RUNNER) {
-		interpreter->errorOutput("Unrecognized opaque literal in _runScript\n");
+		interpreter->errorOutput("Unrecognized opaque literal in resetScript\n");
 		return -1;
 	}
 
@@ -425,7 +424,7 @@ static int nativeResetScript(Toy_Interpreter* interpreter, Toy_LiteralArray* arg
 static int nativeFreeScript(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to _freeScript\n");
+		interpreter->errorOutput("Incorrect number of arguments to freeScript\n");
 		return -1;
 	}
 
@@ -438,7 +437,7 @@ static int nativeFreeScript(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 	}
 
 	if (TOY_GET_OPAQUE_TAG(runnerLiteral) != TOY_OPAQUE_TAG_RUNNER) {
-		interpreter->errorOutput("Unrecognized opaque literal in _freeScript\n");
+		interpreter->errorOutput("Unrecognized opaque literal in freeScript\n");
 		return -1;
 	}
 
@@ -459,7 +458,7 @@ static int nativeFreeScript(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 static int nativeCheckScriptDirty(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//no arguments
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments to _runScript\n");
+		interpreter->errorOutput("Incorrect number of arguments to checkScriptDirty\n");
 		return -1;
 	}
 
@@ -472,7 +471,7 @@ static int nativeCheckScriptDirty(Toy_Interpreter* interpreter, Toy_LiteralArray
 	}
 
 	if (TOY_GET_OPAQUE_TAG(runnerLiteral) != TOY_OPAQUE_TAG_RUNNER) {
-		interpreter->errorOutput("Unrecognized opaque literal in _runScript\n");
+		interpreter->errorOutput("Unrecognized opaque literal in checkScriptDirty\n");
 		return -1;
 	}
 
@@ -501,12 +500,12 @@ int Toy_hookRunner(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Lit
 	Natives natives[] = {
 		{"loadScript", nativeLoadScript},
 		{"loadScriptBytecode", nativeLoadScriptBytecode},
-		{"_runScript", nativeRunScript},
-		{"_getScriptVar", nativeGetScriptVar},
-		{"_callScriptFn", nativeCallScriptFn},
-		{"_resetScript", nativeResetScript},
-		{"_freeScript", nativeFreeScript},
-		{"_checkScriptDirty", nativeCheckScriptDirty},
+		{"runScript", nativeRunScript},
+		{"getScriptVar", nativeGetScriptVar},
+		{"callScriptFn", nativeCallScriptFn},
+		{"resetScript", nativeResetScript},
+		{"freeScript", nativeFreeScript},
+		{"checkScriptDirty", nativeCheckScriptDirty},
 		{NULL, NULL}
 	};
 
@@ -617,7 +616,7 @@ Toy_Literal Toy_getFilePathLiteral(Toy_Interpreter* interpreter, Toy_Literal* dr
 
 	//get the final real file path (concat) TODO: move this concat to refstring library
 	Toy_RefString* realDrive = Toy_copyRefString(TOY_AS_STRING(realDriveLiteral));
-	int realLength = Toy_lengthRefString(realDrive) + Toy_lengthRefString(path);
+	size_t realLength = Toy_lengthRefString(realDrive) + Toy_lengthRefString(path);
 
 	char* filePath = TOY_ALLOCATE(char, realLength + 1); //+1 for null
 	snprintf(filePath, realLength, "%s%s", Toy_toCString(realDrive), Toy_toCString(path));
@@ -630,7 +629,7 @@ Toy_Literal Toy_getFilePathLiteral(Toy_Interpreter* interpreter, Toy_Literal* dr
 	Toy_deleteRefString(drivePath);
 
 	//check for break-out attempts
-	for (int i = 0; i < realLength - 1; i++) {
+	for (size_t i = 0; i < realLength - 1; i++) {
 		if (filePath[i] == '.' && filePath[i + 1] == '.') {
 			interpreter->errorOutput("Parent directory access not allowed\n");
 			TOY_FREE_ARRAY(char, filePath, realLength + 1);

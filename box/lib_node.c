@@ -209,7 +209,7 @@ static int nativePushNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 static int nativeGetNodeChild(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//checks
 	if (arguments->count != 2) {
-		interpreter->errorOutput("Incorrect number of arguments passed to getNode\n");
+		interpreter->errorOutput("Incorrect number of arguments passed to getNodeChild\n");
 		return -1;
 	}
 
@@ -222,7 +222,7 @@ static int nativeGetNodeChild(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 	}
 
 	if (!TOY_IS_OPAQUE(parent) || !TOY_IS_INTEGER(index)) {
-		interpreter->errorOutput("Incorrect argument type passed to getNode\n");
+		interpreter->errorOutput("Incorrect argument type passed to getNodeChild\n");
 		Toy_freeLiteral(parent);
 		Toy_freeLiteral(index);
 		return -1;
@@ -233,7 +233,7 @@ static int nativeGetNodeChild(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 	int intIndex = TOY_AS_INTEGER(index);
 
 	if (intIndex < 0 || intIndex >= parentNode->count) {
-		interpreter->errorOutput("index out of bounds in getNode\n");
+		interpreter->errorOutput("index out of bounds in getNodeChild\n");
 		Toy_freeLiteral(parent);
 		Toy_freeLiteral(index);
 		return -1;
@@ -292,7 +292,7 @@ static int nativeGetNodeParent(Toy_Interpreter* interpreter, Toy_LiteralArray* a
 
 static int nativeLoadTexture(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 2) {
-		interpreter->errorOutput("Incorrect number of arguments passed to loadTextureEngineNode\n");
+		interpreter->errorOutput("Incorrect number of arguments passed to loadTexture\n");
 		return -1;
 	}
 
@@ -312,7 +312,7 @@ static int nativeLoadTexture(Toy_Interpreter* interpreter, Toy_LiteralArray* arg
 
 	//check argument types
 	if (!TOY_IS_STRING(drivePathLiteral) || !TOY_IS_OPAQUE(nodeLiteral)) {
-		interpreter->errorOutput("Incorrect argument type passed to loadTextureEngineNode\n");
+		interpreter->errorOutput("Incorrect argument type passed to loadTexture\n");
 		Toy_freeLiteral(drivePathLiteral);
 		Toy_freeLiteral(nodeLiteral);
 		return -1;
@@ -351,7 +351,7 @@ static int nativeLoadTexture(Toy_Interpreter* interpreter, Toy_LiteralArray* arg
 
 static int nativeFreeTexture(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments passed to freeTextureEngineNode\n");
+		interpreter->errorOutput("Incorrect number of arguments passed to freeTexture\n");
 		return -1;
 	}
 
@@ -365,7 +365,7 @@ static int nativeFreeTexture(Toy_Interpreter* interpreter, Toy_LiteralArray* arg
 
 	//check argument types
 	if (!TOY_IS_OPAQUE(nodeLiteral)) {
-		interpreter->errorOutput("Incorrect argument type passed to freeTextureEngineNode\n");
+		interpreter->errorOutput("Incorrect argument type passed to freeTexture\n");
 		Toy_freeLiteral(nodeLiteral);
 		return -1;
 	}
@@ -385,7 +385,7 @@ static int nativeFreeTexture(Toy_Interpreter* interpreter, Toy_LiteralArray* arg
 
 static int nativeSetRect(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 5) {
-		interpreter->errorOutput("Incorrect number of arguments passed to setRectEngineNode\n");
+		interpreter->errorOutput("Incorrect number of arguments passed to setRect\n");
 		return -1;
 	}
 
@@ -423,7 +423,7 @@ static int nativeSetRect(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 
 	//check argument types
 	if (!TOY_IS_OPAQUE(nodeLiteral) || !TOY_IS_INTEGER(x) || !TOY_IS_INTEGER(y) || !TOY_IS_INTEGER(w) || !TOY_IS_INTEGER(h)) {
-		interpreter->errorOutput("Incorrect argument type passed to setRectEngineNode\n");
+		interpreter->errorOutput("Incorrect argument type passed to setRect\n");
 		Toy_freeLiteral(nodeLiteral);
 		Toy_freeLiteral(x);
 		Toy_freeLiteral(y);
@@ -452,7 +452,7 @@ static int nativeSetRect(Toy_Interpreter* interpreter, Toy_LiteralArray* argumen
 
 static int nativeDrawNode(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 3 && arguments->count != 5) {
-		interpreter->errorOutput("Incorrect number of arguments passed to drawEngineNode\n");
+		interpreter->errorOutput("Incorrect number of arguments passed to drawNode\n");
 		return -1;
 	}
 
@@ -494,7 +494,7 @@ static int nativeDrawNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 
 	//check argument types
 	if (!TOY_IS_OPAQUE(nodeLiteral) || !TOY_IS_INTEGER(x) || !TOY_IS_INTEGER(y) || (!TOY_IS_INTEGER(w) && !TOY_IS_NULL(w)) || (!TOY_IS_INTEGER(h) && !TOY_IS_NULL(h))) {
-		interpreter->errorOutput("Incorrect argument type passed to drawEngineNode\n");
+		interpreter->errorOutput("Incorrect argument type passed to drawNode\n");
 		Toy_freeLiteral(nodeLiteral);
 		Toy_freeLiteral(x);
 		Toy_freeLiteral(y);
@@ -528,50 +528,15 @@ static int nativeDrawNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 	return 0;
 }
 
-static int nativeGetNodeTag(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
-	//checks
-	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments passed to getNodeTag\n");
-		return -1;
-	}
-
-	Toy_Literal nodeLiteral = Toy_popLiteralArray(arguments);
-
-	Toy_Literal nodeIdn = nodeLiteral;
-	if (TOY_IS_IDENTIFIER(nodeLiteral) && Toy_parseIdentifierToValue(interpreter, &nodeLiteral)) {
-		Toy_freeLiteral(nodeIdn);
-	}
-
-	if (!TOY_IS_OPAQUE(nodeLiteral)) {
-		interpreter->errorOutput("Incorrect argument type passed to getNodeTag\n");
-		Toy_freeLiteral(nodeLiteral);
-		return -1;
-	}
-
-	//push the tag
-	Toy_Literal tagLiteral = TOY_TO_INTEGER_LITERAL( ((Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral))->tag );
-
-	Toy_pushLiteralArray(&interpreter->stack, tagLiteral);
-
-	//cleanup
-	Toy_freeLiteral(nodeLiteral);
-	Toy_freeLiteral(tagLiteral);
-
-	return 1;
-}
-
 static int nativeCallNode(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//checks
 	if (arguments->count < 2) {
-		interpreter->errorOutput("Too few arguments passed to callEngineNode\n");
+		interpreter->errorOutput("Too few arguments passed to callNode\n");
 		return -1;
 	}
 
 	Toy_LiteralArray extraArgs;
 	Toy_initLiteralArray(&extraArgs);
-
-	Toy_LiteralArray flippedExtraArgs;
-	Toy_initLiteralArray(&flippedExtraArgs);
 
 	//extract the extra arg values
 	while (arguments->count > 2) {
@@ -582,18 +547,9 @@ static int nativeCallNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 			Toy_freeLiteral(idn);
 		}
 
-		Toy_pushLiteralArray(&flippedExtraArgs, tmp);
-		Toy_freeLiteral(tmp);
-	}
-
-	//correct the order
-	while (flippedExtraArgs.count) {
-		Toy_Literal tmp = Toy_popLiteralArray(&flippedExtraArgs);
 		Toy_pushLiteralArray(&extraArgs, tmp);
 		Toy_freeLiteral(tmp);
 	}
-
-	Toy_freeLiteralArray(&flippedExtraArgs);
 
 	//back on track
 	Toy_Literal fnName = Toy_popLiteralArray(arguments);
@@ -610,7 +566,7 @@ static int nativeCallNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 	}
 
 	if (!TOY_IS_OPAQUE(nodeLiteral) || !TOY_IS_STRING(fnName)) {
-		interpreter->errorOutput("Incorrect argument type passed to callEngineNode\n");
+		interpreter->errorOutput("Incorrect argument type passed to callNode\n");
 		Toy_freeLiteral(nodeLiteral);
 		Toy_freeLiteral(fnName);
 		return -1;
@@ -644,17 +600,16 @@ int Box_hookNode(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Liter
 	//build the natives list
 	Natives natives[] = {
 		{"loadNode", nativeLoadNode},
-		{"_initNode", nativeInitNode},
-		{"_freeChildNode", nativeFreeChildNode},
-		{"_pushNode", nativePushNode},
-		{"_getNodeChild", nativeGetNodeChild},
-		{"_getNodeParent", nativeGetNodeParent},
-		{"_loadTexture", nativeLoadTexture},
-		{"_freeTexture", nativeFreeTexture},
-		{"_setRect", nativeSetRect},
-		{"_drawNode", nativeDrawNode},
-		{"_callNode", nativeCallNode},
-		// {"getNodeTag", nativeGetNodeTag}, //not needed if there's only one node type
+		{"initNode", nativeInitNode},
+		{"freeChildNode", nativeFreeChildNode},
+		{"pushNode", nativePushNode},
+		{"getNodeChild", nativeGetNodeChild},
+		{"getNodeParent", nativeGetNodeParent},
+		{"loadTexture", nativeLoadTexture},
+		{"freeTexture", nativeFreeTexture},
+		{"setRect", nativeSetRect},
+		{"drawNode", nativeDrawNode},
+		{"callNode", nativeCallNode},
 		{NULL, NULL},
 	};
 

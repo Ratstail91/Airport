@@ -3,7 +3,7 @@ import engine;
 import node;
 
 //util to generate and init a child node of a parent
-fn _makeChild(parent: opaque, fname: string) {
+fn makeChild(parent: opaque, fname: string) {
 	var child: opaque = loadNode(fname);
 	parent.pushNode(child);
 	child.initNode();
@@ -11,7 +11,7 @@ fn _makeChild(parent: opaque, fname: string) {
 
 //NOTE: root node can load the whole scene, and essentially act as the scene object
 fn onInit(node: opaque) {
-	print "root.toy:onInit() called\n";
+	print "root.toy:onInit() called";
 
 	//make a child
 	node.makeChild("scripts:/entity.toy");
@@ -21,9 +21,9 @@ fn onInit(node: opaque) {
 }
 
 fn onStep(node: opaque) {
-	//print clock() + "\n";
+	//print clock();
 }
 
 fn onFree(node: opaque) {
-	print "root.toy:onFree() called\n";
+	print "root.toy:onFree() called";
 }
