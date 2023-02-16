@@ -20,7 +20,8 @@ toy: $(LIBDIR)
 	$(MAKE) -j8 -C Toy/source
 
 box: $(LIBDIR)
-	$(MAKE) -j8 -C box
+	$(MAKE) -j8 -C box repllibs
+	$(MAKE) -j8 -C box library
 
 $(OUTDIR):
 	mkdir $(OUTDIR)

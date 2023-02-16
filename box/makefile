@@ -8,7 +8,7 @@ ODIR = obj
 SRC = $(wildcard *.c)
 OBJ = $(addprefix $(ODIR)/,$(SRC:.c=.o))
 
-TOYLIBS = $(wildcard ../Toy/repl/lib*) $(wildcard ../Toy/repl/repl_tools.*)
+REPLLIBS = $(wildcard ../Toy/repl/lib*) $(wildcard ../Toy/repl/repl_tools.*)
 
 OUTNAME=box
 
@@ -27,15 +27,15 @@ else
 	exit 1
 endif
 
-library: libs $(OBJ)
+library: repllibs $(OBJ)
 	$(CC) -DBOX_EXPORT $(CFLAGS) -shared -o $(OUT) $(LIBLINE) -L../$(LIBDIR) $(LIBS)
 
-static: libs $(OBJ)
+static: repllibs $(OBJ)
 	ar crs $(BOX_OUTDIR)/lib$(OUTNAME).a $(OBJ) -L../$(LIBDIR) $(LIBS)
 
 #copy the stuff from Toy/repl that is needed
-libs:
-	cp $(TOYLIBS) .
+repllibs:
+	cp $(REPLLIBS) .
 
 $(OBJ): | $(ODIR)
 
@@ -47,5 +47,5 @@ $(ODIR)/%.o: %.c
 
 .PHONY: clean
 
-clean-libs:
-	$(RM) $(notdir $(TOYLIBS))
+clean-repllibs:
+	$(RM) $(notdir $(REPLLIBS))
