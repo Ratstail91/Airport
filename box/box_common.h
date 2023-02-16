@@ -1,8 +1,5 @@
 #pragma once
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -15,10 +12,16 @@
 //platform/compiler-specific instructions
 #if defined(__linux__) || defined(__MINGW32__) || defined(__GNUC__)
 
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+
 #include <unistd.h>
 #define BOX_API extern
 
 #elif defined(_MSC_VER)
+
+#include <SDL.h>
+#include <SDL_image.h>
 
 #include <windows.h>
 #ifndef BOX_EXPORT
@@ -26,6 +29,8 @@
 #else
 #define BOX_API __declspec(dllexport)
 #endif
+
+#define sleep Sleep
 
 #else
 

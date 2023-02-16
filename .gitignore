@@ -1,31 +1,31 @@
 #Editor generated files
-*.sln
-*.vcproj
 *.suo
 *.ncb
 *.user
+compile_commands.json
 
 #Directories
 Release/
 Debug/
 Out/
-Lib/
 release/
 debug/
 out/
-lib/
+bin/
+.cache/
+.vs/
 
 #Project generated files
 *.db
 *.o
 *.a
 *.exe
-*.dll
 *.meta
 *.log
-out
+*.out
 *.stackdump
 *.tb
+*.filters
 
 #Shell files
 *.bat

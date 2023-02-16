@@ -10,6 +10,8 @@
 
 #include "lib_runner.h"
 
+#include <stdio.h>
+
 //errors here should be fatal
 static void fatalError(char* message) {
 	fprintf(stderr, TOY_CC_ERROR "%s" TOY_CC_RESET, message);
