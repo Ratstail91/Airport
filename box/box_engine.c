@@ -336,29 +336,29 @@ void Box_execEngine() {
 	}
 
 	//set up time
-	gettimeofday(&engine.realTime, NULL);
+	engine.realTime = clock();
 	engine.simTime = engine.realTime;
-	struct timeval delta = { .tv_sec = 0, .tv_usec = 1000 * 1000 / 60 }; //60 frames per second
+	clock_t delta = (double) CLOCKS_PER_SEC / 60.0;
 
 	while (engine.running) {
 		execEvents();
 
 		//calc the time passed
-		gettimeofday(&engine.realTime, NULL);
+		engine.realTime = clock();
 
 		//if not enough time has passed
-		if (timercmp(&engine.simTime, &engine.realTime, <)) {
+		if (engine.simTime < engine.realTime) {
 			//while not enough time has passed
-			while(timercmp(&engine.simTime, &engine.realTime, <)) {
+			while(engine.simTime < engine.realTime) {
 				//simulate the world
 				execStep();
 
 				//calc the time simulation
-				timeradd(&delta, &engine.simTime, &engine.simTime);
+				engine.simTime += delta;
 			}
 		}
 		else {
-			SDL_Delay(10); //let the machine sleep, 10ms
+			sleep(0.01); //let the machine sleep, 10ms
 		}
 
 		//render the world

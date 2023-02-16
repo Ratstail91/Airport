@@ -7,15 +7,14 @@
 #include "toy_literal_array.h"
 #include "toy_literal_dictionary.h"
 
-//TODO: remove this, and replace with time.h
-#include <sys/time.h>
+#include <time.h>
 
 //the base engine object, which represents the state of the game
 typedef struct Box_private_engine {
 	//engine stuff
 	Box_EngineNode* rootNode;
-	struct timeval simTime;
-	struct timeval realTime;
+	clock_t simTime;
+	clock_t realTime;
 	bool running;
 
 	//Toy stuff

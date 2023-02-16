@@ -12,12 +12,24 @@
 #define BOX_VERSION_PATCH 0
 #define BOX_VERSION_BUILD __DATE__ " " __TIME__
 
-//platform exports/imports
-#if defined(__linux__)
+//platform/compiler-specific instructions
+#if defined(__linux__) || defined(__MINGW32__) || defined(__GNUC__)
+
+#include <unistd.h>
 #define BOX_API extern
 
+#elif defined(_MSC_VER)
+
+#include <windows.h>
+#ifndef BOX_EXPORT
+#define BOX_API __declspec(dllimport)
 #else
-#define BOX_API
+#define BOX_API __declspec(dllexport)
+#endif
+
+#else
+
+#define BOX_API extern
 
 #endif
 
