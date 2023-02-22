@@ -29,7 +29,7 @@ void Box_initEngineNode(Box_EngineNode* node, Toy_Interpreter* interpreter, cons
 		}
 
 		//if this variable is a function (this outmodes import and export)
-		Toy_private_entry* entry = &variablesPtr->entries[i];
+		Toy_private_dictionary_entry* entry = &variablesPtr->entries[i];
 		if (TOY_IS_FUNCTION(entry->value)) {
 			//save a copy
 			Toy_setLiteralDictionary(node->functions, entry->key, entry->value);

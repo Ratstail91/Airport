@@ -1,7 +1,7 @@
 import node;
 
 //constants
-var SPEED: int const = 10;
+var SPEED: int const = 5;
 
 //variables
 var parent: opaque = null;

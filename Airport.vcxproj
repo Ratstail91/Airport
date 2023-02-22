@@ -113,26 +113,32 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Link>
       <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;Toy.lib;Box.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Users\kayne\Documents\SDL2_image-2.6.2\lib\x64;C:\Users\kayne\Documents\SDL2-2.26.2\lib\x64;$(SolutionDir)out\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SDL2Dir)\lib\x64;$(SDL2ImageDir)\lib\x64;$(SolutionDir)out\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\kayne\Documents\SDL2-2.26.2\include;C:\Users\kayne\Documents\SDL2_image-2.6.2\include;%(SolutionDir)Toy\source;%(SolutionDir)box;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SDL2Dir)\include;$(SDL2ImageDir)\include;%(SolutionDir)Toy\source;$(SolutionDir)box;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <PreprocessorDefinitions>
       </PreprocessorDefinitions>
     </ClCompile>
+    <PreBuildEvent>
+      <Command>xcopy "$(SolutionDir)Toy\repl\lib*.*" "$(SolutionDir)box" /Y /I /E</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <PreprocessorDefinitions>
       </PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\kayne\Documents\SDL2-2.26.2\include;C:\Users\kayne\Documents\SDL2_image-2.6.2\include;%(SolutionDir)Toy\source;%(SolutionDir)box;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SDL2Dir)\include;$(SDL2ImageDir)\include;%(SolutionDir)Toy\source;$(SolutionDir)box;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>C:\Users\kayne\Documents\SDL2_image-2.6.2\lib\x64;C:\Users\kayne\Documents\SDL2-2.26.2\lib\x64;$(SolutionDir)out\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SDL2Dir)\lib\x64;$(SDL2ImageDir)\lib\x64;$(SolutionDir)out\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;Toy.lib;Box.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>xcopy "$(SolutionDir)Toy\repl\lib*.*" "$(SolutionDir)box" /Y /I /E</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
