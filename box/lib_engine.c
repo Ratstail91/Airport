@@ -123,8 +123,8 @@ static int nativeLoadRootNode(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 
 	//load the new root node
 	size_t size = 0;
-	const char* source = Toy_readFile(Toy_toCString(TOY_AS_STRING(filePathLiteral)), &size);
-	const unsigned char* tb = Toy_compileString(source, &size);
+	const unsigned char* source = Toy_readFile(Toy_toCString(TOY_AS_STRING(filePathLiteral)), &size);
+	const unsigned char* tb = Toy_compileString((const char*)source, &size);
 	free((void*)source);
 
 	engine.rootNode = TOY_ALLOCATE(Box_EngineNode, 1);

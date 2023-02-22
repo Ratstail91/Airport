@@ -56,8 +56,8 @@ void Box_initEngine() {
 	Toy_injectNativeHook(&engine.interpreter, "input", Box_hookInput);
 
 	size_t size = 0;
-	const char* source = Toy_readFile("./assets/scripts/init.toy", &size);
-	const unsigned char* tb = Toy_compileString(source, &size);
+	const unsigned char* source = Toy_readFile("./assets/scripts/init.toy", &size);
+	const unsigned char* tb = Toy_compileString((const char*)source, &size);
 	free((void*)source);
 
 	Toy_runInterpreter(&engine.interpreter, tb, size);
