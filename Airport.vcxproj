@@ -122,7 +122,8 @@
       </PreprocessorDefinitions>
     </ClCompile>
     <PreBuildEvent>
-      <Command>xcopy "$(SolutionDir)Toy\repl\lib*.*" "$(SolutionDir)box" /Y /I /E</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -137,7 +138,8 @@
       <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;Toy.lib;Box.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>xcopy "$(SolutionDir)Toy\repl\lib*.*" "$(SolutionDir)box" /Y /I /E</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

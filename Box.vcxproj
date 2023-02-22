@@ -116,6 +116,10 @@
       <AdditionalLibraryDirectories>$(SDL2Dir)\lib\x64;$(SDL2ImageDir)\lib\x64;$(SolutionDir)out\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL2.lib;SDL2_image.lib;Toy.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>xcopy "$(SolutionDir)Toy\repl\lib*.*" "$(SolutionDir)box" /Y /I /E
+xcopy "$(SolutionDir)Toy\repl\repl_tools.*" "$(SolutionDir)box" /Y /I /E</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -127,6 +131,10 @@
       <AdditionalLibraryDirectories>$(SDL2Dir)\lib\x64;$(SDL2ImageDir)\lib\x64;$(SolutionDir)out\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL2.lib;SDL2_image.lib;Toy.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>xcopy "$(SolutionDir)Toy\repl\lib*.*" "$(SolutionDir)box" /Y /I /E
+xcopy "$(SolutionDir)Toy\repl\repl_tools.*" "$(SolutionDir)box" /Y /I /E</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="box\box_common.c" />
