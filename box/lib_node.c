@@ -55,6 +55,8 @@ static int nativeLoadNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 
 	//init the inner interpreter manually
 	Toy_initLiteralArray(&inner.literalCache);
+	Toy_initLiteralArray(&inner.stack);
+	inner.hooks = interpreter->hooks;
 	inner.scope = Toy_pushScope(NULL);
 	inner.bytecode = tb;
 	inner.length = size;
@@ -62,8 +64,6 @@ static int nativeLoadNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 	inner.codeStart = -1;
 	inner.depth = interpreter->depth + 1;
 	inner.panic = false;
-	Toy_initLiteralArray(&inner.stack);
-	inner.hooks = interpreter->hooks;
 	Toy_setInterpreterPrint(&inner, interpreter->printOutput);
 	Toy_setInterpreterAssert(&inner, interpreter->assertOutput);
 	Toy_setInterpreterError(&inner, interpreter->errorOutput);
@@ -74,11 +74,7 @@ static int nativeLoadNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 	Toy_Literal nodeLiteral = TOY_TO_OPAQUE_LITERAL(node, node->tag);
 	Toy_pushLiteralArray(&interpreter->stack, nodeLiteral);
 
-	//cleanup
-	while (inner.scope) {
-		inner.scope = Toy_popScope(inner.scope);
-	}
-
+	//cleanup (NOT the scope - that needs to hang around)
 	Toy_freeLiteralArray(&inner.stack);
 	Toy_freeLiteralArray(&inner.literalCache);
 	Toy_freeLiteral(filePathLiteral);
@@ -219,6 +215,11 @@ static int nativeGetNodeChild(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 	Toy_Literal parentIdn = parent;
 	if (TOY_IS_IDENTIFIER(parent) && Toy_parseIdentifierToValue(interpreter, &parent)) {
 		Toy_freeLiteral(parentIdn);
+	}
+
+	Toy_Literal indexIdn = index;
+	if (TOY_IS_IDENTIFIER(index) && Toy_parseIdentifierToValue(interpreter, &index)) {
+		Toy_freeLiteral(indexIdn);
 	}
 
 	if (!TOY_IS_OPAQUE(parent) || !TOY_IS_INTEGER(index)) {
@@ -528,15 +529,15 @@ static int nativeDrawNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 	return 0;
 }
 
-static int nativeCallNode(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+static int nativeCallNodeFn(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//checks
 	if (arguments->count < 2) {
 		interpreter->errorOutput("Too few arguments passed to callNode\n");
 		return -1;
 	}
 
-	Toy_LiteralArray extraArgs;
-	Toy_initLiteralArray(&extraArgs);
+	Toy_LiteralArray extraArgsBackwards;
+	Toy_initLiteralArray(&extraArgsBackwards);
 
 	//extract the extra arg values
 	while (arguments->count > 2) {
@@ -547,9 +548,21 @@ static int nativeCallNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 			Toy_freeLiteral(idn);
 		}
 
+		Toy_pushLiteralArray(&extraArgsBackwards, tmp);
+		Toy_freeLiteral(tmp);
+	}
+
+	//reverse the extra args
+	Toy_LiteralArray extraArgs;
+	Toy_initLiteralArray(&extraArgs);
+
+	while (extraArgsBackwards.count > 0) {
+		Toy_Literal tmp = Toy_popLiteralArray(&extraArgsBackwards);
 		Toy_pushLiteralArray(&extraArgs, tmp);
 		Toy_freeLiteral(tmp);
 	}
+
+	Toy_freeLiteralArray(&extraArgsBackwards);
 
 	//back on track
 	Toy_Literal fnName = Toy_popLiteralArray(arguments);
@@ -609,7 +622,9 @@ int Box_hookNode(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Liter
 		{"freeTexture", nativeFreeTexture},
 		{"setRect", nativeSetRect},
 		{"drawNode", nativeDrawNode},
-		{"callNode", nativeCallNode},
+		{"callNodeFn", nativeCallNodeFn},
+		
+		//get rect, get node var, create empty node, get child count, get root node
 		{NULL, NULL},
 	};
 

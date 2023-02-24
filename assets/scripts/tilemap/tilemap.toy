@@ -1,0 +1,95 @@
+//this file manages the tilemap-related utilities
+import standard;
+import node;
+
+var childCounter: int = 0;
+
+var levelXCount: int const = 4;
+var levelYCount: int const = 4;
+
+var camX: float = 0;
+var camY: float = 0;
+
+//TODO: reference these from a global source (root?)
+var tileWidth: float const = 100;
+var tileHeight: float const = 100;
+
+var roomWidth: float const = 10;
+var roomHeight: float const = 10;
+
+var screenWidth: float = 1080;
+var screenHeight: float = 720;
+
+
+//util to generate and init a child node of a given parent
+fn makeChild(parent: opaque, fname: string) {
+	var child: opaque = loadNode(fname);
+	parent.pushNode(child);
+	child.initNode();
+	return child;
+}
+
+fn loadLayer(node: opaque, layerName: string) {
+	//load the given layer as a child
+	var layerNode = node.makeChild("scripts:/tilemap/" + layerName);
+	childCounter++;
+}
+
+var stepCounter = 0;
+fn onStep(node: opaque) {
+	stepCounter++;
+
+	camX--;
+	camY--;
+}
+
+fn onDraw(node: opaque) {
+	print stepCounter;
+	stepCounter = 0;
+
+	//TODO: reference the camera width & height
+	//TODO: render parallax
+
+	//cull out-of-bounds regions
+	var lowerX = abs(floor(floor((camX-screenWidth/2) / tileWidth) / float roomWidth));
+	var upperX = abs(ceil(floor((camX-screenWidth*1.5) / float tileWidth) / float roomWidth));
+
+	var lowerY = abs(floor(floor((camY-screenHeight/2) / tileHeight) / float roomHeight));
+	var upperY = abs(ceil(floor((camY-screenHeight*1.5) / float tileHeight) / float roomHeight));
+
+	//bounds check
+	lowerX = max(lowerX, 0);
+	upperX = min(upperX + 1, levelXCount);
+	lowerY = max(lowerY, 0);
+	upperY = min(upperY + 1, levelYCount);
+
+	for (var c = 0; c < childCounter; c++) {
+		for (var j = lowerY; j <= upperY; j++) {
+			for (var i = lowerX; i <= upperX; i++) {
+				node.getNodeChild(c).callNodeFn("drawRoom", i, j, c * 4.0, camX, camY, screenWidth, screenHeight);
+			}
+		}
+	}
+}
+
+fn round(x): int {
+	var f = floor(x);
+	return x - f >= 0.5 ? f + 1 : f;
+}
+
+fn floor(x): int {
+	return int x;
+}
+
+fn ceil(x): int {
+	var f = floor(x);
+	return x - f != 0 ? f + 1 : f;
+}
+
+fn min(a, b) {
+	return a < b ? a : b;
+}
+
+fn max(a, b) {
+	return a > b ? a : b;
+}

@@ -21,6 +21,15 @@
   <ItemGroup>
     <ClCompile Include="source\main.c" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\scripts\entity.toy" />
+    <None Include="assets\scripts\init.toy" />
+    <None Include="assets\scripts\scene.toy" />
+    <None Include="assets\scripts\tilemap\layer-background.toy" />
+    <None Include="assets\scripts\tilemap\layer-walls.toy" />
+    <None Include="assets\scripts\tilemap\tile.toy" />
+    <None Include="assets\scripts\tilemap\tilemap.toy" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <ProjectGuid>{97F823E5-3AB8-47EF-B142-C15DD7CADF76}</ProjectGuid>

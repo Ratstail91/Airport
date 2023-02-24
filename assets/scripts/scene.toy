@@ -1,0 +1,23 @@
+//the overarching scene
+import node;
+
+
+//util to generate and init a child node of a given parent
+fn makeChild(parent: opaque, fname: string) {
+	var child: opaque = loadNode(fname);
+	parent.pushNode(child);
+	child.initNode();
+	return child;
+}
+
+
+fn onInit(node: opaque) {
+	//load the tile map node
+	var tilemapNode = node.makeChild("scripts:/tilemap/tilemap.toy");
+
+	tilemapNode.callNodeFn("loadLayer", "layer-background.toy");
+	tilemapNode.callNodeFn("loadLayer", "layer-walls.toy");
+	tilemapNode.callNodeFn("loadLayer", "layer-walls.toy");
+	//tilemapNode.callNodeFn("loadLayer", "layer-walls.toy"); //TODO: remove this
+	//tilemapNode.callNodeFn("loadLayer", "layer-maze.toy");
+}

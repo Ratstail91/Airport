@@ -1,0 +1,70 @@
+//this is one layer
+import node;
+
+var childCounter: int = 0;
+
+//TODO: reference these from a global source (root?)
+var tileWidth: float const = 100;
+var tileHeight: float const = 100;
+
+var roomWidth: float const = 10;
+var roomHeight: float const = 10;
+
+
+//util to generate and init a child node of a given parent
+fn makeChildSprite(parent: opaque, spriteName: string) {
+	var child: opaque = loadNode("scripts:/tilemap/tile.toy");
+	parent.pushNode(child);
+	child.initNode();
+
+	child.loadTexture("sprites:/" + spriteName);
+
+	//BUGFIX
+	childCounter++;
+
+	return child;
+}
+
+
+fn onInit(node: opaque) {
+	//load the child node, with the tiling back image
+	node.makeChildSprite("tile-background.png");
+}
+
+fn drawRoom(node: opaque, x, y, depth, camX, camY, camW, camH) {
+	//the modifier ratio to move things
+	var mod: float = float tileWidth / (tileWidth - depth);
+	
+	var tileWidth_mod = tileWidth * mod;
+	var tileHeight_mod = tileHeight * mod;
+	var camX_mod = (camX - camW) * mod + camW / 2;
+	var camY_mod = (camY - camH) * mod + camH / 2;
+
+	for (var j: int = 0; j < roomHeight; j++) {
+		for (var i: int = 0; i < roomWidth; i++) {
+			node.getNodeChild(0).drawNode(round( (x * roomWidth + i) * tileWidth_mod + camX_mod ),round( (y * roomHeight + j) * tileHeight_mod + camY_mod ), round( tileWidth_mod ), round( tileHeight_mod ));
+		}
+	}
+}
+
+fn round(x): int {
+	var f = floor(x);
+	return x - f >= 0.5 ? f + 1 : f;
+}
+
+fn floor(x): int {
+	return int x;
+}
+
+fn ceil(x): int {
+	var f = floor(x);
+	return x - f != 0 ? f + 1 : f;
+}
+
+fn min(a, b) {
+	return a < b ? a : b;
+}
+
+fn max(a, b) {
+	return a > b ? a : b;
+}

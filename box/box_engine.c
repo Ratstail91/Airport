@@ -4,6 +4,7 @@
 #include "lib_input.h"
 #include "lib_node.h"
 #include "lib_standard.h"
+#include "lib_random.h"
 #include "lib_runner.h"
 #include "repl_tools.h"
 
@@ -50,6 +51,7 @@ void Box_initEngine() {
 	//init Toy
 	Toy_initInterpreter(&engine.interpreter);
 	Toy_injectNativeHook(&engine.interpreter, "standard", Toy_hookStandard);
+	Toy_injectNativeHook(&engine.interpreter, "random", Toy_hookRandom);
 	Toy_injectNativeHook(&engine.interpreter, "runner", Toy_hookRunner);
 	Toy_injectNativeHook(&engine.interpreter, "engine", Box_hookEngine);
 	Toy_injectNativeHook(&engine.interpreter, "node", Box_hookNode);
@@ -338,7 +340,7 @@ void Box_execEngine() {
 	//set up time
 	engine.realTime = clock();
 	engine.simTime = engine.realTime;
-	clock_t delta = (double) CLOCKS_PER_SEC / 240.0;
+	clock_t delta = (double) CLOCKS_PER_SEC / 60.0;
 
 	while (engine.running) {
 		execEvents();

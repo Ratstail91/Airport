@@ -25,7 +25,7 @@ mapInputEventToKeyUp("character_right", "right"); //event, keysym
 
 
 //this function must always be called, or the engine won't run
-initWindow("Airport Game", 800, 600, false);
+initWindow("Airport Game", 1080, 720, false);
 
 //kick off the logic of the scene graph
-loadRootNode("scripts:/root.toy");
+loadRootNode("scripts:/scene.toy");
