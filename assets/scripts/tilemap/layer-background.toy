@@ -1,4 +1,5 @@
 //this is one layer
+import standard;
 import node;
 
 var childCounter: int = 0;
@@ -9,6 +10,9 @@ var tileHeight: float const = 100;
 
 var roomWidth: float const = 10;
 var roomHeight: float const = 10;
+
+var levelXCount: int const = 4;
+var levelYCount: int const = 4;
 
 
 //util to generate and init a child node of a given parent
@@ -31,22 +35,37 @@ fn onInit(node: opaque) {
 	node.makeChildSprite("tile-background.png");
 }
 
-fn drawRoom(node: opaque, x, y, depth, camX, camY, camW, camH) {
-	//the modifier ratio to move things
+
+fn drawLayer(node: opaque, camX, camY, camW, camH, depth) {
+	//calc the modifier ratio to offset things
 	var mod: float = float tileWidth / (tileWidth - depth);
 	
-	var tileWidth_mod = tileWidth * mod;
-	var tileHeight_mod = tileHeight * mod;
+	var tileWidth_mod = round(tileWidth * mod);
+	var tileHeight_mod = round(tileHeight * mod);
 	var camX_mod = (camX - camW) * mod + camW / 2;
 	var camY_mod = (camY - camH) * mod + camH / 2;
 
-	for (var j: int = 0; j < roomHeight; j++) {
-		for (var i: int = 0; i < roomWidth; i++) {
-			node.getNodeChild(0).drawNode(round( (x * roomWidth + i) * tileWidth_mod + camX_mod ),round( (y * roomHeight + j) * tileHeight_mod + camY_mod ), round( tileWidth_mod ), round( tileHeight_mod ));
+	//calc the region to render
+	var lowerX = round((camX - camW/2) / tileWidth);
+	var upperX = round((camX - camW*1.5) / tileWidth);
+	var lowerY = round((camY - camH/2) / tileHeight);
+	var upperY = round((camY - camH*1.5) / tileHeight);
+
+	//bounds check
+	lowerX = max(0, abs(lowerX));
+	upperX = min(upperX < 0 ? abs(upperX) : 0, levelXCount * roomWidth);
+	lowerY = max(0, abs(lowerY));
+	upperY = min(upperY < 0 ? abs(upperY) : 0, levelYCount * roomHeight);
+
+	//render each tile
+	for (var j = lowerY; j <= upperY; j++) {
+		for (var i = lowerX; i <= upperX; i++) {
+			node.getNodeChild(0).drawNode(round(camX_mod + i * tileWidth_mod), round(camY_mod + j * tileHeight_mod), tileWidth_mod, tileHeight_mod);
 		}
 	}
 }
 
+//math utils
 fn round(x): int {
 	var f = floor(x);
 	return x - f >= 0.5 ? f + 1 : f;

@@ -1,4 +1,5 @@
 //this is one layer
+import standard;
 import node;
 
 var childCounter: int = 0;
@@ -9,6 +10,9 @@ var tileHeight: float const = 100;
 
 var roomWidth: float const = 10;
 var roomHeight: float const = 10;
+
+var levelXCount: int const = 4;
+var levelYCount: int const = 4;
 
 
 //util to generate and init a child node of a given parent
@@ -31,36 +35,42 @@ fn onInit(node: opaque) {
 	node.makeChildSprite("tile-wall.png");
 }
 
-//draw the parallax-style walls
-fn drawRoom(node: opaque, x, y, depth, camX, camY, camW, camH) {
-	var mod: float = float tileWidth / (tileWidth - depth);
 
-	var tileWidth_mod = tileWidth * mod;
-	var tileHeight_mod = tileHeight * mod;
+fn drawLayer(node: opaque, camX, camY, camW, camH, depth) {
+	//calc the modifier ratio to offset things
+	var mod: float = float tileWidth / (tileWidth - depth);
+	
+	var tileWidth_mod = round(tileWidth * mod);
+	var tileHeight_mod = round(tileHeight * mod);
 	var camX_mod = (camX - camW) * mod + camW / 2;
 	var camY_mod = (camY - camH) * mod + camH / 2;
 
-	//top
-	for (var i = x * roomWidth; i < (x * roomWidth) + roomWidth; i++) {
-		node.getNodeChild(0).drawNode(round( i * tileWidth_mod + camX_mod ), round(y * roomHeight * tileHeight_mod + camY_mod ), round( tileWidth_mod), round( tileHeight_mod ));
-	}
+	//calc the region to render
+	var lowerX = round((camX - camW/2) / tileWidth);
+	var upperX = round((camX - camW*1.5) / tileWidth);
+	var lowerY = round((camY - camH/2) / tileHeight);
+	var upperY = round((camY - camH*1.5) / tileHeight);
 
-	//left
-	for (var j = y * roomHeight; j < (y * roomHeight) + roomHeight; j++) {
-		node.getNodeChild(0).drawNode(round( x * roomWidth * tileWidth_mod + camX_mod ), round( j * tileHeight_mod + camY_mod ), round( tileWidth_mod), round( tileHeight_mod ));
-	}
+	//bounds check
+	lowerX = max(0, abs(lowerX));
+	upperX = min(upperX < 0 ? abs(upperX) : 0, levelXCount * roomWidth);
+	lowerY = max(0, abs(lowerY));
+	upperY = min(upperY < 0 ? abs(upperY) : 0, levelYCount * roomHeight);
 
-	//bottom
-	for (var i = x * roomWidth; i < (x * roomWidth) + roomWidth; i++) {
-		node.getNodeChild(0).drawNode(round( i * tileWidth_mod + camX_mod), round( ((y+1) * roomHeight -1) * tileHeight_mod + camY_mod), round( tileWidth_mod), round( tileHeight_mod));
-	}
+	//render each tile
+	for (var j = lowerY; j <= upperY; j++) {
+		for (var i = lowerX; i <= upperX; i++) {
+			if ( !(int i % int roomWidth == 0 || int i % int roomWidth == roomWidth - 1) && !(int j % int roomHeight == 0 || int j % int roomHeight == roomHeight - 1) ) {
+				continue;
+			}
 
-	//right
-	for (var j = y * roomHeight; j < (y * roomHeight) + roomHeight; j++) {
-		node.getNodeChild(0).drawNode(round( ((x + 1) * roomWidth -1) * tileWidth_mod + camX_mod ), round( j * tileHeight_mod + camY_mod ), round( tileWidth_mod ), round( tileHeight_mod ));
+			node.getNodeChild(0).drawNode(round(camX_mod + i * tileWidth_mod), round(camY_mod + j * tileHeight_mod), tileWidth_mod, tileHeight_mod);
+		}
 	}
 }
 
+
+//math utils
 fn round(x): int {
 	var f = floor(x);
 	return x - f >= 0.5 ? f + 1 : f;

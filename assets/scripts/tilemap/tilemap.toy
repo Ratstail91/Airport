@@ -47,31 +47,13 @@ fn onDraw(node: opaque) {
 	print stepCounter;
 	stepCounter = 0;
 
-	//TODO: reference the camera width & height
-	//TODO: render parallax
-
-	//cull out-of-bounds regions
-	var lowerX = abs(floor(floor((camX-screenWidth/2) / tileWidth) / float roomWidth));
-	var upperX = abs(ceil(floor((camX-screenWidth*1.5) / float tileWidth) / float roomWidth));
-
-	var lowerY = abs(floor(floor((camY-screenHeight/2) / tileHeight) / float roomHeight));
-	var upperY = abs(ceil(floor((camY-screenHeight*1.5) / float tileHeight) / float roomHeight));
-
-	//bounds check
-	lowerX = max(lowerX, 0);
-	upperX = min(upperX + 1, levelXCount);
-	lowerY = max(lowerY, 0);
-	upperY = min(upperY + 1, levelYCount);
-
+	//iterate over each layer, passing in the screen dimensions
 	for (var c = 0; c < childCounter; c++) {
-		for (var j = lowerY; j <= upperY; j++) {
-			for (var i = lowerX; i <= upperX; i++) {
-				node.getNodeChild(c).callNodeFn("drawRoom", i, j, c * 4.0, camX, camY, screenWidth, screenHeight);
-			}
-		}
+		node.getNodeChild(c).callNodeFn("drawLayer", camX, camY, screenWidth, screenHeight, c * 2);
 	}
 }
 
+//math utils
 fn round(x): int {
 	var f = floor(x);
 	return x - f >= 0.5 ? f + 1 : f;
