@@ -60,7 +60,7 @@ fn drawLayer(node: opaque, camX, camY, camW, camH, depth) {
 	//render each tile
 	for (var j = lowerY; j <= upperY; j++) {
 		for (var i = lowerX; i <= upperX; i++) {
-			node.getNodeChild(0).drawNode(round(camX_mod + i * tileWidth_mod), round(camY_mod + j * tileHeight_mod), tileWidth_mod, tileHeight_mod);
+			node.getChildNode(0).drawNode(round(camX_mod + i * tileWidth_mod), round(camY_mod + j * tileHeight_mod), tileWidth_mod, tileHeight_mod);
 		}
 	}
 }

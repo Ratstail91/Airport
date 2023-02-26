@@ -28,4 +28,4 @@ mapInputEventToKeyUp("character_right", "right"); //event, keysym
 initWindow("Airport Game", 1080, 720, false);
 
 //kick off the logic of the scene graph
-loadRootNode("scripts:/scene.toy");
+loadRootNode("scripts:/frames.toy");

@@ -13,6 +13,8 @@ void Box_initEngineNode(Box_EngineNode* node, Toy_Interpreter* interpreter, cons
 	node->capacity = 0;
 	node->count = 0;
 	node->texture = NULL;
+	node->rect = ((SDL_Rect) { 0, 0, 0, 0 });
+	node->frames = 0;
 
 	Toy_initLiteralDictionary(node->functions);
 
@@ -205,6 +207,7 @@ int Box_loadTextureEngineNode(Box_EngineNode* node, const char* fname) {
 	SDL_QueryTexture(node->texture, NULL, NULL, &w, &h);
 	SDL_Rect r = { 0, 0, w, h };
 	Box_setRectEngineNode(node, r);
+	Box_setFramesEngineNode(node, 1); //default
 
 	return 0;
 }
@@ -220,6 +223,36 @@ void Box_setRectEngineNode(Box_EngineNode* node, SDL_Rect rect) {
 	node->rect = rect;
 }
 
+BOX_API SDL_Rect Box_getRectEngineNode(Box_EngineNode* node) {
+	return node->rect;
+}
+
+BOX_API void Box_setFramesEngineNode(Box_EngineNode* node, int frames) {
+	node->frames = frames;
+	node->currentFrame = 0; //just in case
+}
+
+BOX_API int Box_getFramesEngineNode(Box_EngineNode* node) {
+	return node->frames;
+}
+
+BOX_API void Box_setCurrentFrameEngineNode(Box_EngineNode* node, int currentFrame) {
+	node->currentFrame = currentFrame;
+}
+
+BOX_API int Box_getCurrentFrameEngineNode(Box_EngineNode* node) {
+	return node->currentFrame;
+}
+
+BOX_API void Box_incrementCurrentFrame(Box_EngineNode* node) {
+	node->currentFrame++;
+	if (node->currentFrame >= node->frames) {
+		node->currentFrame = 0;
+	}
+}
+
 void Box_drawEngineNode(Box_EngineNode* node, SDL_Rect dest) {
-	SDL_RenderCopy(engine.renderer, node->texture, &node->rect, &dest);
+	SDL_Rect src = node->rect;
+	src.x += src.w * node->currentFrame; //TODO: improve this
+	SDL_RenderCopy(engine.renderer, node->texture, &src, &dest);
 }

@@ -64,7 +64,7 @@ fn drawLayer(node: opaque, camX, camY, camW, camH, depth) {
 				continue;
 			}
 
-			node.getNodeChild(0).drawNode(round(camX_mod + i * tileWidth_mod), round(camY_mod + j * tileHeight_mod), tileWidth_mod, tileHeight_mod);
+			node.getChildNode(0).drawNode(round(camX_mod + i * tileWidth_mod), round(camY_mod + j * tileHeight_mod), tileWidth_mod, tileHeight_mod);
 		}
 	}
 }

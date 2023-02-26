@@ -1,0 +1,22 @@
+import node;
+
+fn onInit(node: opaque) {
+	node.loadTexture("sprites:/frametest.png");
+
+	//mapped to the given image
+	node.setNodeRect(0, 0, 32, 32);
+	node.setNodeFrames(3);
+}
+
+var counter = 0;
+fn onStep(node: opaque) {
+	counter++;
+	if (counter >= 60) {
+		counter = 0;
+		node.incrementCurrentNodeFrame();
+	}
+}
+
+fn onDraw(node: opaque) {
+	node.drawNode(0, 0);
+}
