@@ -514,7 +514,7 @@ static int nativeGetNodeFrames(Toy_Interpreter* interpreter, Toy_LiteralArray* a
 	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
 	Toy_Literal framesLiteral = TOY_TO_INTEGER_LITERAL(node->frames);
 
-	Toy_pushLiteralArray(interpreter, framesLiteral);
+	Toy_pushLiteralArray(&interpreter->stack, framesLiteral);
 
 
 	//cleanup
@@ -589,8 +589,7 @@ static int nativeGetCurrentNodeFrame(Toy_Interpreter* interpreter, Toy_LiteralAr
 	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
 	Toy_Literal currentFrameLiteral = TOY_TO_INTEGER_LITERAL(node->currentFrame);
 
-	Toy_pushLiteralArray(interpreter, currentFrameLiteral);
-
+	Toy_pushLiteralArray(&interpreter->stack, currentFrameLiteral);
 
 	//cleanup
 	Toy_freeLiteral(nodeLiteral);

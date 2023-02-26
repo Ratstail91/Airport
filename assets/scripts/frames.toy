@@ -14,6 +14,9 @@ fn onStep(node: opaque) {
 	if (counter >= 60) {
 		counter = 0;
 		node.incrementCurrentNodeFrame();
+		print "---";
+		print node.getCurrentNodeFrame();
+		print node.getNodeFrames();
 	}
 }
 
