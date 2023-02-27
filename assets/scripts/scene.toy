@@ -34,5 +34,5 @@ fn getLevelXCount(node: opaque): int { return 9; }
 fn getLevelYCount(node: opaque): int { return 9; }
 
 //TODO: move this into the engine
-fn getScreenWidth(node: opaque): int { return 1920; }
-fn getScreenHeight(node: opaque): int { return 1080; }
+fn getScreenWidth(node: opaque): int { return 1080; }
+fn getScreenHeight(node: opaque): int { return 720; }
