@@ -21,3 +21,18 @@ fn onInit(node: opaque) {
 	//tilemapNode.callNodeFn("loadLayer", "layer-walls.toy"); //TODO: remove this
 	//tilemapNode.callNodeFn("loadLayer", "layer-maze.toy");
 }
+
+
+//global accessors
+fn getTileWidth(node: opaque): int { return 64; }
+fn getTileHeight(node: opaque): int { return 64; }
+
+fn getRoomWidth(node: opaque): int { return 10; }
+fn getRoomHeight(node: opaque): int { return 10; }
+
+fn getLevelXCount(node: opaque): int { return 9; }
+fn getLevelYCount(node: opaque): int { return 9; }
+
+//TODO: move this into the engine
+fn getScreenWidth(node: opaque): int { return 1920; }
+fn getScreenHeight(node: opaque): int { return 1080; }

@@ -80,7 +80,6 @@ static int nativeInitWindow(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 	return 0;
 }
 
-//TODO: perhaps a returns argument would be better?
 static int nativeLoadRootNode(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 1) {
 		interpreter->errorOutput("Incorrect number of arguments passed to loadRootNode\n");
@@ -127,7 +126,7 @@ static int nativeLoadRootNode(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 	const unsigned char* tb = Toy_compileString((const char*)source, &size);
 	free((void*)source);
 
-	engine.rootNode = TOY_ALLOCATE(Box_EngineNode, 1);
+	Box_EngineNode* rootNode = TOY_ALLOCATE(Box_EngineNode, 1);
 
 	//BUGFIX: make an inner-interpreter
 	Toy_Interpreter inner;
@@ -147,10 +146,13 @@ static int nativeLoadRootNode(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 	Toy_setInterpreterAssert(&inner, interpreter->assertOutput);
 	Toy_setInterpreterError(&inner, interpreter->errorOutput);
 
-	Box_initEngineNode(engine.rootNode, &inner, tb, size);
+	Box_initEngineNode(rootNode, &inner, tb, size);
 
 	//init the new node (and ONLY this node)
-	Box_callEngineNode(engine.rootNode, &engine.interpreter, "onInit", NULL);
+	Box_callEngineNode(rootNode, &engine.interpreter, "onInit", NULL);
+
+	//NOW it's non-null
+	engine.rootNode = rootNode;
 
 	//cleanup
 	while(inner.scope) {
@@ -164,6 +166,24 @@ static int nativeLoadRootNode(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 	return 0;
 }
 
+static int nativeGetRootNode(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 0) {
+		interpreter->errorOutput("Incorrect number of arguments passed to getRootNode\n");
+		return -1;
+	}
+
+	if (engine.rootNode == NULL) {
+		interpreter->errorOutput("Can't access root node until after initialization\n");
+		return -1;
+	}
+
+	Toy_Literal resultLiteral = TOY_TO_OPAQUE_LITERAL(engine.rootNode, engine.rootNode->tag);
+
+	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
+
+	return 1;
+}
+
 //call the hook
 typedef struct Natives {
 	char* name;
@@ -175,6 +195,7 @@ int Box_hookEngine(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Lit
 	Natives natives[] = {
 		{"initWindow", nativeInitWindow},
 		{"loadRootNode", nativeLoadRootNode},
+		{"getRootNode", nativeGetRootNode},
 		{NULL, NULL}
 	};
 

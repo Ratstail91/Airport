@@ -842,7 +842,7 @@ int Box_hookNode(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Liter
 		{"drawNode", nativeDrawNode},
 		{"callNodeFn", nativeCallNodeFn},
 
-		//TODO: get rect, get node var, create empty node, get root node
+		//TODO: get rect, get node var, create empty node
 		{NULL, NULL},
 	};
 

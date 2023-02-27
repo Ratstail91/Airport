@@ -1,23 +1,10 @@
 //this file manages the tilemap-related utilities
 import standard;
+import engine;
 import node;
 
 var camX: float = 0;
 var camY: float = 0;
-
-//TODO: reference these from a global source (root?)
-var tileWidth: int const = 64;
-var tileHeight: int const = 64;
-
-var roomWidth: int const = 10;
-var roomHeight: int const = 10;
-
-var levelXCount: int const = 9;
-var levelYCount: int const = 9;
-
-var screenWidth: int const = 1080;
-var screenHeight: int const = 720;
-
 
 //util to generate and init a child node of a given parent
 fn makeChild(parent: opaque, fname: string) {
@@ -43,6 +30,9 @@ fn onStep(node: opaque) {
 fn onDraw(node: opaque) {
 	print stepCounter;
 	stepCounter = 0;
+
+	var screenWidth: int const = getRootNode().callNodeFn("getScreenWidth");
+	var screenHeight: int const = getRootNode().callNodeFn("getScreenHeight");
 
 	//iterate over each layer, passing in the screen dimensions
 	for (var c = 0; c < node.getChildNodeCount(); c++) {

@@ -1,16 +1,7 @@
 //this is one layer
 import standard;
+import engine;
 import node;
-
-//TODO: reference these from a global source (root?)
-var tileWidth: int const = 64;
-var tileHeight: int const = 64;
-
-var roomWidth: int const = 10;
-var roomHeight: int const = 10;
-
-var levelXCount: int const = 9;
-var levelYCount: int const = 9;
 
 
 //util to generate and init a child node of a given parent
@@ -32,9 +23,21 @@ fn onInit(node: opaque) {
 
 
 fn drawLayer(node: opaque, camX, camY, camW, camH, depth) {
+	//get the constants from root
+	var root: opaque = getRootNode();
+
+	var tileWidth: int const = root.callNodeFn("getTileWidth");
+	var tileHeight: int const = root.callNodeFn("getTileHeight");
+
+	var roomWidth: int const = root.callNodeFn("getRoomWidth");
+	var roomHeight: int const = root.callNodeFn("getRoomHeight");
+
+	var levelXCount: int const = root.callNodeFn("getLevelXCount");
+	var levelYCount: int const = root.callNodeFn("getLevelYCount");
+
 	//calc the modifier ratio to offset things
 	var mod: float = float tileWidth / (tileWidth - depth);
-	
+
 	var tileWidth_mod: int = round(tileWidth * mod);
 	var tileHeight_mod: int = round(tileHeight * mod);
 	var camX_mod: int = round((camX - camW) * mod + camW/2);
