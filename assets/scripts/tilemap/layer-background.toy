@@ -2,8 +2,6 @@
 import standard;
 import node;
 
-var childCounter: int = 0;
-
 //TODO: reference these from a global source (root?)
 var tileWidth: int const = 64;
 var tileHeight: int const = 64;
@@ -22,9 +20,6 @@ fn makeChildSprite(parent: opaque, spriteName: string) {
 	child.initNode();
 
 	child.loadTexture("sprites:/" + spriteName);
-
-	//BUGFIX
-	childCounter++;
 
 	return child;
 }

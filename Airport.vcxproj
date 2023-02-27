@@ -22,8 +22,9 @@
     <ClCompile Include="source\main.c" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="assets\scripts\children_test.toy" />
     <None Include="assets\scripts\entity.toy" />
-    <None Include="assets\scripts\frames.toy" />
+    <None Include="assets\scripts\frames_test.toy" />
     <None Include="assets\scripts\init.toy" />
     <None Include="assets\scripts\scene.toy" />
     <None Include="assets\scripts\tilemap\layer-background.toy" />

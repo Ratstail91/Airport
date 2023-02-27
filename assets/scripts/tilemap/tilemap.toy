@@ -2,9 +2,6 @@
 import standard;
 import node;
 
-//TODO: get child count
-var childCounter: int = 0;
-
 var camX: float = 0;
 var camY: float = 0;
 
@@ -33,7 +30,6 @@ fn makeChild(parent: opaque, fname: string) {
 fn loadLayer(node: opaque, layerName: string) {
 	//load the given layer as a child
 	var layerNode = node.makeChild("scripts:/tilemap/" + layerName);
-	childCounter++;
 }
 
 var stepCounter = 0;
@@ -49,7 +45,7 @@ fn onDraw(node: opaque) {
 	stepCounter = 0;
 
 	//iterate over each layer, passing in the screen dimensions
-	for (var c = 0; c < childCounter; c++) {
+	for (var c = 0; c < node.getChildNodeCount(); c++) {
 		node.getChildNode(c).callNodeFn("drawLayer", camX, camY, screenWidth, screenHeight, c * 4.0);
 	}
 }

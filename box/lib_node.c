@@ -191,12 +191,19 @@ static int nativeGetChildNode(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 		return -1;
 	}
 
-	Box_EngineNode* childNode = parentNode->children[intIndex];
-	Toy_Literal child = TOY_TO_OPAQUE_LITERAL(childNode, childNode->tag);
+	Box_EngineNode* childNode = Box_getChildEngineNode(parentNode, intIndex);
+	Toy_Literal child;
+
+	if (childNode == NULL) {
+		child = TOY_TO_NULL_LITERAL;
+	}
+	else {
+		child = TOY_TO_OPAQUE_LITERAL(childNode, childNode->tag);
+	}
 
 	Toy_pushLiteralArray(&interpreter->stack, child);
 
-	//no return value
+	//cleanup
 	Toy_freeLiteral(parent);
 	Toy_freeLiteral(child);
 	Toy_freeLiteral(index);
@@ -210,46 +217,37 @@ static int nativeFreeChildNode(Toy_Interpreter* interpreter, Toy_LiteralArray* a
 		return -1;
 	}
 
-	Toy_Literal index = Toy_popLiteralArray(arguments);
-	Toy_Literal node = Toy_popLiteralArray(arguments);
+	Toy_Literal indexLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal nodeLiteral = Toy_popLiteralArray(arguments);
 
-	Toy_Literal nodeIdn = node; //annoying
-	if (TOY_IS_IDENTIFIER(node) && Toy_parseIdentifierToValue(interpreter, &node)) {
-		Toy_freeLiteral(nodeIdn);
+	Toy_Literal nodeLiteralIdn = nodeLiteral; //annoying
+	if (TOY_IS_IDENTIFIER(nodeLiteral) && Toy_parseIdentifierToValue(interpreter, &nodeLiteral)) {
+		Toy_freeLiteral(nodeLiteralIdn);
 	}
 
 	//check argument types
-	if (!TOY_IS_OPAQUE(node) || !TOY_IS_INTEGER(index)) {
+	if (!TOY_IS_OPAQUE(nodeLiteral) || !TOY_IS_INTEGER(indexLiteral)) {
 		interpreter->errorOutput("Incorrect argument type passed to freeChildNode\n");
-		Toy_freeLiteral(node);
+		Toy_freeLiteral(nodeLiteral);
 		return -1;
 	}
 
-	Box_EngineNode* parentNode = TOY_AS_OPAQUE(node);
-	int idx = TOY_AS_INTEGER(index);
+	Box_EngineNode* node = TOY_AS_OPAQUE(nodeLiteral);
+	int idx = TOY_AS_INTEGER(indexLiteral);
 
 	//check bounds
-	if (idx < 0 || idx >= parentNode->count) {
+	if (idx < 0 || idx >= node->count) {
 		interpreter->errorOutput("Node index out of bounds in freeChildNode\n");
-		Toy_freeLiteral(node);
-		Toy_freeLiteral(index);
+		Toy_freeLiteral(nodeLiteral);
+		Toy_freeLiteral(indexLiteral);
 		return -1;
 	}
 
-	//get the child node
-	Box_EngineNode* childNode = parentNode->children[idx];
-
-	//free the node
-	if (childNode != NULL) {
-		Box_callRecursiveEngineNode(childNode, &engine.interpreter, "onFree", NULL);
-		Box_freeEngineNode(childNode);
-	}
-
-	parentNode->children[idx] = NULL;
+	Box_freeChildEngineNode(node, idx);
 
 	//cleanup
-	Toy_freeLiteral(node);
-	Toy_freeLiteral(index);
+	Toy_freeLiteral(nodeLiteral);
+	Toy_freeLiteral(indexLiteral);
 	return 0;
 }
 
@@ -289,6 +287,40 @@ static int nativeGetParentNode(Toy_Interpreter* interpreter, Toy_LiteralArray* a
 	Toy_freeLiteral(nodeLiteral);
 
 	return 1;
+}
+
+static int nativeGetChildNodeCount(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	//checks
+	if (arguments->count != 1) {
+		interpreter->errorOutput("Incorrect number of arguments passed to getChildNodeCount\n");
+		return -1;
+	}
+
+	Toy_Literal nodeLiteral = Toy_popLiteralArray(arguments);
+
+	Toy_Literal nodeLiteralIdn = nodeLiteral;
+	if (TOY_IS_IDENTIFIER(nodeLiteral) && Toy_parseIdentifierToValue(interpreter, &nodeLiteral)) {
+		Toy_freeLiteral(nodeLiteralIdn);
+	}
+
+	if (!TOY_IS_OPAQUE(nodeLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to getChildNodeCount\n");
+		Toy_freeLiteral(nodeLiteral);
+		return -1;
+	}
+
+	//get the count
+	Box_EngineNode* node = TOY_AS_OPAQUE(nodeLiteral);
+	int childCount = Box_getChildCountEngineNode(node);
+	Toy_Literal childCountLiteral = TOY_TO_INTEGER_LITERAL(childCount);
+
+	Toy_pushLiteralArray(&interpreter->stack, childCountLiteral);
+
+	//no return value
+	Toy_freeLiteral(nodeLiteral);
+	Toy_freeLiteral(childCountLiteral);
+
+	return 0;
 }
 
 static int nativeLoadTexture(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
@@ -797,6 +829,7 @@ int Box_hookNode(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Liter
 		{"getChildNode", nativeGetChildNode},
 		{"freeChildNode", nativeFreeChildNode},
 		{"getParentNode", nativeGetParentNode},
+		{"getChildNodeCount", nativeGetChildNodeCount},
 		{"loadTexture", nativeLoadTexture},
 		{"freeTexture", nativeFreeTexture},
 		{"setNodeRect", nativeSetNodeRect},
@@ -808,8 +841,8 @@ int Box_hookNode(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Liter
 		{"incrementCurrentNodeFrame", nativeIncrementCurrentNodeFrame},
 		{"drawNode", nativeDrawNode},
 		{"callNodeFn", nativeCallNodeFn},
-		
-		//TODO: get rect, get node var, create empty node, get child count, get root node
+
+		//TODO: get rect, get node var, create empty node, get root node
 		{NULL, NULL},
 	};
 

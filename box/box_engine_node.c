@@ -12,6 +12,7 @@ void Box_initEngineNode(Box_EngineNode* node, Toy_Interpreter* interpreter, cons
 	node->children = NULL;
 	node->capacity = 0;
 	node->count = 0;
+	node->childCount = 0;
 	node->texture = NULL;
 	node->rect = ((SDL_Rect) { 0, 0, 0, 0 });
 	node->frames = 0;
@@ -40,7 +41,7 @@ void Box_initEngineNode(Box_EngineNode* node, Toy_Interpreter* interpreter, cons
 }
 
 void Box_pushEngineNode(Box_EngineNode* node, Box_EngineNode* child) {
-	//push to the array (prune tombstones when expanding/copying)
+	//push to the array
 	if (node->count + 1 > node->capacity) {
 		int oldCapacity = node->capacity;
 
@@ -48,25 +49,14 @@ void Box_pushEngineNode(Box_EngineNode* node, Box_EngineNode* child) {
 		node->children = TOY_GROW_ARRAY(Box_EngineNode*, node->children, oldCapacity, node->capacity);
 	}
 
-	//prune tombstones (experimental)
-	int counter = 0;
-	for (int i = 0; i < node->capacity; i++) {
-		if (i >= node->count) {
-			node->count = counter;
-			break;
-		}
-
-		//move down
-		if (node->children[i] != NULL) {
-			node->children[counter++] = node->children[i];
-		}
-	}
-
 	//assign
 	node->children[node->count++] = child;
 
 	//reverse-assign
 	child->parent = node;
+
+	//count
+	node->childCount++;
 }
 
 void Box_freeEngineNode(Box_EngineNode* node) {
@@ -93,6 +83,28 @@ void Box_freeEngineNode(Box_EngineNode* node) {
 
 	//free this node's memory
 	TOY_FREE(Box_EngineNode, node);
+}
+
+Box_EngineNode* Box_getChildEngineNode(Box_EngineNode* node, int index) {
+	if (index < 0 || index > node->count) {
+		return NULL;
+	}
+
+	return node->children[index];
+}
+
+void Box_freeChildEngineNode(Box_EngineNode* node, int index) {
+	//get the child node
+	Box_EngineNode* childNode = node->children[index];
+
+	//free the node
+	if (childNode != NULL) {
+		Box_callRecursiveEngineNode(childNode, &engine.interpreter, "onFree", NULL);
+		Box_freeEngineNode(childNode);
+		node->childCount--;
+	}
+
+	node->children[index] = NULL;
 }
 
 Toy_Literal Box_callEngineNodeLiteral(Box_EngineNode* node, Toy_Interpreter* interpreter, Toy_Literal key, Toy_LiteralArray* args) {
@@ -188,6 +200,10 @@ void Box_callRecursiveEngineNode(Box_EngineNode* node, Toy_Interpreter* interpre
 	Toy_freeLiteral(key);
 }
 
+int Box_getChildCountEngineNode(Box_EngineNode* node) {
+	return node->childCount;
+}
+
 int Box_loadTextureEngineNode(Box_EngineNode* node, const char* fname) {
 	SDL_Surface* surface = IMG_Load(fname);
 
@@ -223,28 +239,28 @@ void Box_setRectEngineNode(Box_EngineNode* node, SDL_Rect rect) {
 	node->rect = rect;
 }
 
-BOX_API SDL_Rect Box_getRectEngineNode(Box_EngineNode* node) {
+SDL_Rect Box_getRectEngineNode(Box_EngineNode* node) {
 	return node->rect;
 }
 
-BOX_API void Box_setFramesEngineNode(Box_EngineNode* node, int frames) {
+void Box_setFramesEngineNode(Box_EngineNode* node, int frames) {
 	node->frames = frames;
 	node->currentFrame = 0; //just in case
 }
 
-BOX_API int Box_getFramesEngineNode(Box_EngineNode* node) {
+int Box_getFramesEngineNode(Box_EngineNode* node) {
 	return node->frames;
 }
 
-BOX_API void Box_setCurrentFrameEngineNode(Box_EngineNode* node, int currentFrame) {
+void Box_setCurrentFrameEngineNode(Box_EngineNode* node, int currentFrame) {
 	node->currentFrame = currentFrame;
 }
 
-BOX_API int Box_getCurrentFrameEngineNode(Box_EngineNode* node) {
+int Box_getCurrentFrameEngineNode(Box_EngineNode* node) {
 	return node->currentFrame;
 }
 
-BOX_API void Box_incrementCurrentFrame(Box_EngineNode* node) {
+void Box_incrementCurrentFrame(Box_EngineNode* node) {
 	node->currentFrame++;
 	if (node->currentFrame >= node->frames) {
 		node->currentFrame = 0;
