@@ -9,14 +9,14 @@ var camX: float = 0;
 var camY: float = 0;
 
 //TODO: reference these from a global source (root?)
-var tileWidth: int const = 100;
-var tileHeight: int const = 100;
+var tileWidth: int const = 64;
+var tileHeight: int const = 64;
 
 var roomWidth: int const = 10;
 var roomHeight: int const = 10;
 
-var levelXCount: int const = 4;
-var levelYCount: int const = 4;
+var levelXCount: int const = 9;
+var levelYCount: int const = 9;
 
 var screenWidth: int const = 1080;
 var screenHeight: int const = 720;
@@ -50,6 +50,6 @@ fn onDraw(node: opaque) {
 
 	//iterate over each layer, passing in the screen dimensions
 	for (var c = 0; c < childCounter; c++) {
-		node.getChildNode(c).callNodeFn("drawLayer", camX, camY, screenWidth, screenHeight, c * 2);
+		node.getChildNode(c).callNodeFn("drawLayer", camX, camY, screenWidth, screenHeight, c * 4.0);
 	}
 }
