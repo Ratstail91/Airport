@@ -6,6 +6,9 @@ import node;
 var camX: float = 0;
 var camY: float = 0;
 
+var stepCounter: int = 0;
+var stepTracker: [int] = [0, 0, 0, 0, 0, 0];
+
 //util to generate and init a child node of a given parent
 fn makeChild(parent: opaque, fname: string) {
 	var child: opaque = loadNode(fname);
@@ -19,7 +22,6 @@ fn loadLayer(node: opaque, layerName: string) {
 	var layerNode = node.makeChild("scripts:/tilemap/" + layerName);
 }
 
-var stepCounter = 0;
 fn onStep(node: opaque) {
 	stepCounter++;
 
@@ -28,8 +30,19 @@ fn onStep(node: opaque) {
 }
 
 fn onDraw(node: opaque) {
-	//print stepCounter;
+	var tmp = stepCounter;
+	print stepCounter;
 	stepCounter = 0;
+
+	if (tmp > 5) {
+		tmp = 5;
+	}
+
+	print typeof (stepTracker[tmp] + 1);
+
+	//TODO: index[]++
+	stepTracker[tmp] = stepTracker[tmp] + 1;
+	print stepTracker;
 
 	var screenWidth: int const = getRootNode().callNodeFn("getScreenWidth");
 	var screenHeight: int const = getRootNode().callNodeFn("getScreenHeight");
