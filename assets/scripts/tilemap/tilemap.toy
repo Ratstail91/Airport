@@ -28,7 +28,7 @@ fn onStep(node: opaque) {
 }
 
 fn onDraw(node: opaque) {
-	print stepCounter;
+	//print stepCounter;
 	stepCounter = 0;
 
 	var screenWidth: int const = getRootNode().callNodeFn("getScreenWidth");

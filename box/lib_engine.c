@@ -55,7 +55,7 @@ static int nativeInitWindow(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 
 	//init the renderer
 	// SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
-	engine.renderer = SDL_CreateRenderer(engine.window, -1, 0);
+	engine.renderer = SDL_CreateRenderer(engine.window, -1, SDL_RENDERER_ACCELERATED);
 
 	if (engine.renderer == NULL) {
 		fatalError("Failed to initialize the renderer\n");
@@ -64,7 +64,7 @@ static int nativeInitWindow(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 	SDL_RendererInfo rendererInfo;
 	SDL_GetRendererInfo(engine.renderer, &rendererInfo);
 
-	printf("Renderer: %s\n", rendererInfo.name);
+	printf("Renderer: %s (HW %s)\n", rendererInfo.name, rendererInfo.flags & SDL_RENDERER_ACCELERATED ? "yes" : "no");
 
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
 	SDL_RenderSetLogicalSize(engine.renderer, engine.screenWidth, engine.screenHeight);

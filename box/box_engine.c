@@ -44,6 +44,12 @@ void Box_initEngine() {
 		fatalError("Failed to initialize SDL2");
 	}
 
+	//init SDL_image
+	int imageFlags = IMG_INIT_PNG | IMG_INIT_JPG;
+	if (IMG_Init(imageFlags) != imageFlags) {
+		fatalError("Failed to initialize SDL2_image");
+	}
+
 	//init events
 	Toy_initLiteralDictionary(&engine.symKeyDownEvents);
 	Toy_initLiteralDictionary(&engine.symKeyUpEvents);
@@ -109,9 +115,10 @@ static void execEvents() {
 			case SDL_WINDOWEVENT: {
 				switch(event.window.event) {
 					case SDL_WINDOWEVENT_RESIZED:
-						engine.screenWidth = event.window.data1;
-						engine.screenHeight = event.window.data2;
-						SDL_RenderSetLogicalSize(engine.renderer, engine.screenWidth, engine.screenHeight);
+						//TODO: toy onWindowResized, setLogicalWindowSize, getLogicalWindowSize
+						//engine.screenWidth = event.window.data1;
+						//engine.screenHeight = event.window.data2;
+						//SDL_RenderSetLogicalSize(engine.renderer, engine.screenWidth, engine.screenHeight);
 					break;
 				}
 			}
