@@ -1,24 +1,22 @@
 import node;
 
-//util to generate and init a child node of a given parent
-fn makeChild(parent: opaque, fname: string) {
+//looks like a polyfill
+fn loadChild(parent: opaque, fname: string) {
 	var child: opaque = loadNode(fname);
 	parent.pushNode(child);
-	child.initNode();
 	return child;
 }
 
-fn onInit(node: opaque) {
+fn onLoad(node: opaque) {
 	for (var i = 0; i < 20; i++) {
-		node.makeChild("scripts:/tilemap/tile.toy");
+		node.loadChild("scripts:/empty.toy");
 	}
 
 	node.freeChildNode(10);
 	var n = node.getChildNode(10);
 
 	for (var i = 0; i < 20; i++) {
-		//this would originally prune tombstones...
-		node.makeChild("scripts:/tilemap/tile.toy");
+		node.loadChild("scripts:/empty.toy");
 	}
 
 	print node.getChildNodeCount();

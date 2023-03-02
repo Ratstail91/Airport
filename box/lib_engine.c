@@ -25,7 +25,7 @@ static int nativeInitWindow(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 	}
 
 	if (arguments->count != 4) {
-		fatalError("Incorrect number of arguments passed to initEngine\n");
+		fatalError("Incorrect number of arguments passed to initWindow\n");
 	}
 
 	//extract the arguments
@@ -34,9 +34,29 @@ static int nativeInitWindow(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 	Toy_Literal screenWidth = Toy_popLiteralArray(arguments);
 	Toy_Literal caption = Toy_popLiteralArray(arguments);
 
+	Toy_Literal captionIdn = caption;
+	if (TOY_IS_IDENTIFIER(caption) && Toy_parseIdentifierToValue(interpreter, &caption)) {
+		Toy_freeLiteral(captionIdn);
+	}
+
+	Toy_Literal screenWidthIdn = screenWidth;
+	if (TOY_IS_IDENTIFIER(screenWidth) && Toy_parseIdentifierToValue(interpreter, &screenWidth)) {
+		Toy_freeLiteral(screenWidthIdn);
+	}
+
+	Toy_Literal screenHeightIdn = screenHeight;
+	if (TOY_IS_IDENTIFIER(screenHeight) && Toy_parseIdentifierToValue(interpreter, &screenHeight)) {
+		Toy_freeLiteral(screenHeightIdn);
+	}
+
+	Toy_Literal fscreenIdn = fscreen;
+	if (TOY_IS_IDENTIFIER(fscreen) && Toy_parseIdentifierToValue(interpreter, &fscreen)) {
+		Toy_freeLiteral(fscreenIdn);
+	}
+
 	//check argument types
 	if (!TOY_IS_STRING(caption) || !TOY_IS_INTEGER(screenWidth) || !TOY_IS_INTEGER(screenHeight) || !TOY_IS_BOOLEAN(fscreen)) {
-		fatalError("Incorrect argument type passed to initEngine\n");
+		fatalError("Incorrect argument type passed to initWindow\n");
 	}
 
 	//init the window
@@ -133,7 +153,7 @@ static int nativeLoadRootNode(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 
 	//init the inner interpreter manually
 	Toy_initLiteralArray(&inner.literalCache);
-	inner.scope = Toy_pushScope(NULL);
+	inner.scope = Toy_pushScope(interpreter->scope);
 	inner.bytecode = tb;
 	inner.length = size;
 	inner.count = 0;
@@ -148,16 +168,15 @@ static int nativeLoadRootNode(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 
 	Box_initEngineNode(rootNode, &inner, tb, size);
 
-	//init the new node (and ONLY this node)
-	Box_callEngineNode(rootNode, &engine.interpreter, "onInit", NULL);
+	//immediately call onLoad() after running the script - for loading other nodes
+	Box_callEngineNode(rootNode, &engine.interpreter, "onLoad", NULL);
 
 	//NOW it's non-null
 	engine.rootNode = rootNode;
 
 	//cleanup
-	while(inner.scope) {
-		inner.scope = Toy_popScope(inner.scope);
-	}
+	Toy_popScope(inner.scope);
+	inner.scope = NULL;
 
 	Toy_freeLiteralArray(&inner.stack);
 	Toy_freeLiteralArray(&inner.literalCache);

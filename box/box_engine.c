@@ -63,12 +63,17 @@ void Box_initEngine() {
 	Toy_injectNativeHook(&engine.interpreter, "node", Box_hookNode);
 	Toy_injectNativeHook(&engine.interpreter, "input", Box_hookInput);
 
+	//run the init
 	size_t size = 0;
 	const unsigned char* source = Toy_readFile("./assets/scripts/init.toy", &size);
 	const unsigned char* tb = Toy_compileString((const char*)source, &size);
 	free((void*)source);
 
 	Toy_runInterpreter(&engine.interpreter, tb, size);
+
+	//init the node-tree
+	Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onInit", NULL);
+
 }
 
 void Box_freeEngine() {

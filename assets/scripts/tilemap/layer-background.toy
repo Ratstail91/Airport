@@ -4,24 +4,25 @@ import engine;
 import node;
 
 
-//util to generate and init a child node of a given parent
-fn makeChildSprite(parent: opaque, spriteName: string) {
-	var child: opaque = loadNode("scripts:/tilemap/tile.toy");
+//TODO: replace with an empty node function (polyfill)
+fn loadChildEmpty(parent: opaque) {
+	var child: opaque = loadNode("scripts:/empty.toy");
 	parent.pushNode(child);
-	child.initNode();
-
-	child.loadTexture("sprites:/" + spriteName);
-
 	return child;
 }
 
 
-fn onInit(node: opaque) {
+fn onLoad(node: opaque) {
 	//load the child node, with the tiling back image
-	node.makeChildSprite("tile-background.png");
+	node.loadChildEmpty();
+}
+
+fn onInit(node: opaque) {
+	node.getChildNode(0).loadTexture("sprites:/tile-background.png");
 }
 
 
+//drawing util
 fn drawLayer(node: opaque, camX, camY, camW, camH, depth) {
 	//get the constants from root
 	var root: opaque = getRootNode();

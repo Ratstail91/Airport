@@ -50,14 +50,14 @@ static int nativeLoadNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 
 	Box_EngineNode* node = TOY_ALLOCATE(Box_EngineNode, 1);
 
-	//BUGFIX: make an inner-interpreter
+	//BUGFIX: make an -interpreter
 	Toy_Interpreter inner;
 
 	//init the inner interpreter manually
 	Toy_initLiteralArray(&inner.literalCache);
 	Toy_initLiteralArray(&inner.stack);
 	inner.hooks = interpreter->hooks;
-	inner.scope = Toy_pushScope(NULL);
+	inner.scope = Toy_pushScope(interpreter->scope);
 	inner.bytecode = tb;
 	inner.length = size;
 	inner.count = 0;
@@ -69,6 +69,9 @@ static int nativeLoadNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 	Toy_setInterpreterError(&inner, interpreter->errorOutput);
 
 	Box_initEngineNode(node, &inner, tb, size);
+
+	//immediately call onLoad() after running the script - for loading other nodes
+	Box_callEngineNode(node, &engine.interpreter, "onLoad", NULL);
 
 	// return the node
 	Toy_Literal nodeLiteral = TOY_TO_OPAQUE_LITERAL(node, node->tag);

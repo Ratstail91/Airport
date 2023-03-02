@@ -1,17 +1,20 @@
 //the overarching scene
 import node;
 
+//debugging tools
+var stepCounter: int = 0;
+var stepTracker: [int] = [0, 0, 0];
+
 
 //util to generate and init a child node of a given parent
 fn makeChild(parent: opaque, fname: string) {
 	var child: opaque = loadNode(fname);
 	parent.pushNode(child);
-	child.initNode();
 	return child;
 }
 
-
-fn onInit(node: opaque) {
+//lifecycle functions
+fn onLoad(node: opaque) {
 	//load the tile map node
 	var tilemapNode = node.makeChild("scripts:/tilemap/tilemap.toy");
 
@@ -22,6 +25,22 @@ fn onInit(node: opaque) {
 	//tilemapNode.callNodeFn("loadLayer", "layer-maze.toy");
 }
 
+//debugging code
+fn onStep(node: opaque) {
+	stepCounter++;
+}
+
+fn onDraw(node: opaque) {
+	//round off - too many skips means it's crappy anyway
+	if (stepCounter > stepTracker.length() - 1) {
+		stepCounter = stepTracker.length() - 1;
+	}
+
+	//This logic is just a debugging tool
+	stepTracker[stepCounter] = stepTracker[stepCounter] + 1;
+	print stepTracker;
+	stepCounter = 0;
+}
 
 //global accessors
 fn getTileWidth(node: opaque): int { return 64; }

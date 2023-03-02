@@ -23,13 +23,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\scripts\children_test.toy" />
+    <None Include="assets\scripts\empty.toy" />
     <None Include="assets\scripts\entity.toy" />
     <None Include="assets\scripts\frames_test.toy" />
     <None Include="assets\scripts\init.toy" />
     <None Include="assets\scripts\scene.toy" />
     <None Include="assets\scripts\tilemap\layer-background.toy" />
     <None Include="assets\scripts\tilemap\layer-walls.toy" />
-    <None Include="assets\scripts\tilemap\tile.toy" />
     <None Include="assets\scripts\tilemap\tilemap.toy" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
