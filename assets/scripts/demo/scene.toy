@@ -17,7 +17,7 @@ fn makeChild(parent: opaque, fname: string) {
 //lifecycle functions
 fn onLoad(node: opaque) {
 	//load the tile map node
-	var tilemapNode = node.makeChild("scripts:/tilemap/tilemap.toy");
+	var tilemapNode = node.makeChild("scripts:/demo/tilemap/tilemap.toy");
 
 	tilemapNode.callNodeFn("loadLayer", "layer-background.toy");
 	tilemapNode.callNodeFn("loadLayer", "layer-walls.toy");
@@ -46,7 +46,7 @@ fn onDraw(node: opaque) {
 fn onMouseButtonDown(node: opaque, x: int, y: int, button: string) {
 	//reload the scene on click
 	if (button == "left") {
-		loadRootNode("scripts:/scene.toy");
+		loadRootNode("scripts:/demo/scene.toy");
 	}
 }
 

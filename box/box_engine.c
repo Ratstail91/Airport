@@ -101,7 +101,7 @@ void Box_freeEngine() {
 	engine.window = NULL;
 }
 
-static void execLoadRootNode() {
+static inline void execLoadRootNode() {
 	//if a new root node is NOT needed, skip out
 	if (TOY_IS_NULL(engine.nextRootNodeFilename)) {
 		return;
@@ -159,7 +159,7 @@ static void execLoadRootNode() {
 	Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onInit", NULL);
 }
 
-static void execEvents() {
+static inline void execEvents() {
 	Toy_LiteralArray args; //save some allocation by reusing this
 	Toy_initLiteralArray(&args);
 
@@ -394,7 +394,7 @@ static void execEvents() {
 	Toy_freeLiteralArray(&args);
 }
 
-static void execStep() {
+static inline void execStep() {
 	if (engine.rootNode != NULL) {
 		//steps
 		Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onStep", NULL);

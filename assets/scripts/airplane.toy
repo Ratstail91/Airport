@@ -4,11 +4,11 @@ import node;
 var SPEED: int const = 5;
 
 //variables
-var parent: opaque = null;
+var parent: opaque = null; //cache the parent for quick access
 var posX: int = 50;
 var posY: int = 50;
-var WIDTH: int const = 100;
-var HEIGHT: int const = 100;
+var WIDTH: int const = 143;
+var HEIGHT: int const = 75;
 
 var xspeed: int = 0;
 var yspeed: int = 0;
@@ -23,36 +23,39 @@ fn getY(node: opaque) {
 }
 
 //lifecycle functions
-fn onInit(node: opaque) {
-	print "render.toy:onInit() called";
+fn onLoad(node: opaque) {
+	print "onLoad() called";
+}
 
-	node.loadTexture("sprites:/character.png");
-	parent = node.getNodeParent();
+fn onInit(node: opaque) {
+	print "onInit() called";
+
+	parent = node.getParentNode();
+	node.loadTexture("sprites:/little_plane.png");
 }
 
 fn onStep(node: opaque) {
+//	print "onStep() called";
+
 	posX += xspeed;
 	posY += yspeed;
 }
 
 fn onFree(node: opaque) {
-	print "render.toy:onFree() called";
+	print "onFree() called";
 
 	node.freeTexture();
 }
 
 fn onDraw(node: opaque) {
-//	print "render.toy:onDraw() called";
+//	print "onDraw() called";
 
-	var px = parent.callNode("getX");
-	var py = parent.callNode("getY");
+	var px = 0;
+	var py = 0;
 
-	if (px == null) {
-		px = 0;
-	}
-
-	if (py == null) {
-		py = 0;
+	if (parent != null) {
+		px = parent.callNodeFn("getX");
+		py = parent.callNodeFn("getY");
 	}
 
 	node.drawNode(posX + px, posY + py, WIDTH, HEIGHT);

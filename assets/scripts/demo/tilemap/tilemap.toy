@@ -15,7 +15,7 @@ fn loadChild(parent: opaque, fname: string) {
 
 fn loadLayer(node: opaque, layerName: string) {
 	//load the given layer as a child
-	var layerNode = node.loadChild("scripts:/tilemap/" + layerName);
+	var layerNode = node.loadChild("scripts:/demo/tilemap/" + layerName);
 }
 
 //lifecycle functions

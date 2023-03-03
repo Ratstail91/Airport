@@ -31,7 +31,7 @@
 	initWindow("Airport Game", 1080, 720, false);
 
 	//kick off the logic of the scene graph
-	loadRootNode("scripts:/scene.toy");
+	loadRootNode("scripts:/demo/scene.toy");
 }
 
 //Globals go here
