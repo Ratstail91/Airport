@@ -71,13 +71,15 @@ static int nativeLoadNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 	Box_initEngineNode(node, &inner, tb, size);
 
 	//immediately call onLoad() after running the script - for loading other nodes
-	Box_callEngineNode(node, &engine.interpreter, "onLoad", NULL);
+	Box_callEngineNode(node, &inner, "onLoad", NULL);
 
 	// return the node
 	Toy_Literal nodeLiteral = TOY_TO_OPAQUE_LITERAL(node, node->tag);
 	Toy_pushLiteralArray(&interpreter->stack, nodeLiteral);
 
 	//cleanup (NOT the scope - that needs to hang around)
+	node->scope = inner.scope;
+
 	Toy_freeLiteralArray(&inner.stack);
 	Toy_freeLiteralArray(&inner.literalCache);
 	Toy_freeLiteral(filePathLiteral);
@@ -246,6 +248,8 @@ static int nativeFreeChildNode(Toy_Interpreter* interpreter, Toy_LiteralArray* a
 		return -1;
 	}
 
+	//TODO: differentiate between onFree() and freeing memory
+	Box_callRecursiveEngineNode(node, interpreter, "onFree", NULL);
 	Box_freeChildEngineNode(node, idx);
 
 	//cleanup

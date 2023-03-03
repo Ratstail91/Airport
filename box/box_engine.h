@@ -13,6 +13,7 @@
 typedef struct Box_private_engine {
 	//engine stuff
 	Box_EngineNode* rootNode;
+	Toy_Literal nextRootNodeFilename;
 	clock_t simTime;
 	clock_t realTime;
 	bool running;

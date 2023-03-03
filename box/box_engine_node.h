@@ -22,6 +22,9 @@ typedef struct Box_private_engineNode {
 	//point to the parent
 	Box_EngineNode* parent;
 
+	//BUGFIX: hold the node's scope so it can be popped
+	Toy_Scope* scope;
+
 	//my opaque type tag
 	int tag;
 

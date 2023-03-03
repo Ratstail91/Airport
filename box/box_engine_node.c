@@ -8,6 +8,7 @@ void Box_initEngineNode(Box_EngineNode* node, Toy_Interpreter* interpreter, cons
 	// node->freeMemory = freeMemory;
 	node->functions = TOY_ALLOCATE(Toy_LiteralDictionary, 1);
 	node->parent = NULL;
+	node->scope = NULL;
 	node->tag = OPAQUE_TAG_ENGINE_NODE;
 	node->children = NULL;
 	node->capacity = 0;
@@ -64,7 +65,7 @@ void Box_freeEngineNode(Box_EngineNode* node) {
 		return; //NO-OP
 	}
 
-	//free and tombstone this node
+	//free this node's children
 	for (int i = 0; i < node->count; i++) {
 		Box_freeEngineNode(node->children[i]);
 	}
@@ -75,6 +76,10 @@ void Box_freeEngineNode(Box_EngineNode* node) {
 	if (node->functions != NULL) {
 		Toy_freeLiteralDictionary(node->functions);
 		TOY_FREE(Toy_LiteralDictionary, node->functions);
+	}
+
+	if (node->scope != NULL) {
+		Toy_popScope(node->scope);
 	}
 
 	if (node->texture != NULL) {
@@ -99,7 +104,6 @@ void Box_freeChildEngineNode(Box_EngineNode* node, int index) {
 
 	//free the node
 	if (childNode != NULL) {
-		Box_callRecursiveEngineNode(childNode, &engine.interpreter, "onFree", NULL);
 		Box_freeEngineNode(childNode);
 		node->childCount--;
 	}

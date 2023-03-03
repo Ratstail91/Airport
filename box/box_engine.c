@@ -35,6 +35,7 @@ static void fatalError(char* message) {
 void Box_initEngine() {
 	//clear
 	engine.rootNode = NULL;
+	engine.nextRootNodeFilename = TOY_TO_NULL_LITERAL;
 	engine.running = false;
 	engine.window = NULL;
 	engine.renderer = NULL;
@@ -69,21 +70,20 @@ void Box_initEngine() {
 	const unsigned char* tb = Toy_compileString((const char*)source, &size);
 	free((void*)source);
 
+	//TODO: inner-interpreter
 	Toy_runInterpreter(&engine.interpreter, tb, size);
-
-	//init the node-tree
-	Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onInit", NULL);
-
 }
 
 void Box_freeEngine() {
 	//clear existing root node
 	if (engine.rootNode != NULL) {
 		Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onFree", NULL);
-
 		Box_freeEngineNode(engine.rootNode);
-
 		engine.rootNode = NULL;
+	}
+
+	if (!TOY_IS_NULL(engine.nextRootNodeFilename)) {
+		Toy_freeLiteral(engine.nextRootNodeFilename);
 	}
 
 	Toy_freeInterpreter(&engine.interpreter);
@@ -99,6 +99,64 @@ void Box_freeEngine() {
 
 	engine.renderer = NULL;
 	engine.window = NULL;
+}
+
+static void execLoadRootNode() {
+	//if a new root node is NOT needed, skip out
+	if (TOY_IS_NULL(engine.nextRootNodeFilename)) {
+		return;
+	}
+
+	//free the existing root node
+	if (engine.rootNode != NULL) {
+		Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onFree", NULL);
+		Box_freeEngineNode(engine.rootNode);
+		engine.rootNode = NULL;
+	}
+
+	//compile the new root node
+	size_t size = 0;
+	const unsigned char* source = Toy_readFile(Toy_toCString(TOY_AS_STRING(engine.nextRootNodeFilename)), &size);
+	const unsigned char* tb = Toy_compileString((const char*)source, &size);
+	free((void*)source);
+
+	//allocate the new root node
+	engine.rootNode = TOY_ALLOCATE(Box_EngineNode, 1);
+
+	//BUGFIX: make an inner-interpreter
+	Toy_Interpreter inner;
+
+	//init the inner interpreter manually
+	Toy_initLiteralArray(&inner.literalCache);
+	inner.scope = Toy_pushScope(engine.interpreter.scope);
+	inner.bytecode = tb;
+	inner.length = size;
+	inner.count = 0;
+	inner.codeStart = -1;
+	inner.depth = engine.interpreter.depth + 1;
+	inner.panic = false;
+	Toy_initLiteralArray(&inner.stack);
+	inner.hooks = engine.interpreter.hooks;
+	Toy_setInterpreterPrint(&inner, engine.interpreter.printOutput);
+	Toy_setInterpreterAssert(&inner, engine.interpreter.assertOutput);
+	Toy_setInterpreterError(&inner, engine.interpreter.errorOutput);
+
+	Box_initEngineNode(engine.rootNode, &inner, tb, size);
+
+	//immediately call onLoad() after running the script - for loading other nodes
+	Box_callEngineNode(engine.rootNode, &inner, "onLoad", NULL);
+
+	//manual cleanup
+	inner.scope = Toy_popScope(inner.scope);
+	Toy_freeLiteralArray(&inner.stack);
+	Toy_freeLiteralArray(&inner.literalCache);
+
+	//cleanup
+	Toy_freeLiteral(engine.nextRootNodeFilename);
+	engine.nextRootNodeFilename = TOY_TO_NULL_LITERAL;
+
+	//init the new node-tree
+	Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onInit", NULL);
 }
 
 static void execEvents() {
@@ -336,7 +394,7 @@ static void execEvents() {
 	Toy_freeLiteralArray(&args);
 }
 
-void execStep() {
+static void execStep() {
 	if (engine.rootNode != NULL) {
 		//steps
 		Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onStep", NULL);
@@ -355,6 +413,8 @@ void Box_execEngine() {
 	clock_t delta = (double) CLOCKS_PER_SEC / 60.0;
 
 	while (engine.running) {
+		execLoadRootNode();
+
 		execEvents();
 
 		//calc the time passed

@@ -1,4 +1,5 @@
 //the overarching scene
+import engine;
 import node;
 
 //debugging tools
@@ -40,6 +41,13 @@ fn onDraw(node: opaque) {
 	stepTracker[stepCounter] = stepTracker[stepCounter] + 1;
 	print stepTracker;
 	stepCounter = 0;
+}
+
+fn onMouseButtonDown(node: opaque, x: int, y: int, button: string) {
+	//reload the scene on click
+	if (button == "left") {
+		loadRootNode("scripts:/scene.toy");
+	}
 }
 
 //global accessors

@@ -130,56 +130,9 @@ static int nativeLoadRootNode(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 		return -1;
 	}
 
-	//clear existing root node
-	if (engine.rootNode != NULL) {
-		Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onFree", NULL);
+	//set the signal that a new node is needed
+	engine.nextRootNodeFilename = Toy_copyLiteral(filePathLiteral);
 
-		Box_freeEngineNode(engine.rootNode);
-		TOY_FREE(Box_EngineNode, engine.rootNode);
-
-		engine.rootNode = NULL;
-	}
-
-	//load the new root node
-	size_t size = 0;
-	const unsigned char* source = Toy_readFile(Toy_toCString(TOY_AS_STRING(filePathLiteral)), &size);
-	const unsigned char* tb = Toy_compileString((const char*)source, &size);
-	free((void*)source);
-
-	Box_EngineNode* rootNode = TOY_ALLOCATE(Box_EngineNode, 1);
-
-	//BUGFIX: make an inner-interpreter
-	Toy_Interpreter inner;
-
-	//init the inner interpreter manually
-	Toy_initLiteralArray(&inner.literalCache);
-	inner.scope = Toy_pushScope(interpreter->scope);
-	inner.bytecode = tb;
-	inner.length = size;
-	inner.count = 0;
-	inner.codeStart = -1;
-	inner.depth = interpreter->depth + 1;
-	inner.panic = false;
-	Toy_initLiteralArray(&inner.stack);
-	inner.hooks = interpreter->hooks;
-	Toy_setInterpreterPrint(&inner, interpreter->printOutput);
-	Toy_setInterpreterAssert(&inner, interpreter->assertOutput);
-	Toy_setInterpreterError(&inner, interpreter->errorOutput);
-
-	Box_initEngineNode(rootNode, &inner, tb, size);
-
-	//immediately call onLoad() after running the script - for loading other nodes
-	Box_callEngineNode(rootNode, &engine.interpreter, "onLoad", NULL);
-
-	//NOW it's non-null
-	engine.rootNode = rootNode;
-
-	//cleanup
-	Toy_popScope(inner.scope);
-	inner.scope = NULL;
-
-	Toy_freeLiteralArray(&inner.stack);
-	Toy_freeLiteralArray(&inner.literalCache);
 	Toy_freeLiteral(filePathLiteral);
 
 	return 0;
