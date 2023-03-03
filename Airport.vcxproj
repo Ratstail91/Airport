@@ -28,6 +28,8 @@
     <None Include="assets\scripts\demo\tilemap\tilemap.toy" />
     <None Include="assets\scripts\empty.toy" />
     <None Include="assets\scripts\airplane.toy" />
+    <None Include="assets\scripts\gameplay\lejana.toy" />
+    <None Include="assets\scripts\gameplay\scene.toy" />
     <None Include="assets\scripts\init.toy" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

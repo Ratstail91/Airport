@@ -1,0 +1,154 @@
+import node;
+
+//constants
+var SPEED: int const = 3;
+
+//variables
+var parent: opaque = null; //cache the parent for quick access
+var posX: int = 50;
+var posY: int = 50;
+var WIDTH: int const = 128;
+var HEIGHT: int const = 128;
+
+var xspeed: int = 0;
+var yspeed: int = 0;
+
+
+//polyfills - animating different cycles on one image 
+var SPRITE_WIDTH: int const = 32;
+var SPRITE_HEIGHT: int const = 32;
+var stepCount: int = 0;
+var stepDelay: int = 10;
+
+fn faceDown(node: opaque) {
+	node.setNodeRect(0, 0, SPRITE_WIDTH, SPRITE_HEIGHT);
+	node.setNodeFrames(4);
+}
+
+fn faceUp(node: opaque) {
+	node.setNodeRect(32 * 4, 0, SPRITE_WIDTH, SPRITE_HEIGHT);
+	node.setNodeFrames(4);
+}
+
+fn faceLeft(node: opaque) {
+	node.setNodeRect(32 * 8, 0, SPRITE_WIDTH, SPRITE_HEIGHT);
+	node.setNodeFrames(4);
+}
+
+fn faceRight(node: opaque) {
+	node.setNodeRect(32 * 8, 0, SPRITE_WIDTH, SPRITE_HEIGHT);
+	node.setNodeFrames(4);
+}
+
+
+//lifecycle functions
+fn onLoad(node: opaque) {
+	//
+}
+
+fn onInit(node: opaque) {
+	parent = node.getParentNode();
+	node.loadTexture("sprites:/lejana.png");
+	node.faceDown();
+}
+
+fn onStep(node: opaque) {
+	posX += xspeed;
+	posY += yspeed;
+
+	//animate after X steps
+	if (xspeed == 0 && yspeed == 0) {
+		stepCount = 0;
+		node.setCurrentNodeFrame(0);
+	}
+	else {
+		if (++stepCount >= stepDelay) {
+			node.incrementCurrentNodeFrame();
+			stepCount = 0;
+		}
+	}
+}
+
+fn onFree(node: opaque) {
+	node.freeTexture();
+}
+
+fn onDraw(node: opaque) {
+	var px = 0;
+	var py = 0;
+
+	if (parent != null) {
+		px = parent.callNodeFn("getX");
+		py = parent.callNodeFn("getY");
+	}
+
+	node.drawNode(posX + px, posY + py, WIDTH, HEIGHT);
+}
+
+//event functions
+fn onKeyDown(node: opaque, event: string) {
+	if (event == "character_up") {
+		yspeed -= SPEED;
+		faceUp(node);
+		return;
+	}
+
+	if (event == "character_down") {
+		yspeed += SPEED;
+		faceDown(node);
+		return;
+	}
+
+	if (event == "character_left") {
+		xspeed -= SPEED;
+		faceLeft(node);
+		return;
+	}
+
+	if (event == "character_right") {
+		xspeed += SPEED;
+		faceRight(node);
+		return;
+	}
+}
+
+fn onKeyUp(node: opaque, event: string) {
+	if (event == "character_up" && yspeed < 0) {
+		yspeed = 0;
+		return;
+	}
+
+	if (event == "character_down" && yspeed > 0) {
+		yspeed = 0;
+		return;
+	}
+
+	if (event == "character_left" && xspeed < 0) {
+		xspeed = 0;
+		return;
+	}
+
+	if (event == "character_right" && xspeed > 0) {
+		xspeed = 0;
+		return;
+	}
+}
+
+fn onMouseMotion(node: opaque, x: int, y: int, xrel: int, yrel: int) {
+	//
+}
+
+fn onMouseButtonDown(node: opaque, x: int, y: int, button: string) {
+	//jump to pos
+	posX = x - WIDTH / 2;
+	posY = y - HEIGHT / 2;
+}
+
+fn onMouseButtonUp(node: opaque, x: int, y: int, button: string) {
+	//
+}
+
+fn onMouseWheel(node: opaque, xrel: int, yrel: int) {
+	//
+}
+

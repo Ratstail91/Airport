@@ -28,10 +28,10 @@
 
 
 	//this function must always be called, or the engine won't run
-	initWindow("Airport Game", 1080, 720, false);
+	initWindow("Skyland", 1080, 720, false);
 
 	//kick off the logic of the scene graph
-	loadRootNode("scripts:/demo/scene.toy");
+	loadRootNode("scripts:/gameplay/lejana.toy");
 }
 
 //Globals go here

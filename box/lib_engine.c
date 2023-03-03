@@ -86,7 +86,7 @@ static int nativeInitWindow(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 
 	printf("Renderer: %s (HW %s)\n", rendererInfo.name, rendererInfo.flags & SDL_RENDERER_ACCELERATED ? "yes" : "no");
 
-	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
 	SDL_RenderSetLogicalSize(engine.renderer, engine.screenWidth, engine.screenHeight);
 
 	//only run with a window

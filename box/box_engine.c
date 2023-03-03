@@ -146,8 +146,10 @@ static inline void execLoadRootNode() {
 	//immediately call onLoad() after running the script - for loading other nodes
 	Box_callEngineNode(engine.rootNode, &inner, "onLoad", NULL);
 
+	//cache the scope for later freeing
+	engine.rootNode->scope = inner.scope;
+
 	//manual cleanup
-	Toy_popScope(inner.scope);
 	Toy_freeLiteralArray(&inner.stack);
 	Toy_freeLiteralArray(&inner.literalCache);
 
@@ -207,7 +209,7 @@ static inline void execEvents() {
 				//call the function
 				Toy_pushLiteralArray(&args, eventLiteral);
 				Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onKeyDown", &args);
-				Toy_popLiteralArray(&args);
+				Toy_freeLiteral(Toy_popLiteralArray(&args));
 
 				//push to the event list
 				Toy_freeLiteral(eventLiteral);
@@ -234,7 +236,7 @@ static inline void execEvents() {
 				//call the function
 				Toy_pushLiteralArray(&args, eventLiteral);
 				Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onKeyUp", &args);
-				Toy_popLiteralArray(&args);
+				Toy_freeLiteral(Toy_popLiteralArray(&args));
 
 				//push to the event list
 				Toy_freeLiteral(eventLiteral);
