@@ -70,7 +70,7 @@ void Box_initEngine() {
 	const unsigned char* tb = Toy_compileString((const char*)source, &size);
 	free((void*)source);
 
-	//TODO: inner-interpreter
+	//A quirk of the setup is that anything defined in `init.toy` becomes a global object
 	Toy_runInterpreter(&engine.interpreter, tb, size);
 }
 
@@ -147,7 +147,7 @@ static void execLoadRootNode() {
 	Box_callEngineNode(engine.rootNode, &inner, "onLoad", NULL);
 
 	//manual cleanup
-	inner.scope = Toy_popScope(inner.scope);
+	Toy_popScope(inner.scope);
 	Toy_freeLiteralArray(&inner.stack);
 	Toy_freeLiteralArray(&inner.literalCache);
 

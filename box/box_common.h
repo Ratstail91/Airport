@@ -24,12 +24,15 @@
 #include <SDL_image.h>
 
 #include <windows.h>
+#include <crtdbg.h>
+
 #ifndef BOX_EXPORT
 #define BOX_API __declspec(dllimport)
 #else
 #define BOX_API __declspec(dllexport)
 #endif
 
+//TODO: figure out the sleep issue
 #define sleep Sleep
 
 #else

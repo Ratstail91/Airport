@@ -7,6 +7,12 @@
 #include "lib_runner.h"
 
 int main(int argc, char* argv[]) {
+	//debugging tools
+#ifdef _DEBUG
+	// Memory Leak Detection during Debug Builds (MSVC only)
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif//win32 && debug
+
 	//the drive system uses a LiteralDictionary, which must be initialized with this
 	Toy_initDriveDictionary();
 
