@@ -1,0 +1,75 @@
+import standard;
+import node;
+
+//consts
+var ROOM_WIDTH: int const = 5;
+var ROOM_HEIGHT: int const = 5;
+
+var TILE_WIDTH: int const = 128;
+var TILE_HEIGHT: int const = 128;
+
+//vars
+var tilemap: [[int]] = null;
+
+//debug vars
+var camX = 0;
+var camY = 0;
+var camW = 1080;
+var camH = 720;
+
+
+
+//lifecycle functions
+fn onInit(node: opaque) {
+	tilemap = generateBlankMap(ROOM_WIDTH, ROOM_HEIGHT);
+
+	node.loadTexture("sprites:/tileset.png");
+	node.setNodeRect(0, 0, 32, 32);
+
+	//debug
+	print tilemap;
+	tilemap[1][1] = 1;
+	print tilemap;
+}
+
+fn onDraw(node: opaque) {
+	//calc the region to render
+	var lowerX: int = round((camX - camW/2.0) / TILE_WIDTH);
+	var upperX: int = round((camX - camW*1.5) / TILE_WIDTH);
+	var lowerY: int = round((camY - camH/2.0) / TILE_HEIGHT);
+	var upperY: int = round((camY - camH*1.5) / TILE_HEIGHT);
+
+	//bounds check
+	lowerX = max(0, lowerX);
+	upperX = min(upperX < 0 ? abs(upperX) : 0, ROOM_WIDTH);
+	lowerY = max(0, lowerY);
+	upperY = min(upperY < 0 ? abs(upperY) : 0, ROOM_HEIGHT);
+
+
+	//draw the tilemap
+	for (var j = lowerY; j < upperY; j++) {
+		for (var i = lowerX; i < upperX; i++) {
+			node.setCurrentNodeFrame(tilemap[i][j]);
+			node.drawNode(i * TILE_WIDTH, j * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+		}
+	}
+}
+
+
+//utils functions
+fn generateBlankMap(width: int, height: int) {
+	//generate the row template
+	var row: [int] = [];
+	for (var j: int = 0; j < height; j++) {
+		row.push(0);
+	}
+
+	var result: [[int]] = [];
+	//generate the game map proper
+	for (var i: int = 0; i < width; i++) {
+		result.push(row);
+	}
+
+	return result;
+}
+
