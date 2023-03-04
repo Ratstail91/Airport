@@ -594,7 +594,7 @@ static int nativeSetCurrentNodeFrame(Toy_Interpreter* interpreter, Toy_LiteralAr
 	//actually set
 	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
 
-	Box_setFramesEngineNode(node, TOY_AS_INTEGER(currentFrameLiteral));
+	Box_setCurrentFrameEngineNode(node, TOY_AS_INTEGER(currentFrameLiteral));
 
 	//cleanup
 	Toy_freeLiteral(nodeLiteral);
