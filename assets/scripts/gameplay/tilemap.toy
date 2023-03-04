@@ -10,29 +10,30 @@ var TILE_HEIGHT: int const = 64;
 
 //map between the identity and position on the sprite sheet
 var tilemap: [[string]] = null;
+var collisions: [[bool]] = null;
 
 var tileset: [string : [int]] = [
-	"pillar": [0, 0],
+	"pillar": [0, 0, 1],
 	
-	"floor-0": [0, 1],
-	"floor-1": [1, 1],
-	"floor-2": [2, 1],
-	"floor-3": [3, 1],
+	"floor-0": [0, 1, 0],
+	"floor-1": [1, 1, 0],
+	"floor-2": [2, 1, 0],
+	"floor-3": [3, 1, 0],
 
-	"wall-t": [0, 2],
-	"wall-b": [1, 2],
-	"wall-l": [2, 2],
-	"wall-r": [3, 2],
+	"wall-t": [0, 2, 1],
+	"wall-b": [1, 2, 1],
+	"wall-l": [2, 2, 1],
+	"wall-r": [3, 2, 1],
 
-	"corner-tl": [0, 3],
-	"corner-tr": [1, 3],
-	"corner-bl": [2, 3],
-	"corner-br": [3, 3],
+	"corner-tl": [0, 3, 1],
+	"corner-tr": [1, 3, 1],
+	"corner-bl": [2, 3, 1],
+	"corner-br": [3, 3, 1],
 
-	"edge-tl": [0, 4],
-	"edge-tr": [1, 4],
-	"edge-bl": [2, 4],
-	"edge-br": [3, 4]
+	"edge-tl": [0, 4, 1],
+	"edge-tr": [1, 4, 1],
+	"edge-bl": [2, 4, 1],
+	"edge-br": [3, 4, 1]
 ];
 
 
@@ -45,11 +46,13 @@ var camH = 720;
 
 //lifecycle functions
 fn onInit(node: opaque) {
-	tilemap = generateMap(ROOM_WIDTH, ROOM_HEIGHT);
-
 	node.loadTexture("sprites:/tileset.png");
 
+	tilemap = generateTilemap(clock().hash(), ROOM_WIDTH, ROOM_HEIGHT);
+	collisions = bakeCollisionMap(tilemap, ROOM_WIDTH, ROOM_HEIGHT);
+
 	print tilemap;
+	print collisions;
 }
 
 fn onDraw(node: opaque) {
@@ -79,10 +82,10 @@ fn onDraw(node: opaque) {
 }
 
 
-//utils functions
-fn generateMap(width: int, height: int) {
+//utils functions for map generation
+fn generateTilemap(seed: int, width: int, height: int) {
 	import random;
-	var rng: opaque = createRandomGenerator(clock().hash());
+	var rng: opaque = createRandomGenerator(seed);
 
 	//generate an empty grid
 	var result: [[string]] = [];
@@ -95,9 +98,9 @@ fn generateMap(width: int, height: int) {
 		result.push(row);
 	}
 
-	//generate the contents of the grid
-	for (var j: int = 0; j < height; j++) {
-		for (var i: int = 0; i < width; i++) {
+	//generate the contents of the grid - floor
+	for (var j: int = 1; j < height - 1; j++) {
+		for (var i: int = 1; i < width - 1; i++) {
 			//select a random floor tile
 			var x: int = rng.generateRandomNumber() % 4;
 			var t: string = "floor-" + string x;
@@ -106,6 +109,46 @@ fn generateMap(width: int, height: int) {
 		}
 	}
 
+	//draw top and bottom walls
+	for (var i: int = 1; i < width - 1; i++) {
+		result[i][0] = "wall-t";
+		result[i][height - 1] = "wall-b";
+	}
+
+	//draw the left and right walls
+	for (var j: int = 1; j < height - 1; j++) {
+		result[0][j] = "wall-l";
+		result[width-1][j] = "wall-r";
+	}
+
+	//draw the corners
+	result[0][0] = "corner-tl";
+	result[width - 1][0] = "corner-tr";
+	result[0][height - 1] = "corner-bl";
+	result[width - 1][height - 1] = "corner-br";
+
 	return result;
 }
 
+fn bakeCollisionMap(tilemap: [[string]], width: int, height: int) {
+	//generate an empty grid
+	var result: [[bool]] = [];
+	var row: [bool] = [];
+	for (var j: int = 0; j < height; j++) {
+		row.push(false);
+	}
+
+	for (var i: int = 0; i < width; i++) {
+		result.push(row);
+	}
+
+	//extract the collision map
+	for (var j: int = 0; j < height; j++) {
+		for (var i: int = 0; i < width; i++) {
+			//almost - you still need one pair of parentheses
+			result[i][j] = (tileset[ tilemap[i][j] ][2] != 0);
+		}
+	}
+	
+	return result;
+}
