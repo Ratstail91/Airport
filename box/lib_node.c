@@ -750,7 +750,7 @@ static int nativeDrawNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 static int nativeCallNodeFn(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//checks
 	if (arguments->count < 2) {
-		interpreter->errorOutput("Too few arguments passed to callNode\n");
+		interpreter->errorOutput("Too few arguments passed to callNodeFn\n");
 		return -1;
 	}
 
@@ -797,7 +797,7 @@ static int nativeCallNodeFn(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 	}
 
 	if (!TOY_IS_OPAQUE(nodeLiteral) || !TOY_IS_STRING(fnName)) {
-		interpreter->errorOutput("Incorrect argument type passed to callNode\n");
+		interpreter->errorOutput("Incorrect argument type passed to callNodeFn\n");
 		Toy_freeLiteral(nodeLiteral);
 		Toy_freeLiteral(fnName);
 		return -1;

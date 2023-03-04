@@ -31,7 +31,7 @@
 	initWindow("Skyland", 1080, 720, false);
 
 	//kick off the logic of the scene graph
-	loadRootNode("scripts:/gameplay/tilemap.toy");
+	loadRootNode("scripts:/gameplay/scene.toy");
 }
 
 //Globals go here

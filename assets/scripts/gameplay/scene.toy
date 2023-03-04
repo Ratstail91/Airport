@@ -1,0 +1,34 @@
+import standard;
+import node;
+
+var tilemap: opaque = null;
+var player: opaque = null;
+
+var collisionMap: [[bool]] = null; //cache this, since it won't change during a level
+
+//lifecycle functions
+fn onLoad(node: opaque) {
+	tilemap = node.loadChild("scripts:/gameplay/tilemap.toy");
+	player = node.loadChild("scripts:/gameplay/lejana.toy");
+}
+
+fn onInit(node: opaque) {
+	tilemap.callNodeFn("generateFromSeed", clock().hash(), 8, 8);
+	collisionMap = tilemap.callNodeFn("getCollisionMap");
+}
+
+//utils - polyfills
+fn loadChild(parent: opaque, fname: string) {
+	var child: opaque = loadNode(fname);
+	parent.pushNode(child);
+	return child;
+}
+
+//connective functions
+fn getCollisionAt(node: opaque, x: int, y: int) {
+	if (collisionMap == null) {
+		return false;
+	}
+
+	return collisionMap[x][y];
+}

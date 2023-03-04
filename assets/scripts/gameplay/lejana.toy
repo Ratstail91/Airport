@@ -1,72 +1,133 @@
+import standard;
 import node;
 
 //constants
 var SPEED: int const = 3;
 
+var SPRITE_WIDTH: int const = 64;
+var SPRITE_HEIGHT: int const = 64;
+
+
 //variables
 var parent: opaque = null; //cache the parent for quick access
-var posX: int = 50;
-var posY: int = 50;
-var WIDTH: int const = 128;
-var HEIGHT: int const = 128;
 
-var xspeed: int = 0;
-var yspeed: int = 0;
+var gridX: int = 1; //position on the game grid
+var gridY: int = 1;
+
+var realX: int = 0; //will change until realX = gridX * SPRITE_WIDTH
+var realY: int = 0;
+
+var motionX: int = 0; //normalized movement direction
+var motionY: int = 0;
+
+var inputX: int = 0; //cache the keyboard input
+var inputY: int = 0;
 
 
 //polyfills - animating different cycles on one image 
-var SPRITE_WIDTH: int const = 32;
-var SPRITE_HEIGHT: int const = 32;
 var stepCount: int = 0;
-var stepDelay: int = 10;
 
 fn faceDown(node: opaque) {
-	node.setNodeRect(0, 0, SPRITE_WIDTH, SPRITE_HEIGHT);
+	node.setNodeRect(0, 0, 32, 32);
 	node.setNodeFrames(4);
 }
 
 fn faceUp(node: opaque) {
-	node.setNodeRect(32 * 4, 0, SPRITE_WIDTH, SPRITE_HEIGHT);
+	node.setNodeRect(32 * 4, 0, 32, 32);
 	node.setNodeFrames(4);
 }
 
 fn faceLeft(node: opaque) {
-	node.setNodeRect(32 * 12, 0, SPRITE_WIDTH, SPRITE_HEIGHT);
+	node.setNodeRect(32 * 12, 0, 32, 32);
 	node.setNodeFrames(4);
 }
 
 fn faceRight(node: opaque) {
-	node.setNodeRect(32 * 8, 0, SPRITE_WIDTH, SPRITE_HEIGHT);
+	node.setNodeRect(32 * 8, 0, 32, 32);
 	node.setNodeFrames(4);
+}
+
+//polyfills - move these to standard
+fn normalize(x): int {
+	if (x > 0) {
+		return 1;
+	}
+	if (x < 0) {
+		return -1;
+	}
+	return 0;
 }
 
 
 //lifecycle functions
 fn onLoad(node: opaque) {
-	//
-}
-
-fn onInit(node: opaque) {
-	parent = node.getParentNode();
 	node.loadTexture("sprites:/lejana.png");
 	node.faceDown();
 }
 
-fn onStep(node: opaque) {
-	posX += xspeed;
-	posY += yspeed;
+fn onInit(node: opaque) {
+	parent = node.getParentNode();
+}
 
-	//animate after X steps
-	if (xspeed == 0 && yspeed == 0) {
+fn onStep(node: opaque) {
+	//process input when aligned to a grid
+	if (realX / SPRITE_WIDTH == gridX && realY / SPRITE_HEIGHT == gridY && motionX == 0 && motionY == 0) {
+		//disallow wall phasing
+		if (parent.callNodeFn("getCollisionAt", gridX + inputX, gridY) != true) {
+			inputX = 0;
+		}
+
+		if (parent.callNodeFn("getCollisionAt", gridX, gridY + inputY) != true) {
+			inputY = 0;
+		}
+
+		//disallow diagonal movement
+		if (abs(inputX) != 0) {
+			gridX += inputX;
+		}
+		else {
+			gridY += inputY;
+		}
+
+		//facing
+		if (inputY > 0) {
+			node.faceDown();
+		}
+
+		if (inputY < 0) {
+			node.faceUp();
+		}
+
+		if (inputX > 0) {
+			node.faceRight();
+		}
+
+		if (inputX < 0) {
+			node.faceLeft();
+		}
+	}
+
+	//animation
+	if (motionX == 0 && motionY == 0) {
 		stepCount = 0;
 		node.setCurrentNodeFrame(0);
 	}
-	else {
-		if (++stepCount >= stepDelay) {
-			node.incrementCurrentNodeFrame();
-			stepCount = 0;
-		}
+
+	if (++stepCount >= 10) {
+		node.incrementCurrentNodeFrame();
+		stepCount = 0;
 	}
+
+	//calc movement
+	var distX = gridX * SPRITE_WIDTH - realX;
+	var distY = gridY * SPRITE_HEIGHT - realY;
+
+	motionX = normalize(distX);
+	motionY = normalize(distY);
+
+	//make movement
+	realX += abs(distX) > SPEED ? SPEED * motionX : distX;
+	realY += abs(distY) > SPEED ? SPEED * motionY : distY;
 }
 
 fn onFree(node: opaque) {
@@ -80,75 +141,55 @@ fn onDraw(node: opaque) {
 	if (parent != null) {
 		px = parent.callNodeFn("getX");
 		py = parent.callNodeFn("getY");
+
+		px = px != null ? px : 0;
+		py = py != null ? py : 0;
 	}
 
-	node.drawNode(posX + px, posY + py, WIDTH, HEIGHT);
+	node.drawNode(realX + px, realY + py, SPRITE_WIDTH, SPRITE_HEIGHT);
 }
 
 //event functions
 fn onKeyDown(node: opaque, event: string) {
 	if (event == "character_up") {
-		yspeed -= SPEED;
-		faceUp(node);
+		inputY -= 1;
 		return;
 	}
 
 	if (event == "character_down") {
-		yspeed += SPEED;
-		faceDown(node);
+		inputY += 1;
 		return;
 	}
 
 	if (event == "character_left") {
-		xspeed -= SPEED;
-		faceLeft(node);
+		inputX -= 1;
 		return;
 	}
 
 	if (event == "character_right") {
-		xspeed += SPEED;
-		faceRight(node);
+		inputX += 1;
 		return;
 	}
 }
 
 fn onKeyUp(node: opaque, event: string) {
-	if (event == "character_up" && yspeed < 0) {
-		yspeed = 0;
+	if (event == "character_up" && inputY < 0) {
+		inputY = 0;
 		return;
 	}
 
-	if (event == "character_down" && yspeed > 0) {
-		yspeed = 0;
+	if (event == "character_down" && inputY > 0) {
+		inputY = 0;
 		return;
 	}
 
-	if (event == "character_left" && xspeed < 0) {
-		xspeed = 0;
+	if (event == "character_left" && inputX < 0) {
+		inputX = 0;
 		return;
 	}
 
-	if (event == "character_right" && xspeed > 0) {
-		xspeed = 0;
+	if (event == "character_right" && inputX > 0) {
+		inputX = 0;
 		return;
 	}
 }
-
-fn onMouseMotion(node: opaque, x: int, y: int, xrel: int, yrel: int) {
-	//
-}
-
-fn onMouseButtonDown(node: opaque, x: int, y: int, button: string) {
-	//jump to pos
-	posX = x - WIDTH / 2;
-	posY = y - HEIGHT / 2;
-}
-
-fn onMouseButtonUp(node: opaque, x: int, y: int, button: string) {
-	//
-}
-
-fn onMouseWheel(node: opaque, xrel: int, yrel: int) {
-	//
-}
-

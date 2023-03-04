@@ -2,9 +2,6 @@ import standard;
 import node;
 
 //consts
-var ROOM_WIDTH: int const = 8;
-var ROOM_HEIGHT: int const = 8;
-
 var TILE_WIDTH: int const = 64;
 var TILE_HEIGHT: int const = 64;
 
@@ -13,27 +10,27 @@ var tilemap: [[string]] = null;
 var collisions: [[bool]] = null;
 
 var tileset: [string : [int]] = [
-	"pillar": [0, 0, 1],
+	"pillar": [0, 0, 0],
 	
-	"floor-0": [0, 1, 0],
-	"floor-1": [1, 1, 0],
-	"floor-2": [2, 1, 0],
-	"floor-3": [3, 1, 0],
+	"floor-0": [0, 1, 1],
+	"floor-1": [1, 1, 1],
+	"floor-2": [2, 1, 1],
+	"floor-3": [3, 1, 1],
 
-	"wall-t": [0, 2, 1],
-	"wall-b": [1, 2, 1],
-	"wall-l": [2, 2, 1],
-	"wall-r": [3, 2, 1],
+	"wall-t": [0, 2, 0],
+	"wall-b": [1, 2, 0],
+	"wall-l": [2, 2, 0],
+	"wall-r": [3, 2, 0],
 
-	"corner-tl": [0, 3, 1],
-	"corner-tr": [1, 3, 1],
-	"corner-bl": [2, 3, 1],
-	"corner-br": [3, 3, 1],
+	"corner-tl": [0, 3, 0],
+	"corner-tr": [1, 3, 0],
+	"corner-bl": [2, 3, 0],
+	"corner-br": [3, 3, 0],
 
-	"edge-tl": [0, 4, 1],
-	"edge-tr": [1, 4, 1],
-	"edge-bl": [2, 4, 1],
-	"edge-br": [3, 4, 1]
+	"edge-tl": [0, 4, 0],
+	"edge-tr": [1, 4, 0],
+	"edge-bl": [2, 4, 0],
+	"edge-br": [3, 4, 0]
 ];
 
 
@@ -45,34 +42,41 @@ var camH = 720;
 
 
 //lifecycle functions
-fn onInit(node: opaque) {
+fn onLoad(node: opaque) {
 	node.loadTexture("sprites:/tileset.png");
-
-	tilemap = generateTilemap(clock().hash(), ROOM_WIDTH, ROOM_HEIGHT);
-	collisions = bakeCollisionMap(tilemap, ROOM_WIDTH, ROOM_HEIGHT);
-
-	print tilemap;
-	print collisions;
 }
 
 fn onDraw(node: opaque) {
+	if (tilemap == null) {
+		return;
+	}
+
 	//calc the region to render
 	var lowerX: int = round((camX - camW/2.0) / TILE_WIDTH);
 	var upperX: int = round((camX - camW*1.5) / TILE_WIDTH);
 	var lowerY: int = round((camY - camH/2.0) / TILE_HEIGHT);
 	var upperY: int = round((camY - camH*1.5) / TILE_HEIGHT);
 
+	var rwidth = 0;
+	var rheight = 0;
+
+	if (tilemap.length() != 0) {
+		rwidth = tilemap.length();
+
+		if (tilemap[0].length() != 0) {
+			rheight = (tilemap[0].length()); //TODO: Some kind of Toy bug here, use parentheses
+		}
+	}
+
 	//bounds check
 	lowerX = max(0, lowerX);
-	upperX = min(upperX < 0 ? abs(upperX) : 0, ROOM_WIDTH);
+	upperX = min(upperX < 0 ? abs(upperX) : 0, rwidth);
 	lowerY = max(0, lowerY);
-	upperY = min(upperY < 0 ? abs(upperY) : 0, ROOM_HEIGHT);
-
+	upperY = min(upperY < 0 ? abs(upperY) : 0, rheight);
 
 	//draw the tilemap
 	for (var j = lowerY; j < upperY; j++) {
 		for (var i = lowerX; i < upperX; i++) {
-
 			var pos = tileset[tilemap[i][j]];
 			node.setNodeRect(pos[0] * 16, pos[1] * 16, 16, 16);
 
@@ -83,6 +87,14 @@ fn onDraw(node: opaque) {
 
 
 //utils functions for map generation
+fn generateFromSeed(node: opaque, seed: int, width: int, height: int) {
+	tilemap = generateTilemap(seed, width, height);
+	collisions = bakeCollisionMap(tilemap, width, height);
+
+	print tilemap;
+	print collisions;
+}
+
 fn generateTilemap(seed: int, width: int, height: int) {
 	import random;
 	var rng: opaque = createRandomGenerator(seed);
@@ -151,4 +163,8 @@ fn bakeCollisionMap(tilemap: [[string]], width: int, height: int) {
 	}
 	
 	return result;
+}
+
+fn getCollisionMap(node: opaque) {
+	return collisions;
 }
