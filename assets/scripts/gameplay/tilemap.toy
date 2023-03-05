@@ -48,7 +48,7 @@ fn onLoad(node: opaque) {
 	node.loadTexture("sprites:/tileset.png");
 }
 
-fn onDraw(node: opaque) {
+fn customOnDraw(node: opaque) {
 	if (tilemap == null) {
 		return;
 	}
@@ -89,8 +89,8 @@ fn onDraw(node: opaque) {
 
 
 //utils functions for map generation
-fn generateFromSeed(node: opaque, seed: int, width: int, height: int) {
-	rawmap = generateRawTilemap(seed, width, height);
+fn generateFromRng(node: opaque, rng: opaque, width: int, height: int) {
+	rawmap = generateRawTilemap(rng, width, height);
 
 	tilemap = bakeTilemap(rawmap, width, height);
 	collisions = bakeCollisionMap(rawmap, width, height);
@@ -99,9 +99,8 @@ fn generateFromSeed(node: opaque, seed: int, width: int, height: int) {
 	print collisions;
 }
 
-fn generateRawTilemap(seed: int, width: int, height: int) {
+fn generateRawTilemap(rng: opaque, width: int, height: int) {
 	import random;
-	var rng: opaque = createRandomGenerator(seed);
 
 	//generate an empty grid
 	var result: [[string]] = [];
