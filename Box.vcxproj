@@ -110,11 +110,11 @@
     <ClCompile>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <PreprocessorDefinitions>BOX_EXPORT;LIB_RUNNER_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SDL2Dir)\include;$(SDL2ImageDir)\include;%(SolutionDir)Toy\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SDL2Dir)\include;$(SDL2ImageDir)\include;$(SDL2TTFDir)\include;%(SolutionDir)Toy\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(SDL2Dir)\lib\x64;$(SDL2ImageDir)\lib\x64;$(SolutionDir)out\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;Toy.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SDL2Dir)\lib\x64;$(SDL2ImageDir)\lib\x64;$(SDL2TTFDir)\lib\x64;$(SolutionDir)out\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;SDL2_ttf.lib;Toy.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>xcopy "$(SolutionDir)Toy\repl\lib*.*" "$(SolutionDir)box" /Y /I /E
@@ -125,11 +125,11 @@ xcopy "$(SolutionDir)Toy\repl\repl_tools.*" "$(SolutionDir)box" /Y /I /E</Comman
     <ClCompile>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <PreprocessorDefinitions>BOX_EXPORT;LIB_RUNNER_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SDL2Dir)\include;$(SDL2ImageDir)\include;%(SolutionDir)Toy\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SDL2Dir)\include;$(SDL2ImageDir)\include;$(SDL2TTFDir)\include;%(SolutionDir)Toy\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(SDL2Dir)\lib\x64;$(SDL2ImageDir)\lib\x64;$(SolutionDir)out\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;Toy.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SDL2Dir)\lib\x64;$(SDL2ImageDir)\lib\x64;$(SDL2TTFDir)\lib\x64;$(SolutionDir)out\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;SDL2_ttf.lib;Toy.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>xcopy "$(SolutionDir)Toy\repl\lib*.*" "$(SolutionDir)box" /Y /I /E

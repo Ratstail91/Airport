@@ -14,6 +14,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 
 #include <unistd.h>
 #define BOX_API extern
@@ -22,6 +23,7 @@
 
 #include <SDL.h>
 #include <SDL_image.h>
+#include <SDL_ttf.h>
 
 #include <windows.h>
 #include <crtdbg.h>

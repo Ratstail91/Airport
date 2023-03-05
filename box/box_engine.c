@@ -51,6 +51,11 @@ void Box_initEngine() {
 		fatalError("Failed to initialize SDL2_image");
 	}
 
+	//init SDL_ttf
+	if (TTF_Init() == -1) {
+		fatalError("Failed to initialize SDL2_ttf");
+	}
+
 	//init events
 	Toy_initLiteralDictionary(&engine.symKeyDownEvents);
 	Toy_initLiteralDictionary(&engine.symKeyUpEvents);

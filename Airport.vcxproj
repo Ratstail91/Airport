@@ -126,10 +126,10 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Link>
       <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;Toy.lib;Box.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SDL2Dir)\lib\x64;$(SDL2ImageDir)\lib\x64;$(SolutionDir)out\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SDL2Dir)\lib\x64;$(SDL2ImageDir)\lib\x64;$(SDL2TTFDir)\lib\x64;$(SolutionDir)out\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SDL2Dir)\include;$(SDL2ImageDir)\include;%(SolutionDir)Toy\source;$(SolutionDir)box;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SDL2Dir)\include;$(SDL2ImageDir)\include;$(SDL2TTFDir)\include;%(SolutionDir)Toy\source;$(SolutionDir)box;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <PreprocessorDefinitions>
       </PreprocessorDefinitions>
@@ -144,10 +144,10 @@
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <PreprocessorDefinitions>
       </PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SDL2Dir)\include;$(SDL2ImageDir)\include;%(SolutionDir)Toy\source;$(SolutionDir)box;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SDL2Dir)\include;$(SDL2ImageDir)\include;$(SDL2TTFDir)\include;%(SolutionDir)Toy\source;$(SolutionDir)box;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(SDL2Dir)\lib\x64;$(SDL2ImageDir)\lib\x64;$(SolutionDir)out\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SDL2Dir)\lib\x64;$(SDL2ImageDir)\lib\x64;$(SDL2TTFDir)\lib\x64;$(SolutionDir)out\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;Toy.lib;Box.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
