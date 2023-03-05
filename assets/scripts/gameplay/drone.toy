@@ -2,7 +2,7 @@ import standard;
 import node;
 
 //constants
-var SPEED: int const = 2;
+var SPEED: int const = 4;
 
 var SPRITE_WIDTH: int const = 64;
 var SPRITE_HEIGHT: int const = 64;
@@ -98,7 +98,7 @@ fn onInit(node: opaque) {
 }
 
 fn onStep(node: opaque) {
-	if (++stepCount >= 10) {
+	if (++stepCount >= 5) {
 		node.incrementCurrentNodeFrame();
 		stepCount = 0;
 	}

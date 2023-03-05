@@ -27,8 +27,11 @@
 	mapInputEventToKeyUp("character_right", "right"); //event, keysym
 
 
+	//TODO: escape to kill the game
+
+
 	//this function must always be called, or the engine won't run
-	initWindow("Skyland", 1080, 720, false);
+	initWindow("Skyland", 32*16, 32*16, false); //TODO: custom FPS setting
 
 	//kick off the logic of the scene graph
 	loadRootNode("scripts:/gameplay/scene.toy");

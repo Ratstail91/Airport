@@ -31,8 +31,8 @@ fn onInit(node: opaque) {
 }
 
 fn onStep(node: opaque) {
-	if (++stepCounter >= 60) {
-		print "FPS: " + string drawCounter + " / 60";
+	if (++stepCounter >= 30) {
+		print "FPS: " + string drawCounter + " / 30";
 		stepCounter = 0;
 		drawCounter = 0;
 	}

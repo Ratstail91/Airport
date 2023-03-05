@@ -412,7 +412,7 @@ void Box_execEngine() {
 	//set up time
 	engine.realTime = clock();
 	engine.simTime = engine.realTime;
-	clock_t delta = (double) CLOCKS_PER_SEC / 60.0;
+	clock_t delta = (double) CLOCKS_PER_SEC / 30.0;
 
 	while (engine.running) {
 		execLoadRootNode();
@@ -432,8 +432,8 @@ void Box_execEngine() {
 		}
 
 		//render the world
-		SDL_SetRenderDrawColor(engine.renderer, 128, 128, 128, 255); //NOTE: This line can be disabled later
-		SDL_RenderClear(engine.renderer); //NOTE: This line can be disabled later
+		//SDL_SetRenderDrawColor(engine.renderer, 128, 128, 128, 255); //NOTE: This line can be disabled later
+		//SDL_RenderClear(engine.renderer); //NOTE: This line can be disabled later
 
 		Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onDraw", NULL);
 

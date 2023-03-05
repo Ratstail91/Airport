@@ -2,7 +2,7 @@ import standard;
 import node;
 
 //constants
-var SPEED: int const = 2;
+var SPEED: int const = 4;
 
 var SPRITE_WIDTH: int const = 64;
 var SPRITE_HEIGHT: int const = 64;
@@ -27,7 +27,7 @@ var inputX: int = 0; //cache the keyboard input
 var inputY: int = 0;
 
 var direction: int = null; //BUGFIX: animation not looping properly
-var enableMovementCounter: int = 60 * 4; //BUGFIX: freeze while drones reach their starting spot
+var enableMovementCounter: int = 30 * 3; //BUGFIX: freeze while drones reach their starting spot
 
 
 //polyfills - animating different cycles on one image 
@@ -155,7 +155,7 @@ fn onStep(node: opaque) {
 		node.setCurrentNodeFrame(0);
 	}
 
-	if (++stepCount >= 10) {
+	if (++stepCount >= 5) {
 		node.incrementCurrentNodeFrame();
 		stepCount = 0;
 	}
