@@ -6,6 +6,9 @@ var player: opaque = null;
 
 var collisionMap: [[bool]] = null; //cache this, since it won't change during a level
 
+var stepCounter: int = 0;
+var drawCounter: int = 0;
+
 //lifecycle functions
 fn onLoad(node: opaque) {
 	tilemap = node.loadChild("scripts:/gameplay/tilemap.toy");
@@ -13,8 +16,20 @@ fn onLoad(node: opaque) {
 }
 
 fn onInit(node: opaque) {
-	tilemap.callNodeFn("generateFromSeed", clock().hash(), 8, 8);
+	tilemap.callNodeFn("generateFromSeed", clock().hash(), 16, 16);
 	collisionMap = tilemap.callNodeFn("getCollisionMap");
+}
+
+fn onStep(node: opaque) {
+	if (++stepCounter >= 60) {
+		print "FPS: " + string drawCounter + " / 60";
+		stepCounter = 0;
+		drawCounter = 0;
+	}
+}
+
+fn onDraw(node: opaque) {
+	drawCounter++;
 }
 
 //utils - polyfills

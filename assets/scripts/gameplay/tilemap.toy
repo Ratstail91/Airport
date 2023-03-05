@@ -2,11 +2,13 @@ import standard;
 import node;
 
 //consts
-var TILE_WIDTH: int const = 64;
-var TILE_HEIGHT: int const = 64;
+var TILE_WIDTH: int const = 32;
+var TILE_HEIGHT: int const = 32;
 
 //map between the identity and position on the sprite sheet
-var tilemap: [[string]] = null;
+var rawmap: [[string]] = null;
+
+var tilemap: [[[int]]] = null;
 var collisions: [[bool]] = null;
 
 var tileset: [string : [int]] = [
@@ -77,7 +79,7 @@ fn onDraw(node: opaque) {
 	//draw the tilemap
 	for (var j = lowerY; j < upperY; j++) {
 		for (var i = lowerX; i < upperX; i++) {
-			var pos = tileset[tilemap[i][j]];
+			var pos = tileset[ rawmap[i][j] ];
 			node.setNodeRect(pos[0] * 16, pos[1] * 16, 16, 16);
 
 			node.drawNode(i * TILE_WIDTH, j * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
@@ -88,14 +90,16 @@ fn onDraw(node: opaque) {
 
 //utils functions for map generation
 fn generateFromSeed(node: opaque, seed: int, width: int, height: int) {
-	tilemap = generateTilemap(seed, width, height);
-	collisions = bakeCollisionMap(tilemap, width, height);
+	rawmap = generateRawTilemap(seed, width, height);
+
+	tilemap = bakeTilemap(rawmap, width, height);
+	collisions = bakeCollisionMap(rawmap, width, height);
 
 	print tilemap;
 	print collisions;
 }
 
-fn generateTilemap(seed: int, width: int, height: int) {
+fn generateRawTilemap(seed: int, width: int, height: int) {
 	import random;
 	var rng: opaque = createRandomGenerator(seed);
 
@@ -159,6 +163,30 @@ fn bakeCollisionMap(tilemap: [[string]], width: int, height: int) {
 		for (var i: int = 0; i < width; i++) {
 			//almost - you still need one pair of parentheses
 			result[i][j] = (tileset[ tilemap[i][j] ][2] != 0);
+		}
+	}
+	
+	return result;
+}
+
+fn bakeTilemap(tilemap: [[string]], width: int, height: int) {
+	//generate an empty grid
+	var result: [[[int]]] = [];
+	var row: [[int]] = [];
+	for (var j: int = 0; j < height; j++) {
+		row.push([0,0]);
+	}
+
+	for (var i: int = 0; i < width; i++) {
+		result.push(row);
+	}
+
+	//extract the collision map
+	for (var j: int = 0; j < height; j++) {
+		for (var i: int = 0; i < width; i++) {
+			//almost - you still need one pair of parentheses
+			result[i][j][0] = (tileset[ tilemap[i][j] ][0]);
+			result[i][j][1] = (tileset[ tilemap[i][j] ][1]);
 		}
 	}
 	

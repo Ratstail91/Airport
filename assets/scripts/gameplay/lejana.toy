@@ -2,10 +2,13 @@ import standard;
 import node;
 
 //constants
-var SPEED: int const = 3;
+var SPEED: int const = 2;
 
 var SPRITE_WIDTH: int const = 64;
 var SPRITE_HEIGHT: int const = 64;
+
+var TILE_WIDTH: int const = 32;
+var TILE_HEIGHT: int const = 32;
 
 
 //variables
@@ -71,13 +74,13 @@ fn onInit(node: opaque) {
 
 fn onStep(node: opaque) {
 	//process input when aligned to a grid
-	if (realX / SPRITE_WIDTH == gridX && realY / SPRITE_HEIGHT == gridY && motionX == 0 && motionY == 0) {
+	if (realX / TILE_WIDTH == gridX && realY / TILE_HEIGHT == gridY && motionX == 0 && motionY == 0) {
 		//disallow wall phasing
-		if (parent.callNodeFn("getCollisionAt", gridX + inputX, gridY) != true) {
+		if (inputX != 0 && parent.callNodeFn("getCollisionAt", gridX + inputX, gridY) != true) {
 			inputX = 0;
 		}
 
-		if (parent.callNodeFn("getCollisionAt", gridX, gridY + inputY) != true) {
+		if (inputY != 0 && parent.callNodeFn("getCollisionAt", gridX, gridY + inputY) != true) {
 			inputY = 0;
 		}
 
@@ -119,8 +122,8 @@ fn onStep(node: opaque) {
 	}
 
 	//calc movement
-	var distX = gridX * SPRITE_WIDTH - realX;
-	var distY = gridY * SPRITE_HEIGHT - realY;
+	var distX = gridX * TILE_WIDTH - realX;
+	var distY = gridY * TILE_HEIGHT - realY;
 
 	motionX = normalize(distX);
 	motionY = normalize(distY);
@@ -146,7 +149,7 @@ fn onDraw(node: opaque) {
 		py = py != null ? py : 0;
 	}
 
-	node.drawNode(realX + px, realY + py, SPRITE_WIDTH, SPRITE_HEIGHT);
+	node.drawNode(realX + px - SPRITE_WIDTH / 4, realY + py - SPRITE_HEIGHT / 2, SPRITE_WIDTH, SPRITE_HEIGHT);
 }
 
 //event functions
