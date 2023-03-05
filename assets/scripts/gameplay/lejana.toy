@@ -26,26 +26,36 @@ var motionY: int = 0;
 var inputX: int = 0; //cache the keyboard input
 var inputY: int = 0;
 
+var direction: int = null; //BUGFIX: animation not looping properly
+
 
 //polyfills - animating different cycles on one image 
 var stepCount: int = 0;
 
 fn faceDown(node: opaque) {
+	if (direction == 0) return;
+	direction = 0;
 	node.setNodeRect(0, 0, 32, 32);
 	node.setNodeFrames(4);
 }
 
 fn faceUp(node: opaque) {
+	if (direction == 1) return;
+	direction = 1;
 	node.setNodeRect(32 * 4, 0, 32, 32);
 	node.setNodeFrames(4);
 }
 
 fn faceLeft(node: opaque) {
+	if (direction == 3) return;
+	direction = 3;
 	node.setNodeRect(32 * 12, 0, 32, 32);
 	node.setNodeFrames(4);
 }
 
 fn faceRight(node: opaque) {
+	if (direction == 2) return;
+	direction = 2;
 	node.setNodeRect(32 * 8, 0, 32, 32);
 	node.setNodeFrames(4);
 }
@@ -111,7 +121,7 @@ fn onStep(node: opaque) {
 	}
 
 	//animation
-	if (motionX == 0 && motionY == 0) {
+	if (motionX == 0 && motionY == 0 && inputX == 0 && inputY == 0) {
 		stepCount = 0;
 		node.setCurrentNodeFrame(0);
 	}
