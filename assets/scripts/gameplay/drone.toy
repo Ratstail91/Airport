@@ -17,18 +17,15 @@ var parent: opaque = null; //cache the parent for quick access
 var gridX: int = 1; //position on the game grid
 var gridY: int = 1;
 
-var realX: int = null; //will change until realX = gridX * SPRITE_WIDTH
-var realY: int = null;
+var realX: int = 0; //will change until realX = gridX * SPRITE_WIDTH
+var realY: int = 0;
 
 var motionX: int = 0; //normalized movement direction
 var motionY: int = 0;
 
-var inputX: int = 0; //cache the keyboard input
-var inputY: int = 0;
-
 var direction: int = null; //BUGFIX: animation not looping properly
-var enableMovementCounter: int = 30 * 3; //BUGFIX: freeze while drones reach their starting spot
 
+var stepAI: int = 0;
 
 //polyfills - animating different cycles on one image 
 var stepCount: int = 0;
@@ -37,28 +34,28 @@ fn faceDown(node: opaque) {
 	if (direction == 0) return;
 	direction = 0;
 	node.setNodeRect(0, 0, 32, 32);
-	node.setNodeFrames(4);
+	node.setNodeFrames(2);
 }
 
 fn faceUp(node: opaque) {
 	if (direction == 1) return;
 	direction = 1;
-	node.setNodeRect(32 * 4, 0, 32, 32);
-	node.setNodeFrames(4);
+	node.setNodeRect(32 * 2, 0, 32, 32);
+	node.setNodeFrames(2);
 }
 
 fn faceRight(node: opaque) {
 	if (direction == 2) return;
 	direction = 2;
-	node.setNodeRect(32 * 8, 0, 32, 32);
-	node.setNodeFrames(4);
+	node.setNodeRect(32 * 4, 0, 32, 32);
+	node.setNodeFrames(2);
 }
 
 fn faceLeft(node: opaque) {
 	if (direction == 3) return;
 	direction = 3;
-	node.setNodeRect(32 * 12, 0, 32, 32);
-	node.setNodeFrames(4);
+	node.setNodeRect(32 * 6, 0, 32, 32);
+	node.setNodeFrames(2);
 }
 
 
@@ -92,7 +89,7 @@ fn getRealPos(node: opaque) {
 
 //lifecycle functions
 fn onLoad(node: opaque) {
-	node.loadTexture("sprites:/lejana.png");
+	node.loadTexture("sprites:/drone.png");
 	node.faceDown();
 }
 
@@ -101,60 +98,6 @@ fn onInit(node: opaque) {
 }
 
 fn onStep(node: opaque) {
-	//initial freeze
-	if (enableMovementCounter > 0) {
-		enableMovementCounter--;
-		return;
-	}
-
-	//process input when aligned to a grid
-	if (realX / TILE_WIDTH == gridX && realY / TILE_HEIGHT == gridY && motionX == 0 && motionY == 0) {
-		//disallow wall phasing
-		if (inputX != 0 && parent.callNodeFn("getCollisionAt", gridX + inputX, gridY) != true) {
-			inputX = 0;
-		}
-
-		if (inputY != 0 && parent.callNodeFn("getCollisionAt", gridX, gridY + inputY) != true) {
-			inputY = 0;
-		}
-
-		//disallow diagonal movement
-		if (abs(inputX) != 0) {
-			gridX += inputX;
-		}
-		else {
-			gridY += inputY;
-		}
-
-		//facing
-		if (inputY > 0) {
-			node.faceDown();
-		}
-
-		if (inputY < 0) {
-			node.faceUp();
-		}
-
-		if (inputX > 0) {
-			node.faceRight();
-		}
-
-		if (inputX < 0) {
-			node.faceLeft();
-		}
-
-		//trigger the world
-		if (inputX != 0 || inputY != 0) {
-			parent.callNodeFn("runAI");
-		}
-	}
-
-	//animation
-	if (motionX == 0 && motionY == 0 && inputX == 0 && inputY == 0) {
-		stepCount = 0;
-		node.setCurrentNodeFrame(0);
-	}
-
 	if (++stepCount >= 5) {
 		node.incrementCurrentNodeFrame();
 		stepCount = 0;
@@ -192,48 +135,41 @@ fn customOnDraw(node: opaque) {
 }
 
 
-//event functions
-fn onKeyDown(node: opaque, event: string) {
-	if (event == "character_up") {
-		inputY -= 1;
-		return;
-	}
+//gameplay functions
+fn runAI(node: opaque, rng: opaque) {
+	if ((stepAI++) >= 1) { //TODO: Toy bug here, something to do with precedence of postfix++?
+		stepAI = 0;
 
-	if (event == "character_down") {
-		inputY += 1;
-		return;
-	}
+		import random;
 
-	if (event == "character_left") {
-		inputX -= 1;
-		return;
-	}
+		var dir = rng.generateRandomNumber() % 4;
+		var moveX = 0;
+		var moveY = 0;
 
-	if (event == "character_right") {
-		inputX += 1;
-		return;
-	}
-}
+		if (dir == 0) {
+			moveY += 1;
+			node.faceDown();
+		}
 
-fn onKeyUp(node: opaque, event: string) {
-	if (event == "character_up" && inputY < 0) {
-		inputY = 0;
-		return;
-	}
+		if (dir == 1) {
+			moveY -= 1;
+			node.faceUp();
+		}
 
-	if (event == "character_down" && inputY > 0) {
-		inputY = 0;
-		return;
-	}
+		if (dir == 2) {
+			moveX += 1;
+			node.faceRight();
+		}
 
-	if (event == "character_left" && inputX < 0) {
-		inputX = 0;
-		return;
-	}
+		if (dir == 3) {
+			moveX -= 1;
+			node.faceLeft();
+		}
 
-	if (event == "character_right" && inputX > 0) {
-		inputX = 0;
-		return;
+		if (parent.callNodeFn("getCollisionAt", gridX + moveX, gridY + moveY)) {
+			gridX += moveX;
+			gridY += moveY;
+		}
 	}
 }
 

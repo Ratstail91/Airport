@@ -1,10 +1,24 @@
 import standard;
 import node;
 
+//consts
+var TILE_WIDTH: int const = 32;
+var TILE_HEIGHT: int const = 32;
+
+
 var tilemap: opaque = null;
 var player: opaque = null;
+var enemies: [opaque] = [];
+
+var entities: [opaque] = null; //full list of entities
 
 var collisionMap: [[bool]] = null; //cache this, since it won't change during a level
+
+var rng: opaque = null;
+
+//debugging tools
+var stepCounter: int = 0;
+var drawCounter: int = 0;
 
 //lifecycle functions
 fn onLoad(node: opaque) {
@@ -13,8 +27,27 @@ fn onLoad(node: opaque) {
 }
 
 fn onInit(node: opaque) {
-	tilemap.callNodeFn("generateFromSeed", clock().hash(), 8, 8);
-	collisionMap = tilemap.callNodeFn("getCollisionMap");
+	node.generateLevel(clock().hash(), 16, 16);
+}
+
+fn onStep(node: opaque) {
+	if (++stepCounter >= 30) {
+		print "FPS: " + string drawCounter + " / 30";
+		stepCounter = 0;
+		drawCounter = 0;
+	}
+
+	entities = entities.sort(depthComparator);
+}
+
+fn onDraw(node: opaque) {
+	drawCounter++;
+
+	//call each child's custom sort fn
+	tilemap.callNodeFn("customOnDraw");
+	for (var i = 0; i < entities.length(); i++) {
+		entities[i].callNodeFn("customOnDraw");
+	}
 }
 
 //utils - polyfills
@@ -24,11 +57,78 @@ fn loadChild(parent: opaque, fname: string) {
 	return child;
 }
 
-//connective functions
+//gameplay functions
+fn generateLevel(node: opaque, seed: int, width: int, height: int) {
+	//reset the array
+	enemies = [];
+	entities = [player]; //assume the player exists already
+
+	import random;
+
+	if (rng != null) rng.freeRandomGenerator();
+	rng = createRandomGenerator(seed);
+
+	//place player
+	player.callNodeFn("setGridPos", 1, 1);
+
+	//generate map
+	tilemap.callNodeFn("generateFromRng", rng, 16, 16);
+	collisionMap = tilemap.callNodeFn("getCollisionMap");
+
+	//generate drones
+	var droneCount: int const = rng.generateRandomNumber() % 2 + 2;
+	for (var i = 0; i < droneCount; i++) {
+		var d = node.loadChild("scripts:/gameplay/drone.toy");
+		d.initNode();
+
+		enemies.push(d);
+		entities.push(d);
+
+		var x = 0;
+		var y = 0;
+
+		//while generated spot is a collision, or too close to the player
+		while ((x == 0 && y == 0) || node.getCollisionAt(x, y) == false || (x < (width / 2) && y < (height / 2))) { //TODO: toy bug - no short-circuiting?
+			x = rng.generateRandomNumber() % width;
+			y = rng.generateRandomNumber() % height;
+		}
+
+		d.callNodeFn("setGridPos", x, y);
+		d.callNodeFn("setRealPos", (width -1) * TILE_WIDTH, (height - 1) * TILE_HEIGHT);
+	}
+}
+
 fn getCollisionAt(node: opaque, x: int, y: int) {
-	if (collisionMap == null) {
+	if (collisionMap == null || x == null || y == null) {
 		return false;
 	}
 
+	//entities
+	var pos = player.callNodeFn("getGridPos");
+	if (x == pos[0] && y == pos[1]) {
+		return false;
+	}
+
+	for (var i = 0; i < enemies.length(); i++) {
+		var pos = enemies[i].callNodeFn("getGridPos");
+		if (x == pos[0] && y == pos[1]) {
+			return false;
+		}
+	}
+
+	//default
 	return collisionMap[x][y];
+}
+
+fn runAI(node: opaque) {
+	for (var i = 0; i < enemies.length(); i++) {
+		enemies[i].callNodeFn("runAI", rng);
+	}
+}
+
+fn depthComparator(lhs: opaque, rhs: opaque) { //for sorting by depth
+	var lhsPos = lhs.callNodeFn("getRealPos");
+	var rhsPos = rhs.callNodeFn("getRealPos");
+
+	return lhsPos[1] < rhsPos[1];
 }

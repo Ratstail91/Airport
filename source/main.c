@@ -42,6 +42,19 @@ int main(int argc, char* argv[]) {
 		Toy_freeLiteral(pathLiteral);
 	}
 
+	{
+		//create a pair of literals, the first for the drive name, the second for the path
+		Toy_Literal driveLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("fonts"));
+		Toy_Literal pathLiteral = TOY_TO_STRING_LITERAL(Toy_createRefString("assets/fonts"));
+
+		//set these within the drive dictionary
+		Toy_setLiteralDictionary(Toy_getDriveDictionary(), driveLiteral, pathLiteral);
+
+		//these literals are no longer needed
+		Toy_freeLiteral(driveLiteral);
+		Toy_freeLiteral(pathLiteral);
+	}
+
 	//run the rest of your program
 	Box_initEngine();
 	Box_execEngine();
