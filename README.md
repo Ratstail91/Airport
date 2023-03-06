@@ -33,4 +33,5 @@ Make sure the program can see the `assets` folder (symbolic links can help), and
 * Art - Evan Hartshorn
 * Coding - Kayne Ruse
 * Font - Ancient God (Koczman Bálint)
+* Font - AlphaBeta (Brian Kent)
 
