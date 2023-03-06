@@ -5,11 +5,16 @@ import node;
 var TILE_WIDTH: int const = 32;
 var TILE_HEIGHT: int const = 32;
 
+
+//vars
+var mapWidth: int = 0;
+var mapHeight: int = 0;
+
 //map between the identity and position on the sprite sheet
 var rawmap: [[string]] = null;
 
-var tilemap: [[[int]]] = null;
-var collisions: [[bool]] = null;
+var tilemap: [int] = null; // [x0, y0, x1, y1, ...]
+var collisions: [bool] = null;
 
 var tileset: [string : [int]] = [
 	"pillar": [0, 0, 0],
@@ -59,28 +64,18 @@ fn customOnDraw(node: opaque) {
 	var lowerY: int = round((camY - camH/2.0) / TILE_HEIGHT);
 	var upperY: int = round((camY - camH*1.5) / TILE_HEIGHT);
 
-	var rwidth = 0;
-	var rheight = 0;
-
-	if (tilemap.length() != 0) {
-		rwidth = tilemap.length();
-
-		if (tilemap[0].length() != 0) {
-			rheight = (tilemap[0].length()); //TODO: Some kind of Toy bug here, use parentheses
-		}
-	}
-
 	//bounds check
 	lowerX = max(0, lowerX);
-	upperX = min(upperX < 0 ? abs(upperX) : 0, rwidth);
+	upperX = min(upperX < 0 ? abs(upperX) : 0, mapWidth);
 	lowerY = max(0, lowerY);
-	upperY = min(upperY < 0 ? abs(upperY) : 0, rheight);
+	upperY = min(upperY < 0 ? abs(upperY) : 0, mapHeight);
+
+	var runner: int = 0;
 
 	//draw the tilemap
 	for (var j = lowerY; j < upperY; j++) {
 		for (var i = lowerX; i < upperX; i++) {
-			var pos = tileset[ rawmap[i][j] ];
-			node.setNodeRect(pos[0] * 16, pos[1] * 16, 16, 16);
+			node.setNodeRect(tilemap[j * mapWidth * 2 + i * 2] * 16, tilemap[j * mapWidth * 2 + i * 2 + 1] * 16, 16, 16);
 
 			node.drawNode(i * TILE_WIDTH, j * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
 		}
@@ -94,6 +89,9 @@ fn generateFromRng(node: opaque, rng: opaque, width: int, height: int) {
 
 	tilemap = bakeTilemap(rawmap, width, height);
 	collisions = bakeCollisionMap(rawmap, width, height);
+
+	mapWidth = width;
+	mapHeight = height;
 
 	print tilemap;
 	print collisions;
@@ -142,26 +140,24 @@ fn generateRawTilemap(rng: opaque, width: int, height: int) {
 	result[0][height - 1] = "corner-bl";
 	result[width - 1][height - 1] = "corner-br";
 
+	//debug
+	result[4][4] = "pillar";
+	result[width - 5][4] = "pillar";
+	result[4][height - 5] = "pillar";
+	result[width - 5][height - 5] = "pillar";
+
 	return result;
 }
 
 fn bakeCollisionMap(tilemap: [[string]], width: int, height: int) {
 	//generate an empty grid
-	var result: [[bool]] = [];
-	var row: [bool] = [];
-	for (var j: int = 0; j < height; j++) {
-		row.push(false);
-	}
-
-	for (var i: int = 0; i < width; i++) {
-		result.push(row);
-	}
+	var result: [bool] = [];
 
 	//extract the collision map
 	for (var j: int = 0; j < height; j++) {
 		for (var i: int = 0; i < width; i++) {
 			//almost - you still need one pair of parentheses
-			result[i][j] = (tileset[ tilemap[i][j] ][2] != 0);
+			result.push(tileset[ tilemap[i][j] ][2] != 0);
 		}
 	}
 	
@@ -170,22 +166,13 @@ fn bakeCollisionMap(tilemap: [[string]], width: int, height: int) {
 
 fn bakeTilemap(tilemap: [[string]], width: int, height: int) {
 	//generate an empty grid
-	var result: [[[int]]] = [];
-	var row: [[int]] = [];
-	for (var j: int = 0; j < height; j++) {
-		row.push([0,0]);
-	}
+	var result: [int] = [];
 
-	for (var i: int = 0; i < width; i++) {
-		result.push(row);
-	}
-
-	//extract the collision map
+	//extract the position map
 	for (var j: int = 0; j < height; j++) {
 		for (var i: int = 0; i < width; i++) {
-			//almost - you still need one pair of parentheses
-			result[i][j][0] = (tileset[ tilemap[i][j] ][0]);
-			result[i][j][1] = (tileset[ tilemap[i][j] ][1]);
+			result.push(tileset[ tilemap[i][j] ][0]);
+			result.push(tileset[ tilemap[i][j] ][1]);
 		}
 	}
 	
