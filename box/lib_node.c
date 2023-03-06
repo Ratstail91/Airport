@@ -747,6 +747,139 @@ static int nativeDrawNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 	return 0;
 }
 
+static int nativeSetNodeText(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 8) {
+		interpreter->errorOutput("Incorrect number of arguments passed to setNodeText\n");
+		return -1;
+	}
+
+	//extract the arguments
+	Toy_Literal aLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal bLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal gLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal rLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal textLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal sizeLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal fontLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal nodeLiteral = Toy_popLiteralArray(arguments);
+
+	Toy_Literal nodeLiteralIdn = nodeLiteral;
+	if (TOY_IS_IDENTIFIER(nodeLiteral) && Toy_parseIdentifierToValue(interpreter, &nodeLiteral)) {
+		Toy_freeLiteral(nodeLiteralIdn);
+	}
+
+	Toy_Literal fontLiteralIdn = fontLiteral;
+	if (TOY_IS_IDENTIFIER(fontLiteral) && Toy_parseIdentifierToValue(interpreter, &fontLiteral)) {
+		Toy_freeLiteral(fontLiteralIdn);
+	}
+
+	Toy_Literal sizeLiteralIdn = sizeLiteral;
+	if (TOY_IS_IDENTIFIER(sizeLiteral) && Toy_parseIdentifierToValue(interpreter, &sizeLiteral)) {
+		Toy_freeLiteral(sizeLiteralIdn);
+	}
+
+	Toy_Literal textLiteralIdn = textLiteral;
+	if (TOY_IS_IDENTIFIER(textLiteral) && Toy_parseIdentifierToValue(interpreter, &textLiteral)) {
+		Toy_freeLiteral(textLiteralIdn);
+	}
+
+	Toy_Literal rLiteralIdn = rLiteral;
+	if (TOY_IS_IDENTIFIER(rLiteral) && Toy_parseIdentifierToValue(interpreter, &rLiteral)) {
+		Toy_freeLiteral(rLiteralIdn);
+	}
+
+	Toy_Literal gLiteralIdn = gLiteral;
+	if (TOY_IS_IDENTIFIER(gLiteral) && Toy_parseIdentifierToValue(interpreter, &gLiteral)) {
+		Toy_freeLiteral(gLiteralIdn);
+	}
+
+	Toy_Literal bLiteralIdn = bLiteral;
+	if (TOY_IS_IDENTIFIER(bLiteral) && Toy_parseIdentifierToValue(interpreter, &bLiteral)) {
+		Toy_freeLiteral(bLiteralIdn);
+	}
+
+	Toy_Literal aLiteralIdn = aLiteral;
+	if (TOY_IS_IDENTIFIER(aLiteral) && Toy_parseIdentifierToValue(interpreter, &aLiteral)) {
+		Toy_freeLiteral(aLiteralIdn);
+	}
+
+	//check argument types
+	if (!TOY_IS_OPAQUE(nodeLiteral) || !TOY_IS_STRING(fontLiteral)  || !TOY_IS_INTEGER(sizeLiteral) || !TOY_IS_STRING(textLiteral)
+		|| !TOY_IS_INTEGER(rLiteral) || !TOY_IS_INTEGER(gLiteral) || !TOY_IS_INTEGER(bLiteral) || !TOY_IS_INTEGER(aLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to setNodeText\n");
+		Toy_freeLiteral(nodeLiteral);
+		Toy_freeLiteral(fontLiteral);
+		Toy_freeLiteral(sizeLiteral);
+		Toy_freeLiteral(textLiteral);
+		Toy_freeLiteral(rLiteral);
+		Toy_freeLiteral(gLiteral);
+		Toy_freeLiteral(bLiteral);
+		Toy_freeLiteral(aLiteral);
+		return -1;
+	}
+
+	//bounds checks
+	if (TOY_AS_INTEGER(rLiteral) < 0 || TOY_AS_INTEGER(rLiteral) > 255 ||
+		TOY_AS_INTEGER(gLiteral) < 0 || TOY_AS_INTEGER(gLiteral) > 255 ||
+		TOY_AS_INTEGER(bLiteral) < 0 || TOY_AS_INTEGER(bLiteral) > 255 ||
+		TOY_AS_INTEGER(aLiteral) < 0 || TOY_AS_INTEGER(aLiteral) > 255) {
+		interpreter->errorOutput("Color out of bounds in to setNodeText\n");
+		Toy_freeLiteral(nodeLiteral);
+		Toy_freeLiteral(fontLiteral);
+		Toy_freeLiteral(sizeLiteral);
+		Toy_freeLiteral(textLiteral);
+		Toy_freeLiteral(rLiteral);
+		Toy_freeLiteral(gLiteral);
+		Toy_freeLiteral(bLiteral);
+		Toy_freeLiteral(aLiteral);
+		return -1;
+	}
+
+	//get the font
+	Toy_Literal fileLiteral = Toy_getFilePathLiteral(interpreter, &fontLiteral);
+
+	TTF_Font* font = TTF_OpenFont( Toy_toCString(TOY_AS_STRING(fileLiteral)), TOY_AS_INTEGER(sizeLiteral) );
+
+	if (!font) {
+		interpreter->errorOutput("Failed to open a font file: ");
+		interpreter->errorOutput(SDL_GetError());
+		interpreter->errorOutput("\n");
+
+		Toy_freeLiteral(fileLiteral);
+		Toy_freeLiteral(nodeLiteral);
+		Toy_freeLiteral(fontLiteral);
+		Toy_freeLiteral(sizeLiteral);
+		Toy_freeLiteral(textLiteral);
+		Toy_freeLiteral(rLiteral);
+		Toy_freeLiteral(gLiteral);
+		Toy_freeLiteral(bLiteral);
+		Toy_freeLiteral(aLiteral);
+		return -1;
+	}
+
+	//make the color
+	SDL_Color color = (SDL_Color){ .r = TOY_AS_INTEGER(rLiteral), .g = TOY_AS_INTEGER(gLiteral), .b = TOY_AS_INTEGER(bLiteral), .a = TOY_AS_INTEGER(aLiteral) };
+
+	//actually set
+	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
+	Box_setTextEngineNode(node, font, Toy_toCString(TOY_AS_STRING(textLiteral)), color);
+
+	//cleanup
+	TTF_CloseFont(font);
+
+	Toy_freeLiteral(fileLiteral);
+	Toy_freeLiteral(nodeLiteral);
+	Toy_freeLiteral(fontLiteral);
+	Toy_freeLiteral(sizeLiteral);
+	Toy_freeLiteral(textLiteral);
+	Toy_freeLiteral(rLiteral);
+	Toy_freeLiteral(gLiteral);
+	Toy_freeLiteral(bLiteral);
+	Toy_freeLiteral(aLiteral);
+
+	return 0;
+}
+
 static int nativeCallNodeFn(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//checks
 	if (arguments->count < 2) {
@@ -847,6 +980,7 @@ int Box_hookNode(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Liter
 		{"getCurrentNodeFrame", nativeGetCurrentNodeFrame},
 		{"incrementCurrentNodeFrame", nativeIncrementCurrentNodeFrame},
 		{"drawNode", nativeDrawNode},
+		{"setNodeText", nativeSetNodeText},
 		{"callNodeFn", nativeCallNodeFn},
 
 		//TODO: get rect, get node var, create empty node

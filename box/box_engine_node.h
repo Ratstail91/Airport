@@ -69,4 +69,6 @@ BOX_API void Box_setCurrentFrameEngineNode(Box_EngineNode* node, int currentFram
 BOX_API int Box_getCurrentFrameEngineNode(Box_EngineNode* node);
 BOX_API void Box_incrementCurrentFrame(Box_EngineNode* node);
 
+BOX_API void Box_setTextEngineNode(Box_EngineNode* node, TTF_Font* font, const char* text, SDL_Color color);
+
 BOX_API void Box_drawEngineNode(Box_EngineNode* node, SDL_Rect dest);

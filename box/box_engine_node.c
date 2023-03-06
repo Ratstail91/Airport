@@ -271,7 +271,21 @@ void Box_incrementCurrentFrame(Box_EngineNode* node) {
 	}
 }
 
+void Box_setTextEngineNode(Box_EngineNode* node, TTF_Font* font, const char* text, SDL_Color color) {
+	SDL_Surface* surface = TTF_RenderText_Solid(font, text, color);
+
+	node->texture = SDL_CreateTextureFromSurface(engine.renderer, surface);
+
+	node->rect = (SDL_Rect){ .x = 0, .y = 0, .w = surface->w, .h = surface->h };
+	node->frames = 1;
+	node->currentFrame = 0;
+
+	SDL_FreeSurface(surface);
+}
+
+
 void Box_drawEngineNode(Box_EngineNode* node, SDL_Rect dest) {
+	if (!node->texture) return;
 	SDL_Rect src = node->rect;
 	src.x += src.w * node->currentFrame; //TODO: improve this
 	SDL_RenderCopy(engine.renderer, node->texture, &src, &dest);

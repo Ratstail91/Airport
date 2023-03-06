@@ -1,5 +1,6 @@
 import standard;
 import node;
+import random;
 
 //consts
 var TILE_WIDTH: int const = 32;
@@ -11,6 +12,7 @@ var MAP_HEIGHT: int const = 16;
 
 var tilemap: opaque = null;
 var player: opaque = null;
+
 var enemies: [opaque] = [];
 
 var entities: [opaque] = null; //full list of entities
@@ -23,14 +25,25 @@ var rng: opaque = null;
 var stepCounter: int = 0;
 var drawCounter: int = 0;
 
+var textNode: opaque = null;
+
 //lifecycle functions
 fn onLoad(node: opaque) {
 	tilemap = node.loadChild("scripts:/gameplay/tilemap.toy");
 	player = node.loadChild("scripts:/gameplay/lejana.toy");
+	textNode = node.loadChild("scripts:/empty.toy");
 }
 
 fn onInit(node: opaque) {
 	node.generateLevel(clock().hash(), MAP_WIDTH, MAP_HEIGHT);
+
+	//debugging
+//	textNode.setNodeText("fonts:/alphbeta.ttf", 48, "Hello world", 128, 0, 0, 255);
+	textNode.setNodeText("fonts:/Ancient God.ttf", 48, "Hello world", 128, 0, 0, 255);
+}
+
+fn onFree(node: opaque) {
+	rng.freeRandomGenerator();
 }
 
 fn onStep(node: opaque) {
@@ -46,7 +59,7 @@ fn onStep(node: opaque) {
 fn onDraw(node: opaque) {
 	drawCounter++;
 
-	//call each child's custom sort fn
+	//call each child's custom draw fn
 	tilemap.callNodeFn("customOnDraw");
 	for (var i = 0; i < entities.length(); i++) {
 		entities[i].callNodeFn("customOnDraw");
@@ -65,8 +78,6 @@ fn generateLevel(node: opaque, seed: int, width: int, height: int) {
 	//reset the array
 	enemies = [];
 	entities = [player]; //assume the player exists already
-
-	import random;
 
 	if (rng != null) rng.freeRandomGenerator();
 	rng = createRandomGenerator(seed);
@@ -91,7 +102,7 @@ fn generateLevel(node: opaque, seed: int, width: int, height: int) {
 		var y = 0;
 
 		//while generated spot is a collision, or too close to the player
-		while ((x == 0 && y == 0) || node.getCollisionAt(x, y) == false || (x < (width / 3 * 2) && y < (height / 3 * 2))) { //TODO: toy bug - no short-circuiting?
+		while ((x == 0 && y == 0) || node.getCollisionAt(x, y) == false || (x < (width / 6 * 2) && y < (height / 6 * 2))) { //TODO: toy bug - no short-circuiting?
 			x = rng.generateRandomNumber() % width;
 			y = rng.generateRandomNumber() % height;
 		}

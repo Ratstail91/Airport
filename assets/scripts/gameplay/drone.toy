@@ -1,5 +1,6 @@
 import standard;
 import node;
+import random;
 
 //constants
 var SPEED: int const = 4;
@@ -139,8 +140,6 @@ fn customOnDraw(node: opaque) {
 fn runAI(node: opaque, rng: opaque) {
 	if ((stepAI++) >= 1) { //TODO: Toy bug here, something to do with precedence of postfix++?
 		stepAI = 0;
-
-		import random;
 
 		var dir = rng.generateRandomNumber() % 4;
 		var moveX = 0;
