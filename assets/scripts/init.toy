@@ -26,6 +26,7 @@
 	mapInputEventToKeyUp("character_down",  "down"); //event, keysym
 	mapInputEventToKeyUp("character_right", "right"); //event, keysym
 
+	mapInputEventToKeyDown("character_attack", "space"); //event, keysym
 
 	//TODO: escape to kill the game
 

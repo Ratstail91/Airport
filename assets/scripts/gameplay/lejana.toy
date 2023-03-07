@@ -28,7 +28,7 @@ var inputY: int = 0;
 
 var direction: int = null; //BUGFIX: animation not looping properly
 var enableMovementCounter: int = 30 * 3; //BUGFIX: freeze while drones reach their starting spot
-
+var attackCounter: int = 0;
 
 //polyfills - animating different cycles on one image 
 var stepCount: int = 0;
@@ -106,26 +106,9 @@ fn onStep(node: opaque) {
 		enableMovementCounter--;
 		return;
 	}
-
+	
 	//process input when aligned to a grid
 	if (realX / TILE_WIDTH == gridX && realY / TILE_HEIGHT == gridY && motionX == 0 && motionY == 0) {
-		//disallow wall phasing
-		if (inputX != 0 && parent.callNodeFn("getCollisionAt", gridX + inputX, gridY) != true) {
-			inputX = 0;
-		}
-
-		if (inputY != 0 && parent.callNodeFn("getCollisionAt", gridX, gridY + inputY) != true) {
-			inputY = 0;
-		}
-
-		//disallow diagonal movement
-		if (abs(inputX) != 0) {
-			gridX += inputX;
-		}
-		else {
-			gridY += inputY;
-		}
-
 		//facing
 		if (inputY > 0) {
 			node.faceDown();
@@ -143,21 +126,58 @@ fn onStep(node: opaque) {
 			node.faceLeft();
 		}
 
+		//disallow wall phasing
+		if (inputX != 0 && parent.callNodeFn("getCollisionAt", gridX + inputX, gridY) != true) {
+			inputX = 0;
+		}
+
+		if (inputY != 0 && parent.callNodeFn("getCollisionAt", gridX, gridY + inputY) != true) {
+			inputY = 0;
+		}
+
+		//disallow diagonal movement
+		if (abs(inputX) != 0) {
+			gridX += inputX;
+		}
+		else {
+			gridY += inputY;
+		}
+
 		//trigger the world
 		if (inputX != 0 || inputY != 0) {
 			parent.callNodeFn("runAI");
 		}
 	}
 
-	//animation
-	if (motionX == 0 && motionY == 0 && inputX == 0 && inputY == 0) {
-		stepCount = 0;
-		node.setCurrentNodeFrame(0);
+	//animation - standing still
+	if (attackCounter == 0 && stepCount == 0) {
+		//move to standing state
+		if (node.getNodeRectY() != 0) {
+			node.setNodeRect(direction * 32 * 4, 0, 32, 32);
+			node.setNodeFrames(4);
+		}
 	}
 
+	//animation - attacking
+	if (attackCounter > 0 && stepCount == 0) {
+		//move to attacking state
+		if (node.getNodeRectY() != 32) {
+			node.setNodeRect(direction * 32 * 4, 32, 32, 32);
+			node.setNodeFrames(3);
+		}
+	}
+
+	//actually animate
 	if (++stepCount >= 5) {
+		if (motionX == 0 && motionY == 0 && inputX == 0 && inputY == 0) {
+			stepCount = 0;
+		}
+		
+		if (attackCounter > 0) {
+			attackCounter--;
+		}
+
 		node.incrementCurrentNodeFrame();
-		stepCount = 0;
 	}
 
 	//calc movement
@@ -183,6 +203,16 @@ fn customOnDraw(node: opaque, parentX: int, parentY: int) {
 
 //event functions
 fn onKeyDown(node: opaque, event: string) {
+	//initial freeze
+	if (enableMovementCounter > 0) {
+		return;
+	}
+
+	if (event == "character_attack" && inputX == 0 && inputY == 0) {
+		attackCounter = 2;
+		return;
+	}
+
 	if (event == "character_up") {
 		inputY -= 1;
 		return;
