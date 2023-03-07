@@ -330,9 +330,9 @@ static int nativeGetChildNodeCount(Toy_Interpreter* interpreter, Toy_LiteralArra
 	return 0;
 }
 
-static int nativeLoadTexture(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+static int nativeLoadNodeTexture(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 2) {
-		interpreter->errorOutput("Incorrect number of arguments passed to loadTexture\n");
+		interpreter->errorOutput("Incorrect number of arguments passed to loadNodeTexture\n");
 		return -1;
 	}
 
@@ -352,7 +352,7 @@ static int nativeLoadTexture(Toy_Interpreter* interpreter, Toy_LiteralArray* arg
 
 	//check argument types
 	if (!TOY_IS_STRING(drivePathLiteral) || !TOY_IS_OPAQUE(nodeLiteral)) {
-		interpreter->errorOutput("Incorrect argument type passed to loadTexture\n");
+		interpreter->errorOutput("Incorrect argument type passed to loadNodeTexture\n");
 		Toy_freeLiteral(drivePathLiteral);
 		Toy_freeLiteral(nodeLiteral);
 		return -1;
@@ -389,9 +389,9 @@ static int nativeLoadTexture(Toy_Interpreter* interpreter, Toy_LiteralArray* arg
 	return 0;
 }
 
-static int nativeFreeTexture(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+static int nativeFreeNodeTexture(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	if (arguments->count != 1) {
-		interpreter->errorOutput("Incorrect number of arguments passed to freeTexture\n");
+		interpreter->errorOutput("Incorrect number of arguments passed to freeNodeTexture\n");
 		return -1;
 	}
 
@@ -405,7 +405,7 @@ static int nativeFreeTexture(Toy_Interpreter* interpreter, Toy_LiteralArray* arg
 
 	//check argument types
 	if (!TOY_IS_OPAQUE(nodeLiteral)) {
-		interpreter->errorOutput("Incorrect argument type passed to freeTexture\n");
+		interpreter->errorOutput("Incorrect argument type passed to freeNodeTexture\n");
 		Toy_freeLiteral(nodeLiteral);
 		return -1;
 	}
@@ -970,8 +970,8 @@ int Box_hookNode(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Liter
 		{"freeChildNode", nativeFreeChildNode},
 		{"getParentNode", nativeGetParentNode},
 		{"getChildNodeCount", nativeGetChildNodeCount},
-		{"loadTexture", nativeLoadTexture},
-		{"freeTexture", nativeFreeTexture},
+		{"loadNodeTexture", nativeLoadNodeTexture},
+		{"freeNodeTexture", nativeFreeNodeTexture},
 		{"setNodeRect", nativeSetNodeRect},
 		//get rect
 		{"setNodeFrames", nativeSetNodeFrames},
@@ -983,7 +983,7 @@ int Box_hookNode(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Liter
 		{"setNodeText", nativeSetNodeText},
 		{"callNodeFn", nativeCallNodeFn},
 
-		//TODO: get rect, get node var, create empty node
+		//TODO: get rect, get node var, create empty node, set node color (tinting)
 		{NULL, NULL},
 	};
 

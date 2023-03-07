@@ -90,7 +90,7 @@ fn getRealPos(node: opaque) {
 
 //lifecycle functions
 fn onLoad(node: opaque) {
-	node.loadTexture("sprites:/drone.png");
+	node.loadNodeTexture("sprites:/drone.png");
 	node.faceDown();
 }
 
@@ -117,22 +117,11 @@ fn onStep(node: opaque) {
 }
 
 fn onFree(node: opaque) {
-	node.freeTexture();
+	node.freeNodeTexture();
 }
 
-fn customOnDraw(node: opaque) {
-	var px = 0;
-	var py = 0;
-
-	if (parent != null) {
-		px = parent.callNodeFn("getX");
-		py = parent.callNodeFn("getY");
-
-		px = px != null ? px : 0;
-		py = py != null ? py : 0;
-	}
-
-	node.drawNode(realX + px - SPRITE_WIDTH / 4, realY + py - SPRITE_HEIGHT / 2, SPRITE_WIDTH, SPRITE_HEIGHT);
+fn customOnDraw(node: opaque, parentX: int, parentY: int) {
+	node.drawNode(realX + parentX - SPRITE_WIDTH / 4, realY + parentY - SPRITE_HEIGHT / 2, SPRITE_WIDTH, SPRITE_HEIGHT);
 }
 
 

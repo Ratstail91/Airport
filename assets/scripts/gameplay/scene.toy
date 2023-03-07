@@ -12,6 +12,7 @@ var MAP_HEIGHT: int const = 16;
 
 var tilemap: opaque = null;
 var player: opaque = null;
+var stepCounter: opaque = null;
 
 var enemies: [opaque] = [];
 
@@ -22,24 +23,19 @@ var collisionMap: [bool] = null; //cache this, since it won't change during a le
 var rng: opaque = null;
 
 //debugging tools
-var stepCounter: int = 0;
-var drawCounter: int = 0;
-
-var textNode: opaque = null;
+var debugStepCounter: int = 0;
+var debugDrawCounter: int = 0;
 
 //lifecycle functions
 fn onLoad(node: opaque) {
 	tilemap = node.loadChild("scripts:/gameplay/tilemap.toy");
 	player = node.loadChild("scripts:/gameplay/lejana.toy");
-	textNode = node.loadChild("scripts:/empty.toy");
+	stepCounter = node.loadChild("scripts:/gameplay/step-counter.toy");
 }
 
 fn onInit(node: opaque) {
 	node.generateLevel(clock().hash(), MAP_WIDTH, MAP_HEIGHT);
-
-	//debugging
-//	textNode.setNodeText("fonts:/alphbeta.ttf", 48, "Hello world", 128, 0, 0, 255);
-	textNode.setNodeText("fonts:/Ancient God.ttf", 48, "Hello world", 128, 0, 0, 255);
+	stepCounter.callNodeFn("setMaxSteps", 100);
 }
 
 fn onFree(node: opaque) {
@@ -47,23 +43,25 @@ fn onFree(node: opaque) {
 }
 
 fn onStep(node: opaque) {
-	if (++stepCounter >= 30) {
-		print "FPS: " + string drawCounter + " / 30";
-		stepCounter = 0;
-		drawCounter = 0;
+	if (++debugStepCounter >= 30) {
+		print "FPS: " + string debugDrawCounter + " / 30";
+		debugStepCounter = 0;
+		debugDrawCounter = 0;
 	}
 
 	entities = entities.sort(depthComparator);
 }
 
 fn onDraw(node: opaque) {
-	drawCounter++;
+	debugDrawCounter++;
 
-	//call each child's custom draw fn
-	tilemap.callNodeFn("customOnDraw");
+	//call each child's custom draw fn (with parent shifting)
+	tilemap.callNodeFn("customOnDraw", 0, 32);
 	for (var i = 0; i < entities.length(); i++) {
-		entities[i].callNodeFn("customOnDraw");
+		entities[i].callNodeFn("customOnDraw", 0, 32);
 	}
+
+	stepCounter.callNodeFn("customOnDraw", 0, 0, TILE_WIDTH * MAP_WIDTH, 32);
 }
 
 //utils - polyfills
@@ -138,11 +136,17 @@ fn runAI(node: opaque) {
 	for (var i = 0; i < enemies.length(); i++) {
 		enemies[i].callNodeFn("runAI", rng);
 	}
+
+	stepCounter.callNodeFn("alterRemainingSteps", -1);
 }
 
 fn depthComparator(lhs: opaque, rhs: opaque) { //for sorting by depth
 	var lhsPos = lhs.callNodeFn("getRealPos");
 	var rhsPos = rhs.callNodeFn("getRealPos");
+
+	if (lhsPos[1] == rhsPos[1]) { //BUGFIX: prevent z-fighting
+		return lhsPos[0] < rhsPos[0];
+	}
 
 	return lhsPos[1] < rhsPos[1];
 }

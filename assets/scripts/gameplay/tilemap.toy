@@ -50,10 +50,10 @@ var camH = 720;
 
 //lifecycle functions
 fn onLoad(node: opaque) {
-	node.loadTexture("sprites:/tileset.png");
+	node.loadNodeTexture("sprites:/tileset.png");
 }
 
-fn customOnDraw(node: opaque) {
+fn customOnDraw(node: opaque, parentX: int, parentY: int) {
 	if (tilemap == null) {
 		return;
 	}
@@ -77,7 +77,7 @@ fn customOnDraw(node: opaque) {
 		for (var i = lowerX; i < upperX; i++) {
 			node.setNodeRect(tilemap[j * mapWidth * 2 + i * 2] * 16, tilemap[j * mapWidth * 2 + i * 2 + 1] * 16, 16, 16);
 
-			node.drawNode(i * TILE_WIDTH, j * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+			node.drawNode(i * TILE_WIDTH + parentX, j * TILE_HEIGHT + parentY, TILE_WIDTH, TILE_HEIGHT);
 		}
 	}
 }

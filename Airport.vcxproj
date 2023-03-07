@@ -31,6 +31,8 @@
     <None Include="assets\scripts\gameplay\drone.toy" />
     <None Include="assets\scripts\gameplay\lejana.toy" />
     <None Include="assets\scripts\gameplay\scene.toy" />
+    <None Include="assets\scripts\gameplay\step-counter.toy" />
+    <None Include="assets\scripts\gameplay\text.toy" />
     <None Include="assets\scripts\gameplay\tilemap.toy" />
     <None Include="assets\scripts\init.toy" />
   </ItemGroup>

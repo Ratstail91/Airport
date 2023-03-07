@@ -1,0 +1,9 @@
+import node;
+
+fn customOnDraw(node: opaque, parentX: int, parentY: int) {
+	node.drawNode(parentX, parentY);
+}
+
+fn onFree(node: opaque) {
+	node.freeNodeTexture();
+}

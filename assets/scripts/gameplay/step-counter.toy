@@ -1,0 +1,67 @@
+import node;
+
+//utils
+var maxSteps: int = 0;
+var remainingSteps: int = 0;
+
+fn setMaxSteps(node: opaque, steps: int) {
+	maxSteps = steps;
+	remainingSteps = steps;
+}
+
+fn setRemainingSteps(node: opaque, steps: int) {
+	remainingSteps = steps;
+}
+
+fn getMaxSteps(node: opaque) {
+	return maxSteps;
+}
+
+fn getRemainingSteps(node: opaque) {
+	return remainingSteps;
+}
+
+fn alterRemainingSteps(node: opaque, increment: int) {
+	remainingSteps += increment;
+	if (remainingSteps > maxSteps) {
+		remainingSteps = maxSteps;
+	}
+
+	if (remainingSteps < 0) {
+		remainingSteps = 0;
+	}
+
+	return remainingSteps;
+}
+
+//utils - polyfills
+fn loadChild(parent: opaque, fname: string) {
+	var child: opaque = loadNode(fname);
+	parent.pushNode(child);
+	return child;
+}
+
+//lifecycle functions
+fn onLoad(node: opaque) {
+	node.loadNodeTexture("sprites:/stepcounter.png");
+
+	node
+		.loadChild("scripts:/gameplay/text.toy")
+		.setNodeText("fonts:/alphbeta.ttf", 32, "Water", 0, 60, 240, 255);
+}
+
+fn onFree(node: opaque) {
+	node.freeNodeTexture();
+}
+
+fn customOnDraw(node: opaque, x: int, y: int, w: int, h: int) {
+	if (remainingSteps > 0 && maxSteps > 0) {
+		var tmp = float remainingSteps / maxSteps * w;
+
+		node.drawNode(x, y, int tmp, h);
+
+		for (var i: int = 0; i < node.getChildNodeCount(); i++) {
+			node.getChildNode(i).callNodeFn("customOnDraw", x, y);
+		}
+	}
+}

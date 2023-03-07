@@ -31,7 +31,7 @@ fn onInit(node: opaque) {
 	print "onInit() called";
 
 	parent = node.getParentNode();
-	node.loadTexture("sprites:/little_plane.png");
+	node.loadNodeTexture("sprites:/little_plane.png");
 }
 
 fn onStep(node: opaque) {
@@ -44,7 +44,7 @@ fn onStep(node: opaque) {
 fn onFree(node: opaque) {
 	print "onFree() called";
 
-	node.freeTexture();
+	node.freeNodeTexture();
 }
 
 fn onDraw(node: opaque) {

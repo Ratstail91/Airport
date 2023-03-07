@@ -1,6 +1,1 @@
 //this file is a polyfill TODO: fix this
-
-fn onDraw(node: opaque) {
-	//debug draw at the origin
-	node.drawNode(0, 0);
-}

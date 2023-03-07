@@ -437,8 +437,8 @@ void Box_execEngine() {
 		}
 
 		//render the world
-		//SDL_SetRenderDrawColor(engine.renderer, 128, 128, 128, 255); //NOTE: This line can be disabled later
-		//SDL_RenderClear(engine.renderer); //NOTE: This line can be disabled later
+		SDL_SetRenderDrawColor(engine.renderer, 128, 128, 128, 255); //NOTE: This line can be disabled later
+		SDL_RenderClear(engine.renderer); //NOTE: This line can be disabled later
 
 		Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onDraw", NULL);
 
