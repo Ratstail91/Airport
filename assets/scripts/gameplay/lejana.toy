@@ -149,6 +149,19 @@ fn onStep(node: opaque) {
 		}
 	}
 
+	//actually animate
+	if (++stepCount >= 5) {
+		if (motionX == 0 && motionY == 0 && inputX == 0 && inputY == 0) {
+			stepCount = 0;
+		}
+		
+		if (attackCounter > 0) {
+			attackCounter--;
+		}
+
+		node.incrementCurrentNodeFrame();
+	}
+
 	//animation - standing still
 	if (attackCounter == 0 && stepCount == 0) {
 		//move to standing state
@@ -164,20 +177,8 @@ fn onStep(node: opaque) {
 		if (node.getNodeRectY() != 32) {
 			node.setNodeRect(direction * 32 * 4, 32, 32, 32);
 			node.setNodeFrames(3);
-		}
-	}
-
-	//actually animate
-	if (++stepCount >= 5) {
-		if (motionX == 0 && motionY == 0 && inputX == 0 && inputY == 0) {
 			stepCount = 0;
 		}
-		
-		if (attackCounter > 0) {
-			attackCounter--;
-		}
-
-		node.incrementCurrentNodeFrame();
 	}
 
 	//calc movement
@@ -209,7 +210,7 @@ fn onKeyDown(node: opaque, event: string) {
 	}
 
 	if (event == "character_attack" && inputX == 0 && inputY == 0) {
-		attackCounter = 2;
+		attackCounter = 3;
 		return;
 	}
 
