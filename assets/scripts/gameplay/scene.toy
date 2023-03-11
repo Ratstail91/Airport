@@ -100,7 +100,7 @@ fn generateLevel(node: opaque, seed: int, width: int, height: int) {
 		var y = 0;
 
 		//while generated spot is a collision, or too close to the player
-		while ((x == 0 && y == 0) || node.getCollisionAt(x, y) == false || (x < (width / 6 * 2) && y < (height / 6 * 2))) { //TODO: toy bug - no short-circuiting?
+		while (x == 0 && y == 0 || node.getCollisionAt(x, y) == false || x < width / 6 * 2 && y < height / 6 * 2) {
 			x = rng.generateRandomNumber() % width;
 			y = rng.generateRandomNumber() % height;
 		}

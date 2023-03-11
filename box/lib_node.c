@@ -368,7 +368,7 @@ static int nativeLoadNodeTexture(Toy_Interpreter* interpreter, Toy_LiteralArray*
 
 	Toy_freeLiteral(drivePathLiteral); //not needed anymore
 
-	//actually load TODO: number the opaques, and check the numbers
+	//actually load TODO: number the opaques, and check the tag
 	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
 
 	if (node->texture != NULL) {

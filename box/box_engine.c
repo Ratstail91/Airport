@@ -374,7 +374,7 @@ static inline void execEvents() {
 				}
 				args.count = 0;
 			}
-			break; //TODO: remove copied code
+			break;
 
 			//mouse wheel
 			case SDL_MOUSEWHEEL: {
