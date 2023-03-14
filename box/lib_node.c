@@ -4,10 +4,9 @@
 #include "box_engine.h"
 
 #include "repl_tools.h"
+#include "toy_drive_system.h"
 #include "toy_literal_array.h"
 #include "toy_memory.h"
-
-#include "lib_runner.h"
 
 #include <stdlib.h>
 
@@ -32,7 +31,7 @@ static int nativeLoadNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 		return -1;
 	}
 
-	Toy_Literal filePathLiteral = Toy_getFilePathLiteral(interpreter, &drivePathLiteral);
+	Toy_Literal filePathLiteral = Toy_getDrivePathLiteral(interpreter, &drivePathLiteral);
 
 	if (!TOY_IS_STRING(filePathLiteral)) {
 		Toy_freeLiteral(drivePathLiteral);
@@ -358,7 +357,7 @@ static int nativeLoadNodeTexture(Toy_Interpreter* interpreter, Toy_LiteralArray*
 		return -1;
 	}
 
-	Toy_Literal filePathLiteral = Toy_getFilePathLiteral(interpreter, &drivePathLiteral);
+	Toy_Literal filePathLiteral = Toy_getDrivePathLiteral(interpreter, &drivePathLiteral);
 
 	if (!TOY_IS_STRING(filePathLiteral)) {
 		Toy_freeLiteral(drivePathLiteral);
@@ -968,7 +967,7 @@ static int nativeSetNodeText(Toy_Interpreter* interpreter, Toy_LiteralArray* arg
 	}
 
 	//get the font
-	Toy_Literal fileLiteral = Toy_getFilePathLiteral(interpreter, &fontLiteral);
+	Toy_Literal fileLiteral = Toy_getDrivePathLiteral(interpreter, &fontLiteral);
 
 	TTF_Font* font = TTF_OpenFont( Toy_toCString(TOY_AS_STRING(fileLiteral)), TOY_AS_INTEGER(sizeLiteral) );
 

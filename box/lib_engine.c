@@ -4,11 +4,10 @@
 
 #include "repl_tools.h"
 #include "toy_memory.h"
+#include "toy_drive_system.h"
 #include "toy_literal_array.h"
 
 #include "toy_console_colors.h"
-
-#include "lib_runner.h"
 
 #include <stdio.h>
 
@@ -121,7 +120,7 @@ static int nativeLoadRootNode(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 		return -1;
 	}
 
-	Toy_Literal filePathLiteral = Toy_getFilePathLiteral(interpreter, &drivePathLiteral);
+	Toy_Literal filePathLiteral = Toy_getDrivePathLiteral(interpreter, &drivePathLiteral);
 
 	Toy_freeLiteral(drivePathLiteral); //not needed anymore
 
