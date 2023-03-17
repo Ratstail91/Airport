@@ -140,6 +140,7 @@ xcopy "$(SolutionDir)Toy\repl\repl_tools.*" "$(SolutionDir)box" /Y /I /E</Comman
     <ClCompile Include="box\box_common.c" />
     <ClCompile Include="box\box_engine.c" />
     <ClCompile Include="box\box_engine_node.c" />
+    <ClCompile Include="box\dbg_profiler.c" />
     <ClCompile Include="box\lib_about.c" />
     <ClCompile Include="box\lib_engine.c" />
     <ClCompile Include="box\lib_input.c" />
@@ -153,6 +154,7 @@ xcopy "$(SolutionDir)Toy\repl\repl_tools.*" "$(SolutionDir)box" /Y /I /E</Comman
     <ClInclude Include="box\box_common.h" />
     <ClInclude Include="box\box_engine.h" />
     <ClInclude Include="box\box_engine_node.h" />
+    <ClInclude Include="box\dbg_profiler.h" />
     <ClInclude Include="box\lib_about.h" />
     <ClInclude Include="box\lib_engine.h" />
     <ClInclude Include="box\lib_input.h" />

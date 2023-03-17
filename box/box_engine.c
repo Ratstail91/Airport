@@ -419,14 +419,31 @@ void Box_execEngine() {
 	engine.simTime = engine.realTime;
 	clock_t delta = (double) CLOCKS_PER_SEC / 30.0;
 
-	while (engine.running) {
-		execLoadRootNode();
+	Dbg_Timer dbgTimer;
+	Dbg_FPSCounter fps;
 
+	Dbg_initTimer(&dbgTimer);
+	Dbg_initFPSCounter(&fps);
+
+	while (engine.running) {
+		Dbg_tickFPSCounter(&fps);
+
+		Dbg_clearConsole();
+		Dbg_printTimerLog(&dbgTimer);
+		Dbg_printFPSCounter(&fps);
+
+		Dbg_startTimer(&dbgTimer, "execLoadRootNode()");
+		execLoadRootNode();
+		Dbg_stopTimer(&dbgTimer);
+
+		Dbg_startTimer(&dbgTimer, "execEvents()");
 		execEvents();
+		Dbg_stopTimer(&dbgTimer);
 
 		//calc the time passed
 		engine.realTime = clock();
 
+		Dbg_startTimer(&dbgTimer, "execStep() (variable)");
 		//while not enough time has passed
 		while(engine.simTime < engine.realTime) {
 			//simulate the world
@@ -435,13 +452,20 @@ void Box_execEngine() {
 			//calc the time simulation
 			engine.simTime += delta;
 		}
+		Dbg_stopTimer(&dbgTimer);
 
 		//render the world
+		Dbg_startTimer(&dbgTimer, "clear screen");
 		SDL_SetRenderDrawColor(engine.renderer, 128, 128, 128, 255); //NOTE: This line can be disabled later
 		SDL_RenderClear(engine.renderer); //NOTE: This line can be disabled later
+		Dbg_stopTimer(&dbgTimer);
 
+		Dbg_startTimer(&dbgTimer, "draw screen");
 		Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onDraw", NULL);
-
 		SDL_RenderPresent(engine.renderer);
+		Dbg_stopTimer(&dbgTimer);
 	}
+
+	Dbg_freeTimer(&dbgTimer);
+	Dbg_freeFPSCounter(&fps);
 }

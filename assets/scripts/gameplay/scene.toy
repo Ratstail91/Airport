@@ -22,9 +22,6 @@ var collisionMap: [bool] = null; //cache this, since it won't change during a le
 
 var rng: opaque = null;
 
-//debugging tools
-var debugStepCounter: int = 0;
-var debugDrawCounter: int = 0;
 
 //lifecycle functions
 fn onLoad(node: opaque) {
@@ -43,18 +40,10 @@ fn onFree(node: opaque) {
 }
 
 fn onStep(node: opaque) {
-	if (++debugStepCounter >= 30) {
-		print "FPS: " + string debugDrawCounter + " / 30";
-		debugStepCounter = 0;
-		debugDrawCounter = 0;
-	}
-
 	entities = entities.sort(depthComparator);
 }
 
 fn onDraw(node: opaque) {
-	debugDrawCounter++;
-
 	//call each child's custom draw fn (with parent shifting)
 	tilemap.callNodeFn("customOnDraw", 0, 32);
 	for (var i = 0; i < entities.length(); i++) {

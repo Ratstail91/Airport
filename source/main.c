@@ -2,9 +2,7 @@
 #define SDL_MAIN_HANDLED
 
 #include "box_engine.h"
-
-//the runner library needs a little more setup since it accesses the disk
-#include "lib_runner.h"
+#include "toy_drive_system.h"
 
 int main(int argc, char* argv[]) {
 	//debugging tools
