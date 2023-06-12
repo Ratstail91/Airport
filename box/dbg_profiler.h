@@ -7,7 +7,7 @@ void Dbg_clearConsole();
 typedef struct Dbg_Timer {
 	const char* name;
 	clock_t start;
-	char* log;
+	char log[2048];
 	int logPos;
 } Dbg_Timer;
 
@@ -20,7 +20,7 @@ void Dbg_freeTimer(Dbg_Timer*);
 typedef struct Dbg_FPSCounter {
 	int count;
 	clock_t start;
-	char* log;
+	char log[256];
 } Dbg_FPSCounter;
 
 void Dbg_initFPSCounter(Dbg_FPSCounter*);

@@ -460,8 +460,11 @@ void Box_execEngine() {
 		SDL_RenderClear(engine.renderer); //NOTE: This line can be disabled later
 		Dbg_stopTimer(&dbgTimer);
 
-		Dbg_startTimer(&dbgTimer, "draw screen");
+		Dbg_startTimer(&dbgTimer, "onDraw() calls");
 		Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onDraw", NULL);
+		Dbg_stopTimer(&dbgTimer);
+
+		Dbg_startTimer(&dbgTimer, "render screen");
 		SDL_RenderPresent(engine.renderer);
 		Dbg_stopTimer(&dbgTimer);
 	}

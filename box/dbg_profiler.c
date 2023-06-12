@@ -66,7 +66,6 @@ void Dbg_clearConsole()
 void Dbg_initTimer(Dbg_Timer* timer) {
 	timer->name = NULL;
 	timer->start = 0;
-	timer->log = TOY_ALLOCATE(char, 2048);
 	memset(timer->log, 0, 2048);
 	timer->logPos = 0;
 }
@@ -87,13 +86,12 @@ void Dbg_printTimerLog(Dbg_Timer* timer) {
 }
 
 void Dbg_freeTimer(Dbg_Timer* timer) {
-	TOY_FREE_ARRAY(char, timer->log, 2048);
+	//
 }
 
 void Dbg_initFPSCounter(Dbg_FPSCounter* counter) {
 	counter->count = 0;
 	counter->start = clock();
-	counter->log = TOY_ALLOCATE(char, 256);
 	memset(counter->log, 0, 256);
 }
 
@@ -112,5 +110,5 @@ void Dbg_printFPSCounter(Dbg_FPSCounter* counter) {
 }
 
 void Dbg_freeFPSCounter(Dbg_FPSCounter* counter) {
-	TOY_FREE_ARRAY(char, counter->log, 256);
+	//
 }
