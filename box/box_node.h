@@ -9,13 +9,9 @@
 
 //forward declare
 typedef struct Box_private_node Box_Node;
-// typedef void (*Box_NodeCallback)(void*);
 
 //the node object, which forms a tree
 typedef struct Box_private_node {
-	//function for releasing memory NOTE: removed, because it's not needed with only 1 node type - I've left them commented out because I might need them soon
-	// Box_NodeCallback freeMemory;
-
 	//toy functions, stored in a dict for flexibility
 	Toy_LiteralDictionary* functions;
 
@@ -36,10 +32,10 @@ typedef struct Box_private_node {
 
 	//rendering-specific features
 	SDL_Texture* texture;
-	SDL_Rect rect;
-	int frames;
+	SDL_Rect rect; //rendered rect
+	int frames; //horizontal-strip based animations
 	int currentFrame;
-} Box_Node; //TODO: rename this?
+} Box_Node;
 
 BOX_API void Box_initNode(Box_Node* node, Toy_Interpreter* interpreter, const unsigned char* tb, size_t size); //run bytecode, then grab all top-level function literals
 BOX_API void Box_pushNode(Box_Node* node, Box_Node* child); //push to the array (prune tombstones when expanding/copying)
@@ -47,6 +43,8 @@ BOX_API void Box_freeNode(Box_Node* node); //free this node and all children
 
 BOX_API Box_Node* Box_getChildNode(Box_Node* node, int index);
 BOX_API void Box_freeChildNode(Box_Node* node, int index);
+
+BOX_API void Box_sortChildrenNode(Box_Node* node, Toy_Interpreter* interpreter, Toy_Literal fnCompare);
 
 BOX_API Toy_Literal Box_callNodeLiteral(Box_Node* node, Toy_Interpreter* interpreter, Toy_Literal key, Toy_LiteralArray* args);
 BOX_API Toy_Literal Box_callNode(Box_Node* node, Toy_Interpreter* interpreter, const char* fnName, Toy_LiteralArray* args); //call "fnName" on this node, and only this node, if it exists

@@ -1,0 +1,34 @@
+
+import node;
+
+//generate a number of child nodes
+fn onInit(node: opaque) {
+	node.loadChild("scripts:/empty.toy", 3);
+	node.loadChild("scripts:/empty.toy", 2);
+	node.loadChild("scripts:/empty.toy", 1);
+	node.loadChild("scripts:/empty.toy", 4);
+	node.loadChild("scripts:/empty.toy", 5);
+
+	node.freeChildNode(3);
+}
+
+fn onStep(node) {
+	node.sortChildrenNode(lessThan);
+}
+
+fn lessThan(lhs, rhs) {
+	var a = lhs.callNodeFn("getValue");
+	var b = rhs.callNodeFn("getValue");
+
+	return a < b;
+}
+
+//utils - polyfills
+fn loadChild(parent: opaque, fname: string, value) {
+	var child: opaque = loadNode(fname);
+
+	child.callNodeFn("setValue", value);
+
+	parent.pushNode(child);
+	return child;
+}

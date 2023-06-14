@@ -41,7 +41,10 @@ var tileset: [string : [int]] = [
 ];
 
 
-//debug vars
+var parent: opaque = null;
+
+
+//debug vars - what are these for?
 var camX = 0;
 var camY = 0;
 var camW = 1080;
@@ -53,10 +56,20 @@ fn onLoad(node: opaque) {
 	node.loadNodeTexture("sprites:/tileset.png");
 }
 
-fn customOnDraw(node: opaque, parentX: int, parentY: int) {
+fn onInit(node: opaque) {
+	//find root
+	parent = node;
+	while (parent.getParentNode() != null) {
+		parent = parent.getParentNode();
+	}
+}
+
+fn onDraw(node: opaque) {
 	if (tilemap == null) {
 		return;
 	}
+	
+	var camera = parent.callNodeFn("getCameraPos");
 
 	//calc the region to render
 	var lowerX: int = round((camX - camW/2.0) / TILE_WIDTH);
@@ -77,7 +90,7 @@ fn customOnDraw(node: opaque, parentX: int, parentY: int) {
 		for (var i = lowerX; i < upperX; i++) {
 			node.setNodeRect(tilemap[j * mapWidth * 2 + i * 2] * 16, tilemap[j * mapWidth * 2 + i * 2 + 1] * 16, 16, 16);
 
-			node.drawNode(i * TILE_WIDTH + parentX, j * TILE_HEIGHT + parentY, TILE_WIDTH, TILE_HEIGHT);
+			node.drawNode(i * TILE_WIDTH + camera[0], j * TILE_HEIGHT + camera[1], TILE_WIDTH, TILE_HEIGHT);
 		}
 	}
 }

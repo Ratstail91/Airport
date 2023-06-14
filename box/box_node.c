@@ -111,6 +111,115 @@ void Box_freeChildNode(Box_Node* node, int index) {
 	node->children[index] = NULL;
 }
 
+static void swapUtil(Box_Node** lhs, Box_Node** rhs) {
+	Box_Node* tmp = *lhs;
+	*lhs = *rhs;
+	*rhs = tmp;
+}
+
+//copied from lib_standard.c
+static void recursiveLiteralQuicksortUtil(Toy_Interpreter* interpreter, Box_Node** ptr, int count, Toy_Literal fnCompare) {
+	//base case
+	if (count <= 1) {
+		return;
+	}
+
+	int runner = 0;
+
+	//iterate through the array
+	for (int checker = 0; checker < count - 1; checker++) {
+		//if node is null, it is always sorted to the end
+		if (ptr[checker] == NULL) {
+			swapUtil(&ptr[checker], &ptr[checker + 1]);
+			runner++;
+			continue;
+		}
+
+		if (ptr[checker + 1] == NULL) {
+			runner++;
+			continue;
+		}
+
+		Toy_LiteralArray arguments;
+		Toy_LiteralArray returns;
+
+		Toy_initLiteralArray(&arguments);
+		Toy_initLiteralArray(&returns);
+
+		Toy_pushLiteralArray(&arguments, TOY_TO_OPAQUE_LITERAL(ptr[checker], OPAQUE_TAG_NODE));
+		Toy_pushLiteralArray(&arguments, TOY_TO_OPAQUE_LITERAL(ptr[checker + 1], OPAQUE_TAG_NODE));
+
+		Toy_callLiteralFn(interpreter, fnCompare, &arguments, &returns);
+
+		Toy_Literal lessThan = Toy_popLiteralArray(&returns);
+
+		Toy_freeLiteralArray(&arguments);
+		Toy_freeLiteralArray(&returns);
+
+		if (TOY_IS_TRUTHY(lessThan)) {
+			swapUtil(&ptr[runner++], &ptr[checker]);
+		}
+
+		Toy_freeLiteral(lessThan);
+	}
+
+	//"shift everything up" so the pivot is in the middle
+	swapUtil(&ptr[runner], &ptr[count - 1]);
+
+	//recurse on each end
+	if (runner > 0) {
+		recursiveLiteralQuicksortUtil(interpreter, &ptr[0], runner, fnCompare);
+	}
+
+	if (runner < count) {
+		recursiveLiteralQuicksortUtil(interpreter, &ptr[runner + 1], count - runner - 1, fnCompare);
+	}
+}
+
+BOX_API void Box_sortChildrenNode(Box_Node* node, Toy_Interpreter* interpreter, Toy_Literal fnCompare) {
+	//check that this node's children aren't already sorted
+	bool sorted = true;
+	for (int checker = 0; checker < node->count - 1 && sorted; checker++) {
+		//NULL (tombstone) is always considered unsorted
+		if (node->children[checker] == NULL || node->children[checker + 1] == NULL) {
+			sorted = false;
+			break;
+		}
+
+		Toy_LiteralArray arguments;
+		Toy_LiteralArray returns;
+
+		Toy_initLiteralArray(&arguments);
+		Toy_initLiteralArray(&returns);
+
+		Toy_pushLiteralArray(&arguments, TOY_TO_OPAQUE_LITERAL(node->children[checker], OPAQUE_TAG_NODE));
+		Toy_pushLiteralArray(&arguments, TOY_TO_OPAQUE_LITERAL(node->children[checker + 1], OPAQUE_TAG_NODE));
+
+		Toy_callLiteralFn(interpreter, fnCompare, &arguments, &returns);
+
+		Toy_Literal lessThan = Toy_popLiteralArray(&returns);
+
+		Toy_freeLiteralArray(&arguments);
+		Toy_freeLiteralArray(&returns);
+
+		if (!TOY_IS_TRUTHY(lessThan)) {
+			sorted = false;
+		}
+
+		Toy_freeLiteral(lessThan);
+	}
+
+	//sort the children
+	if (!sorted) {
+		recursiveLiteralQuicksortUtil(interpreter, node->children, node->count, fnCompare);
+	}
+
+	//re-count the newly-sorted children
+	for (int i = node->count - 1; node->children[i] == NULL; i--) {
+		node->count--;
+	}
+}
+
 Toy_Literal Box_callNodeLiteral(Box_Node* node, Toy_Interpreter* interpreter, Toy_Literal key, Toy_LiteralArray* args) {
 	Toy_Literal ret = TOY_TO_NULL_LITERAL;
 
@@ -287,6 +396,6 @@ void Box_setTextNode(Box_Node* node, TTF_Font* font, const char* text, SDL_Color
 void Box_drawNode(Box_Node* node, SDL_Rect dest) {
 	if (!node->texture) return;
 	SDL_Rect src = node->rect;
-	src.x += src.w * node->currentFrame; //TODO: improve this
+	src.x += src.w * node->currentFrame;
 	SDL_RenderCopy(engine.renderer, node->texture, &src, &dest);
 }

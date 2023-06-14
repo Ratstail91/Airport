@@ -9,14 +9,15 @@ var TILE_HEIGHT: int const = 32;
 var MAP_WIDTH: int const = 16;
 var MAP_HEIGHT: int const = 16;
 
+var CAMERA_X: int const = 0;
+var CAMERA_Y: int const = 32;
+
 
 var tilemap: opaque = null;
 var player: opaque = null;
 var stepCounter: opaque = null;
 
 var enemies: [opaque] = [];
-
-var entities: [opaque] = null; //full list of entities
 
 var collisionMap: [bool] = null; //cache this, since it won't change during a level
 
@@ -25,9 +26,12 @@ var rng: opaque = null;
 
 //lifecycle functions
 fn onLoad(node: opaque) {
-	tilemap = node.loadChild("scripts:/gameplay/tilemap.toy");
+	var empty = node.loadChild("scripts:/empty.toy");
+
+	tilemap = empty.loadChild("scripts:/gameplay/tilemap.toy");
+	stepCounter = empty.loadChild("scripts:/gameplay/step-counter.toy");
+
 	player = node.loadChild("scripts:/gameplay/lejana.toy");
-	stepCounter = node.loadChild("scripts:/gameplay/step-counter.toy");
 }
 
 fn onInit(node: opaque) {
@@ -39,17 +43,12 @@ fn onFree(node: opaque) {
 	rng.freeRandomGenerator();
 }
 
-fn onStep(node: opaque) {
-	entities = entities.sort(depthComparator);
-}
+//fn onStep(node: opaque) {
+//	//
+//}
 
 fn onDraw(node: opaque) {
-	//call each child's custom draw fn (with parent shifting)
-	tilemap.callNodeFn("customOnDraw", 0, 32);
-	for (var i = 0; i < entities.length(); i++) {
-		entities[i].callNodeFn("customOnDraw", 0, 32);
-	}
-
+	node.sortChildrenNode(depthComparator);
 	stepCounter.callNodeFn("customOnDraw", 0, 0, TILE_WIDTH * MAP_WIDTH, 32);
 }
 
@@ -64,8 +63,7 @@ fn loadChild(parent: opaque, fname: string) {
 fn generateLevel(node: opaque, seed: int, width: int, height: int) {
 	//reset the array
 	enemies = [];
-	entities = [player]; //assume the player exists already
-
+	
 	if (rng != null) rng.freeRandomGenerator();
 	rng = createRandomGenerator(seed);
 
@@ -83,7 +81,6 @@ fn generateLevel(node: opaque, seed: int, width: int, height: int) {
 		d.initNode();
 
 		enemies.push(d);
-		entities.push(d);
 
 		var x = 0;
 		var y = 0;
@@ -134,8 +131,15 @@ fn depthComparator(lhs: opaque, rhs: opaque) { //for sorting by depth
 	var rhsPos = rhs.callNodeFn("getRealPos");
 
 	if (lhsPos[1] == rhsPos[1]) { //BUGFIX: prevent z-fighting
+		if (lhsPos[0] == rhsPos[0]) {
+			return true;
+		}
 		return lhsPos[0] < rhsPos[0];
 	}
 
 	return lhsPos[1] < rhsPos[1];
+}
+
+fn getCameraPos(node: opaque) {
+	return [CAMERA_X, CAMERA_Y];
 }

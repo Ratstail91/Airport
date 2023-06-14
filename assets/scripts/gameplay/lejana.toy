@@ -197,8 +197,9 @@ fn onFree(node: opaque) {
 	node.freeNodeTexture();
 }
 
-fn customOnDraw(node: opaque, parentX: int, parentY: int) {
-	node.drawNode(realX + parentX - SPRITE_WIDTH / 4, realY + parentY - SPRITE_HEIGHT / 2, SPRITE_WIDTH, SPRITE_HEIGHT);
+fn onDraw(node: opaque) {
+	var camera = parent.callNodeFn("getCameraPos");
+	node.drawNode(realX + camera[0] - SPRITE_WIDTH / 4, realY + camera[1] - SPRITE_HEIGHT / 2, SPRITE_WIDTH, SPRITE_HEIGHT);
 }
 
 

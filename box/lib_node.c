@@ -257,6 +257,42 @@ static int nativeFreeChildNode(Toy_Interpreter* interpreter, Toy_LiteralArray* a
 	return 0;
 }
 
+static int nativeSortChildrenNode(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
+	if (arguments->count != 2) {
+		interpreter->errorOutput("Incorrect number of arguments passed to sortChildrenNode\n");
+		return -1;
+	}
+
+	Toy_Literal fnLiteral = Toy_popLiteralArray(arguments);
+	Toy_Literal nodeLiteral = Toy_popLiteralArray(arguments);
+
+	Toy_Literal nodeLiteralIdn = nodeLiteral; //annoying
+	if (TOY_IS_IDENTIFIER(nodeLiteral) && Toy_parseIdentifierToValue(interpreter, &nodeLiteral)) {
+		Toy_freeLiteral(nodeLiteralIdn);
+	}
+
+	Toy_Literal fnLiteralIdn = fnLiteral; //annoying
+	if (TOY_IS_IDENTIFIER(fnLiteral) && Toy_parseIdentifierToValue(interpreter, &fnLiteral)) {
+		Toy_freeLiteral(fnLiteralIdn);
+	}
+
+	//check argument types
+	if (!TOY_IS_OPAQUE(nodeLiteral) || !TOY_IS_FUNCTION(fnLiteral)) {
+		interpreter->errorOutput("Incorrect argument type passed to sortChildrenNode\n");
+		Toy_freeLiteral(nodeLiteral);
+		return -1;
+	}
+
+	Box_Node* node = TOY_AS_OPAQUE(nodeLiteral);
+
+	Box_sortChildrenNode(node, interpreter, fnLiteral);
+
+	//cleanup
+	Toy_freeLiteral(nodeLiteral);
+	Toy_freeLiteral(fnLiteral);
+	return 0;
+}
+
 static int nativeGetParentNode(Toy_Interpreter* interpreter, Toy_LiteralArray* arguments) {
 	//checks
 	if (arguments->count != 1) {
@@ -1099,6 +1135,7 @@ int Box_hookNode(Toy_Interpreter* interpreter, Toy_Literal identifier, Toy_Liter
 		{"pushNode", nativePushNode},
 		{"getChildNode", nativeGetChildNode},
 		{"freeChildNode", nativeFreeChildNode},
+		{"sortChildrenNode", nativeSortChildrenNode},
 		{"getParentNode", nativeGetParentNode},
 		{"getChildNodeCount", nativeGetChildNodeCount},
 		{"loadNodeTexture", nativeLoadNodeTexture},
