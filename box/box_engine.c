@@ -82,8 +82,8 @@ void Box_initEngine() {
 void Box_freeEngine() {
 	//clear existing root node
 	if (engine.rootNode != NULL) {
-		Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onFree", NULL);
-		Box_freeEngineNode(engine.rootNode);
+		Box_callRecursiveNode(engine.rootNode, &engine.interpreter, "onFree", NULL);
+		Box_freeNode(engine.rootNode);
 		engine.rootNode = NULL;
 	}
 
@@ -114,8 +114,8 @@ static inline void execLoadRootNode() {
 
 	//free the existing root node
 	if (engine.rootNode != NULL) {
-		Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onFree", NULL);
-		Box_freeEngineNode(engine.rootNode);
+		Box_callRecursiveNode(engine.rootNode, &engine.interpreter, "onFree", NULL);
+		Box_freeNode(engine.rootNode);
 		engine.rootNode = NULL;
 	}
 
@@ -126,7 +126,7 @@ static inline void execLoadRootNode() {
 	free((void*)source);
 
 	//allocate the new root node
-	engine.rootNode = TOY_ALLOCATE(Box_EngineNode, 1);
+	engine.rootNode = TOY_ALLOCATE(Box_Node, 1);
 
 	//BUGFIX: make an inner-interpreter
 	Toy_Interpreter inner;
@@ -146,10 +146,10 @@ static inline void execLoadRootNode() {
 	Toy_setInterpreterAssert(&inner, engine.interpreter.assertOutput);
 	Toy_setInterpreterError(&inner, engine.interpreter.errorOutput);
 
-	Box_initEngineNode(engine.rootNode, &inner, tb, size);
+	Box_initNode(engine.rootNode, &inner, tb, size);
 
 	//immediately call onLoad() after running the script - for loading other nodes
-	Box_callEngineNode(engine.rootNode, &inner, "onLoad", NULL);
+	Box_callNode(engine.rootNode, &inner, "onLoad", NULL);
 
 	//cache the scope for later freeing
 	engine.rootNode->scope = inner.scope;
@@ -163,7 +163,7 @@ static inline void execLoadRootNode() {
 	engine.nextRootNodeFilename = TOY_TO_NULL_LITERAL;
 
 	//init the new node-tree
-	Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onInit", NULL);
+	Box_callRecursiveNode(engine.rootNode, &engine.interpreter, "onInit", NULL);
 }
 
 static inline void execEvents() {
@@ -213,7 +213,7 @@ static inline void execEvents() {
 
 				//call the function
 				Toy_pushLiteralArray(&args, eventLiteral);
-				Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onKeyDown", &args);
+				Box_callRecursiveNode(engine.rootNode, &engine.interpreter, "onKeyDown", &args);
 				Toy_freeLiteral(Toy_popLiteralArray(&args));
 
 				//push to the event list
@@ -240,7 +240,7 @@ static inline void execEvents() {
 
 				//call the function
 				Toy_pushLiteralArray(&args, eventLiteral);
-				Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onKeyUp", &args);
+				Box_callRecursiveNode(engine.rootNode, &engine.interpreter, "onKeyUp", &args);
 				Toy_freeLiteral(Toy_popLiteralArray(&args));
 
 				//push to the event list
@@ -261,7 +261,7 @@ static inline void execEvents() {
 				Toy_pushLiteralArray(&args, mouseXRel);
 				Toy_pushLiteralArray(&args, mouseYRel);
 
-				Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onMouseMotion", &args);
+				Box_callRecursiveNode(engine.rootNode, &engine.interpreter, "onMouseMotion", &args);
 
 				Toy_freeLiteral(mouseX);
 				Toy_freeLiteral(mouseY);
@@ -312,7 +312,7 @@ static inline void execEvents() {
 				Toy_pushLiteralArray(&args, mouseY);
 				Toy_pushLiteralArray(&args, mouseButton);
 
-				Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onMouseButtonDown", &args);
+				Box_callRecursiveNode(engine.rootNode, &engine.interpreter, "onMouseButtonDown", &args);
 
 				Toy_freeLiteral(mouseX);
 				Toy_freeLiteral(mouseY);
@@ -362,7 +362,7 @@ static inline void execEvents() {
 				Toy_pushLiteralArray(&args, mouseY);
 				Toy_pushLiteralArray(&args, mouseButton);
 
-				Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onMouseButtonUp", &args);
+				Box_callRecursiveNode(engine.rootNode, &engine.interpreter, "onMouseButtonUp", &args);
 
 				Toy_freeLiteral(mouseX);
 				Toy_freeLiteral(mouseY);
@@ -383,7 +383,7 @@ static inline void execEvents() {
 				Toy_pushLiteralArray(&args, mouseX);
 				Toy_pushLiteralArray(&args, mouseY);
 
-				Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onMouseWheel", &args);
+				Box_callRecursiveNode(engine.rootNode, &engine.interpreter, "onMouseWheel", &args);
 
 				Toy_freeLiteral(mouseX);
 				Toy_freeLiteral(mouseY);
@@ -404,7 +404,7 @@ static inline void execEvents() {
 static inline void execStep() {
 	if (engine.rootNode != NULL) {
 		//steps
-		Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onStep", NULL);
+		Box_callRecursiveNode(engine.rootNode, &engine.interpreter, "onStep", NULL);
 	}
 }
 
@@ -461,7 +461,7 @@ void Box_execEngine() {
 		Dbg_stopTimer(&dbgTimer);
 
 		Dbg_startTimer(&dbgTimer, "onDraw() calls");
-		Box_callRecursiveEngineNode(engine.rootNode, &engine.interpreter, "onDraw", NULL);
+		Box_callRecursiveNode(engine.rootNode, &engine.interpreter, "onDraw", NULL);
 		Dbg_stopTimer(&dbgTimer);
 
 		Dbg_startTimer(&dbgTimer, "render screen");

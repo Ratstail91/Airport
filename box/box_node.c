@@ -1,15 +1,15 @@
-#include "box_engine_node.h"
+#include "box_node.h"
 #include "box_engine.h"
 
 #include "toy_memory.h"
 
-void Box_initEngineNode(Box_EngineNode* node, Toy_Interpreter* interpreter, const unsigned char* tb, size_t size) {
+void Box_initNode(Box_Node* node, Toy_Interpreter* interpreter, const unsigned char* tb, size_t size) {
 	//init
 	// node->freeMemory = freeMemory;
 	node->functions = TOY_ALLOCATE(Toy_LiteralDictionary, 1);
 	node->parent = NULL;
 	node->scope = NULL;
-	node->tag = OPAQUE_TAG_ENGINE_NODE;
+	node->tag = OPAQUE_TAG_NODE;
 	node->children = NULL;
 	node->capacity = 0;
 	node->count = 0;
@@ -41,13 +41,13 @@ void Box_initEngineNode(Box_EngineNode* node, Toy_Interpreter* interpreter, cons
 	}
 }
 
-void Box_pushEngineNode(Box_EngineNode* node, Box_EngineNode* child) {
+void Box_pushNode(Box_Node* node, Box_Node* child) {
 	//push to the array
 	if (node->count + 1 > node->capacity) {
 		int oldCapacity = node->capacity;
 
 		node->capacity = TOY_GROW_CAPACITY(oldCapacity);
-		node->children = TOY_GROW_ARRAY(Box_EngineNode*, node->children, oldCapacity, node->capacity);
+		node->children = TOY_GROW_ARRAY(Box_Node*, node->children, oldCapacity, node->capacity);
 	}
 
 	//assign
@@ -60,18 +60,18 @@ void Box_pushEngineNode(Box_EngineNode* node, Box_EngineNode* child) {
 	node->childCount++;
 }
 
-void Box_freeEngineNode(Box_EngineNode* node) {
+void Box_freeNode(Box_Node* node) {
 	if (node == NULL) {
 		return; //NO-OP
 	}
 
 	//free this node's children
 	for (int i = 0; i < node->count; i++) {
-		Box_freeEngineNode(node->children[i]);
+		Box_freeNode(node->children[i]);
 	}
 
 	//free the pointer array to the children
-	TOY_FREE_ARRAY(Box_EngineNode*, node->children, node->capacity);
+	TOY_FREE_ARRAY(Box_Node*, node->children, node->capacity);
 
 	if (node->functions != NULL) {
 		Toy_freeLiteralDictionary(node->functions);
@@ -83,14 +83,14 @@ void Box_freeEngineNode(Box_EngineNode* node) {
 	}
 
 	if (node->texture != NULL) {
-		Box_freeTextureEngineNode(node);
+		Box_freeTextureNode(node);
 	}
 
 	//free this node's memory
-	TOY_FREE(Box_EngineNode, node);
+	TOY_FREE(Box_Node, node);
 }
 
-Box_EngineNode* Box_getChildEngineNode(Box_EngineNode* node, int index) {
+Box_Node* Box_getChildNode(Box_Node* node, int index) {
 	if (index < 0 || index > node->count) {
 		return NULL;
 	}
@@ -98,20 +98,20 @@ Box_EngineNode* Box_getChildEngineNode(Box_EngineNode* node, int index) {
 	return node->children[index];
 }
 
-void Box_freeChildEngineNode(Box_EngineNode* node, int index) {
+void Box_freeChildNode(Box_Node* node, int index) {
 	//get the child node
-	Box_EngineNode* childNode = node->children[index];
+	Box_Node* childNode = node->children[index];
 
 	//free the node
 	if (childNode != NULL) {
-		Box_freeEngineNode(childNode);
+		Box_freeNode(childNode);
 		node->childCount--;
 	}
 
 	node->children[index] = NULL;
 }
 
-Toy_Literal Box_callEngineNodeLiteral(Box_EngineNode* node, Toy_Interpreter* interpreter, Toy_Literal key, Toy_LiteralArray* args) {
+Toy_Literal Box_callNodeLiteral(Box_Node* node, Toy_Interpreter* interpreter, Toy_Literal key, Toy_LiteralArray* args) {
 	Toy_Literal ret = TOY_TO_NULL_LITERAL;
 
 	//if this fn exists
@@ -147,18 +147,18 @@ Toy_Literal Box_callEngineNodeLiteral(Box_EngineNode* node, Toy_Interpreter* int
 	return ret;
 }
 
-Toy_Literal Box_callEngineNode(Box_EngineNode* node, Toy_Interpreter* interpreter, const char* fnName, Toy_LiteralArray* args) {
+Toy_Literal Box_callNode(Box_Node* node, Toy_Interpreter* interpreter, const char* fnName, Toy_LiteralArray* args) {
 	//call "fnName" on this node, and all children, if it exists
 	Toy_Literal key = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString(fnName));
 
-	Toy_Literal ret = Box_callEngineNodeLiteral(node, interpreter, key, args);
+	Toy_Literal ret = Box_callNodeLiteral(node, interpreter, key, args);
 
 	Toy_freeLiteral(key);
 
 	return ret;
 }
 
-void Box_callRecursiveEngineNodeLiteral(Box_EngineNode* node, Toy_Interpreter* interpreter, Toy_Literal key, Toy_LiteralArray* args) {
+void Box_callRecursiveNodeLiteral(Box_Node* node, Toy_Interpreter* interpreter, Toy_Literal key, Toy_LiteralArray* args) {
 	//if this fn exists
 	if (Toy_existsLiteralDictionary(node->functions, key)) {
 		Toy_Literal fn = Toy_getLiteralDictionary(node->functions, key);
@@ -190,25 +190,25 @@ void Box_callRecursiveEngineNodeLiteral(Box_EngineNode* node, Toy_Interpreter* i
 	//recurse to the (non-tombstone) children
 	for (int i = 0; i < node->count; i++) {
 		if (node->children[i] != NULL) {
-			Box_callRecursiveEngineNodeLiteral(node->children[i], interpreter, key, args);
+			Box_callRecursiveNodeLiteral(node->children[i], interpreter, key, args);
 		}
 	}
 }
 
-void Box_callRecursiveEngineNode(Box_EngineNode* node, Toy_Interpreter* interpreter, const char* fnName, Toy_LiteralArray* args) {
+void Box_callRecursiveNode(Box_Node* node, Toy_Interpreter* interpreter, const char* fnName, Toy_LiteralArray* args) {
 	//call "fnName" on this node, and all children, if it exists
 	Toy_Literal key = TOY_TO_IDENTIFIER_LITERAL(Toy_createRefString(fnName));
 
-	Box_callRecursiveEngineNodeLiteral(node, interpreter, key, args);
+	Box_callRecursiveNodeLiteral(node, interpreter, key, args);
 
 	Toy_freeLiteral(key);
 }
 
-int Box_getChildCountEngineNode(Box_EngineNode* node) {
+int Box_getChildCountNode(Box_Node* node) {
 	return node->childCount;
 }
 
-int Box_loadTextureEngineNode(Box_EngineNode* node, const char* fname) {
+int Box_loadTextureNode(Box_Node* node, const char* fname) {
 	SDL_Surface* surface = IMG_Load(fname);
 
 	if (surface == NULL) {
@@ -226,52 +226,52 @@ int Box_loadTextureEngineNode(Box_EngineNode* node, const char* fname) {
 	int w, h;
 	SDL_QueryTexture(node->texture, NULL, NULL, &w, &h);
 	SDL_Rect r = { 0, 0, w, h };
-	Box_setRectEngineNode(node, r);
-	Box_setFramesEngineNode(node, 1); //default
+	Box_setRectNode(node, r);
+	Box_setFramesNode(node, 1); //default
 
 	return 0;
 }
 
-void Box_freeTextureEngineNode(Box_EngineNode* node) {
+void Box_freeTextureNode(Box_Node* node) {
 	if (node->texture != NULL) {
 		SDL_DestroyTexture(node->texture);
 		node->texture = NULL;
 	}
 }
 
-void Box_setRectEngineNode(Box_EngineNode* node, SDL_Rect rect) {
+void Box_setRectNode(Box_Node* node, SDL_Rect rect) {
 	node->rect = rect;
 }
 
-SDL_Rect Box_getRectEngineNode(Box_EngineNode* node) {
+SDL_Rect Box_getRectNode(Box_Node* node) {
 	return node->rect;
 }
 
-void Box_setFramesEngineNode(Box_EngineNode* node, int frames) {
+void Box_setFramesNode(Box_Node* node, int frames) {
 	node->frames = frames;
 	node->currentFrame = 0; //just in case
 }
 
-int Box_getFramesEngineNode(Box_EngineNode* node) {
+int Box_getFramesNode(Box_Node* node) {
 	return node->frames;
 }
 
-void Box_setCurrentFrameEngineNode(Box_EngineNode* node, int currentFrame) {
+void Box_setCurrentFrameNode(Box_Node* node, int currentFrame) {
 	node->currentFrame = currentFrame;
 }
 
-int Box_getCurrentFrameEngineNode(Box_EngineNode* node) {
+int Box_getCurrentFrameNode(Box_Node* node) {
 	return node->currentFrame;
 }
 
-void Box_incrementCurrentFrame(Box_EngineNode* node) {
+void Box_incrementCurrentFrame(Box_Node* node) {
 	node->currentFrame++;
 	if (node->currentFrame >= node->frames) {
 		node->currentFrame = 0;
 	}
 }
 
-void Box_setTextEngineNode(Box_EngineNode* node, TTF_Font* font, const char* text, SDL_Color color) {
+void Box_setTextNode(Box_Node* node, TTF_Font* font, const char* text, SDL_Color color) {
 	SDL_Surface* surface = TTF_RenderText_Solid(font, text, color);
 
 	node->texture = SDL_CreateTextureFromSurface(engine.renderer, surface);
@@ -284,7 +284,7 @@ void Box_setTextEngineNode(Box_EngineNode* node, TTF_Font* font, const char* tex
 }
 
 
-void Box_drawEngineNode(Box_EngineNode* node, SDL_Rect dest) {
+void Box_drawNode(Box_Node* node, SDL_Rect dest) {
 	if (!node->texture) return;
 	SDL_Rect src = node->rect;
 	src.x += src.w * node->currentFrame; //TODO: improve this

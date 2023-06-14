@@ -1,6 +1,6 @@
 #include "lib_node.h"
 
-#include "box_engine_node.h"
+#include "box_node.h"
 #include "box_engine.h"
 
 #include "repl_tools.h"
@@ -47,7 +47,7 @@ static int nativeLoadNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 	const unsigned char* tb = Toy_compileString((const char*)source, &size);
 	free((void*)source);
 
-	Box_EngineNode* node = TOY_ALLOCATE(Box_EngineNode, 1);
+	Box_Node* node = TOY_ALLOCATE(Box_Node, 1);
 
 	//BUGFIX: make an -interpreter
 	Toy_Interpreter inner;
@@ -67,10 +67,10 @@ static int nativeLoadNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 	Toy_setInterpreterAssert(&inner, interpreter->assertOutput);
 	Toy_setInterpreterError(&inner, interpreter->errorOutput);
 
-	Box_initEngineNode(node, &inner, tb, size);
+	Box_initNode(node, &inner, tb, size);
 
 	//immediately call onLoad() after running the script - for loading other nodes
-	Box_callEngineNode(node, &inner, "onLoad", NULL);
+	Box_callNode(node, &inner, "onLoad", NULL);
 
 	// return the node
 	Toy_Literal nodeLiteral = TOY_TO_OPAQUE_LITERAL(node, node->tag);
@@ -93,27 +93,27 @@ static int nativeInitNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 		return -1;
 	}
 
-	Toy_Literal node = Toy_popLiteralArray(arguments);
+	Toy_Literal nodeLiteral = Toy_popLiteralArray(arguments);
 
-	Toy_Literal nodeIdn = node;
-	if (TOY_IS_IDENTIFIER(node) && Toy_parseIdentifierToValue(interpreter, &node)) {
+	Toy_Literal nodeIdn = nodeLiteral;
+	if (TOY_IS_IDENTIFIER(nodeLiteral) && Toy_parseIdentifierToValue(interpreter, &nodeLiteral)) {
 		Toy_freeLiteral(nodeIdn);
 	}
 
 	//check argument types
-	if (!TOY_IS_OPAQUE(node)) {
+	if (!TOY_IS_OPAQUE(nodeLiteral)) {
 		interpreter->errorOutput("Incorrect argument type passed to initNode\n");
-		Toy_freeLiteral(node);
+		Toy_freeLiteral(nodeLiteral);
 		return -1;
 	}
 
-	Box_EngineNode* engineNode = TOY_AS_OPAQUE(node);
+	Box_Node* node = TOY_AS_OPAQUE(nodeLiteral);
 
 	//init the new node (and ONLY this node)
-	Box_callEngineNode(engineNode, &engine.interpreter, "onInit", NULL);
+	Box_callNode(node, &engine.interpreter, "onInit", NULL);
 
 	//cleanup
-	Toy_freeLiteral(node);
+	Toy_freeLiteral(nodeLiteral);
 	return 0;
 }
 
@@ -145,10 +145,10 @@ static int nativePushNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 	}
 
 	//push the node
-	Box_EngineNode* parentNode = TOY_AS_OPAQUE(parent);
-	Box_EngineNode* childNode = TOY_AS_OPAQUE(child);
+	Box_Node* parentNode = TOY_AS_OPAQUE(parent);
+	Box_Node* childNode = TOY_AS_OPAQUE(child);
 
-	Box_pushEngineNode(parentNode, childNode);
+	Box_pushNode(parentNode, childNode);
 
 	//no return value
 	Toy_freeLiteral(parent);
@@ -185,7 +185,7 @@ static int nativeGetChildNode(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 	}
 
 	//push the node
-	Box_EngineNode* parentNode = TOY_AS_OPAQUE(parent);
+	Box_Node* parentNode = TOY_AS_OPAQUE(parent);
 	int intIndex = TOY_AS_INTEGER(index);
 
 	if (intIndex < 0 || intIndex >= parentNode->count) {
@@ -195,7 +195,7 @@ static int nativeGetChildNode(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 		return -1;
 	}
 
-	Box_EngineNode* childNode = Box_getChildEngineNode(parentNode, intIndex);
+	Box_Node* childNode = Box_getChildNode(parentNode, intIndex);
 	Toy_Literal child;
 
 	if (childNode == NULL) {
@@ -236,7 +236,7 @@ static int nativeFreeChildNode(Toy_Interpreter* interpreter, Toy_LiteralArray* a
 		return -1;
 	}
 
-	Box_EngineNode* node = TOY_AS_OPAQUE(nodeLiteral);
+	Box_Node* node = TOY_AS_OPAQUE(nodeLiteral);
 	int idx = TOY_AS_INTEGER(indexLiteral);
 
 	//check bounds
@@ -248,8 +248,8 @@ static int nativeFreeChildNode(Toy_Interpreter* interpreter, Toy_LiteralArray* a
 	}
 
 	//TODO: differentiate between onFree() and freeing memory
-	Box_callRecursiveEngineNode(node, interpreter, "onFree", NULL);
-	Box_freeChildEngineNode(node, idx);
+	Box_callRecursiveNode(node, interpreter, "onFree", NULL);
+	Box_freeChildNode(node, idx);
 
 	//cleanup
 	Toy_freeLiteral(nodeLiteral);
@@ -278,8 +278,8 @@ static int nativeGetParentNode(Toy_Interpreter* interpreter, Toy_LiteralArray* a
 	}
 
 	//push the node
-	Box_EngineNode* node = TOY_AS_OPAQUE(nodeLiteral);
-	Box_EngineNode* parent = node->parent;
+	Box_Node* node = TOY_AS_OPAQUE(nodeLiteral);
+	Box_Node* parent = node->parent;
 
 	Toy_Literal parentLiteral = TOY_TO_NULL_LITERAL;
 	if (parent != NULL) {
@@ -316,8 +316,8 @@ static int nativeGetChildNodeCount(Toy_Interpreter* interpreter, Toy_LiteralArra
 	}
 
 	//get the count
-	Box_EngineNode* node = TOY_AS_OPAQUE(nodeLiteral);
-	int childCount = Box_getChildCountEngineNode(node);
+	Box_Node* node = TOY_AS_OPAQUE(nodeLiteral);
+	int childCount = Box_getChildCountNode(node);
 	Toy_Literal childCountLiteral = TOY_TO_INTEGER_LITERAL(childCount);
 
 	Toy_pushLiteralArray(&interpreter->stack, childCountLiteral);
@@ -368,14 +368,14 @@ static int nativeLoadNodeTexture(Toy_Interpreter* interpreter, Toy_LiteralArray*
 	Toy_freeLiteral(drivePathLiteral); //not needed anymore
 
 	//actually load TODO: number the opaques, and check the tag
-	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
+	Box_Node* node = (Box_Node*)TOY_AS_OPAQUE(nodeLiteral);
 
 	if (node->texture != NULL) {
-		Box_freeTextureEngineNode(node);
+		Box_freeTextureNode(node);
 	}
 
-	if (Box_loadTextureEngineNode(node, Toy_toCString(TOY_AS_STRING(filePathLiteral))) != 0) {
-		interpreter->errorOutput("Failed to load the texture into the EngineNode\n");
+	if (Box_loadTextureNode(node, Toy_toCString(TOY_AS_STRING(filePathLiteral))) != 0) {
+		interpreter->errorOutput("Failed to load the texture into the Box_Node\n");
 		Toy_freeLiteral(filePathLiteral);
 		Toy_freeLiteral(nodeLiteral);
 		return -1;
@@ -410,10 +410,10 @@ static int nativeFreeNodeTexture(Toy_Interpreter* interpreter, Toy_LiteralArray*
 	}
 
 	//actually load TODO: number the opaques, and check the numbers
-	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
+	Box_Node* node = (Box_Node*)TOY_AS_OPAQUE(nodeLiteral);
 
 	if (node->texture != NULL) {
-		Box_freeTextureEngineNode(node);
+		Box_freeTextureNode(node);
 	}
 
 	//cleanup
@@ -472,10 +472,10 @@ static int nativeSetNodeRect(Toy_Interpreter* interpreter, Toy_LiteralArray* arg
 	}
 
 	//actually set
-	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
+	Box_Node* node = (Box_Node*)TOY_AS_OPAQUE(nodeLiteral);
 
 	SDL_Rect r = {TOY_AS_INTEGER(x), TOY_AS_INTEGER(y), TOY_AS_INTEGER(w), TOY_AS_INTEGER(h)};
-	Box_setRectEngineNode(node, r);
+	Box_setRectNode(node, r);
 
 	//cleanup
 	Toy_freeLiteral(nodeLiteral);
@@ -509,7 +509,7 @@ static int nativeGetNodeRectX(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 	}
 
 	//actually get
-	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
+	Box_Node* node = (Box_Node*)TOY_AS_OPAQUE(nodeLiteral);
 	Toy_Literal resultLiteral = TOY_TO_INTEGER_LITERAL(node->rect.x);
 	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
 
@@ -542,7 +542,7 @@ static int nativeGetNodeRectY(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 	}
 
 	//actually get
-	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
+	Box_Node* node = (Box_Node*)TOY_AS_OPAQUE(nodeLiteral);
 	Toy_Literal resultLiteral = TOY_TO_INTEGER_LITERAL(node->rect.y);
 	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
 
@@ -575,7 +575,7 @@ static int nativeGetNodeRectW(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 	}
 
 	//actually get
-	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
+	Box_Node* node = (Box_Node*)TOY_AS_OPAQUE(nodeLiteral);
 	Toy_Literal resultLiteral = TOY_TO_INTEGER_LITERAL(node->rect.w);
 	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
 
@@ -608,7 +608,7 @@ static int nativeGetNodeRectH(Toy_Interpreter* interpreter, Toy_LiteralArray* ar
 	}
 
 	//actually get
-	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
+	Box_Node* node = (Box_Node*)TOY_AS_OPAQUE(nodeLiteral);
 	Toy_Literal resultLiteral = TOY_TO_INTEGER_LITERAL(node->rect.h);
 	Toy_pushLiteralArray(&interpreter->stack, resultLiteral);
 
@@ -648,9 +648,9 @@ static int nativeSetNodeFrames(Toy_Interpreter* interpreter, Toy_LiteralArray* a
 	}
 
 	//actually set
-	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
+	Box_Node* node = (Box_Node*)TOY_AS_OPAQUE(nodeLiteral);
 
-	Box_setFramesEngineNode(node, TOY_AS_INTEGER(framesLiteral));
+	Box_setFramesNode(node, TOY_AS_INTEGER(framesLiteral));
 
 	//cleanup
 	Toy_freeLiteral(nodeLiteral);
@@ -681,7 +681,7 @@ static int nativeGetNodeFrames(Toy_Interpreter* interpreter, Toy_LiteralArray* a
 	}
 
 	//actually get
-	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
+	Box_Node* node = (Box_Node*)TOY_AS_OPAQUE(nodeLiteral);
 	Toy_Literal framesLiteral = TOY_TO_INTEGER_LITERAL(node->frames);
 
 	Toy_pushLiteralArray(&interpreter->stack, framesLiteral);
@@ -723,9 +723,9 @@ static int nativeSetCurrentNodeFrame(Toy_Interpreter* interpreter, Toy_LiteralAr
 	}
 
 	//actually set
-	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
+	Box_Node* node = (Box_Node*)TOY_AS_OPAQUE(nodeLiteral);
 
-	Box_setCurrentFrameEngineNode(node, TOY_AS_INTEGER(currentFrameLiteral));
+	Box_setCurrentFrameNode(node, TOY_AS_INTEGER(currentFrameLiteral));
 
 	//cleanup
 	Toy_freeLiteral(nodeLiteral);
@@ -756,7 +756,7 @@ static int nativeGetCurrentNodeFrame(Toy_Interpreter* interpreter, Toy_LiteralAr
 	}
 
 	//actually get
-	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
+	Box_Node* node = (Box_Node*)TOY_AS_OPAQUE(nodeLiteral);
 	Toy_Literal currentFrameLiteral = TOY_TO_INTEGER_LITERAL(node->currentFrame);
 
 	Toy_pushLiteralArray(&interpreter->stack, currentFrameLiteral);
@@ -790,7 +790,7 @@ static int nativeIncrementCurrentNodeFrame(Toy_Interpreter* interpreter, Toy_Lit
 	}
 
 	//actually get
-	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
+	Box_Node* node = (Box_Node*)TOY_AS_OPAQUE(nodeLiteral);
 
 	Box_incrementCurrentFrame(node);
 
@@ -854,7 +854,7 @@ static int nativeDrawNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 	}
 
 	//actually render
-	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
+	Box_Node* node = (Box_Node*)TOY_AS_OPAQUE(nodeLiteral);
 
 	SDL_Rect r = {TOY_AS_INTEGER(x), TOY_AS_INTEGER(y), 0, 0};
 	if (TOY_IS_INTEGER(w) && TOY_IS_INTEGER(h)) {
@@ -866,7 +866,7 @@ static int nativeDrawNode(Toy_Interpreter* interpreter, Toy_LiteralArray* argume
 		r.h = node->rect.h;
 	}
 
-	Box_drawEngineNode(node, r);
+	Box_drawNode(node, r);
 
 	//cleanup
 	Toy_freeLiteral(nodeLiteral);
@@ -992,8 +992,8 @@ static int nativeSetNodeText(Toy_Interpreter* interpreter, Toy_LiteralArray* arg
 	SDL_Color color = (SDL_Color){ .r = TOY_AS_INTEGER(rLiteral), .g = TOY_AS_INTEGER(gLiteral), .b = TOY_AS_INTEGER(bLiteral), .a = TOY_AS_INTEGER(aLiteral) };
 
 	//actually set
-	Box_EngineNode* node = (Box_EngineNode*)TOY_AS_OPAQUE(nodeLiteral);
-	Box_setTextEngineNode(node, font, Toy_toCString(TOY_AS_STRING(textLiteral)), color);
+	Box_Node* node = (Box_Node*)TOY_AS_OPAQUE(nodeLiteral);
+	Box_setTextNode(node, font, Toy_toCString(TOY_AS_STRING(textLiteral)), color);
 
 	//cleanup
 	TTF_CloseFont(font);
@@ -1071,7 +1071,7 @@ static int nativeCallNodeFn(Toy_Interpreter* interpreter, Toy_LiteralArray* argu
 	Toy_Literal fnNameIdentifier = TOY_TO_IDENTIFIER_LITERAL(Toy_copyRefString(TOY_AS_STRING(fnName)));
 
 	//call the function
-	Toy_Literal result = Box_callEngineNodeLiteral(TOY_AS_OPAQUE(nodeLiteral), interpreter, fnNameIdentifier, &extraArgs);
+	Toy_Literal result = Box_callNodeLiteral(TOY_AS_OPAQUE(nodeLiteral), interpreter, fnNameIdentifier, &extraArgs);
 
 	Toy_pushLiteralArray(&interpreter->stack, result);
 

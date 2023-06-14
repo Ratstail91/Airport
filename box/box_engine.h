@@ -1,7 +1,7 @@
 #pragma once
 
 #include "box_common.h"
-#include "box_engine_node.h"
+#include "box_node.h"
 
 #include "toy_interpreter.h"
 #include "toy_literal_array.h"
@@ -12,7 +12,7 @@
 //the base engine object, which represents the state of the game
 typedef struct Box_private_engine {
 	//engine stuff
-	Box_EngineNode* rootNode;
+	Box_Node* rootNode;
 	Toy_Literal nextRootNodeFilename;
 	clock_t simTime;
 	clock_t realTime;
