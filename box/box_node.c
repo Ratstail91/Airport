@@ -128,16 +128,15 @@ static void recursiveLiteralQuicksortUtil(Toy_Interpreter* interpreter, Box_Node
 
 	//iterate through the array
 	for (int checker = 0; checker < count - 1; checker++) {
-		//if node is null, it is always sorted to the end
-		if (ptr[checker] == NULL) {
-			swapUtil(&ptr[checker], &ptr[checker + 1]);
-			runner++;
-			continue;
+		//if node is null, it is always "sorted" to the end
+		while (ptr[checker] == NULL && count > 0) {
+			swapUtil(&ptr[checker], &ptr[count - 1]);
+			count--;
 		}
 
-		if (ptr[checker + 1] == NULL) {
-			runner++;
-			continue;
+		//base case
+		if (count < 2) {
+			return;
 		}
 
 		Toy_LiteralArray arguments;
@@ -147,7 +146,7 @@ static void recursiveLiteralQuicksortUtil(Toy_Interpreter* interpreter, Box_Node
 		Toy_initLiteralArray(&returns);
 
 		Toy_pushLiteralArray(&arguments, TOY_TO_OPAQUE_LITERAL(ptr[checker], OPAQUE_TAG_NODE));
-		Toy_pushLiteralArray(&arguments, TOY_TO_OPAQUE_LITERAL(ptr[checker + 1], OPAQUE_TAG_NODE));
+		Toy_pushLiteralArray(&arguments, TOY_TO_OPAQUE_LITERAL(ptr[count - 1], OPAQUE_TAG_NODE));
 
 		Toy_callLiteralFn(interpreter, fnCompare, &arguments, &returns);
 
@@ -167,13 +166,8 @@ static void recursiveLiteralQuicksortUtil(Toy_Interpreter* interpreter, Box_Node
 	swapUtil(&ptr[runner], &ptr[count - 1]);
 
 	//recurse on each end
-	if (runner > 0) {
-		recursiveLiteralQuicksortUtil(interpreter, &ptr[0], runner, fnCompare);
-	}
-
-	if (runner < count) {
-		recursiveLiteralQuicksortUtil(interpreter, &ptr[runner + 1], count - runner - 1, fnCompare);
-	}
+	recursiveLiteralQuicksortUtil(interpreter, &ptr[0], runner, fnCompare);
+	recursiveLiteralQuicksortUtil(interpreter, &ptr[runner + 1], count - runner - 1, fnCompare);
 }
 
 BOX_API void Box_sortChildrenNode(Box_Node* node, Toy_Interpreter* interpreter, Toy_Literal fnCompare) {

@@ -1,5 +1,1 @@
 //this file is a polyfill TODO: fix this
-
-fn getRealPos(node: opaque) {
-	return [0, 0];
-}
