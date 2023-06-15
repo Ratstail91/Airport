@@ -130,14 +130,21 @@ fn depthComparator(lhs: opaque, rhs: opaque) { //for sorting by depth
 	var lhsPos = lhs.callNodeFn("getRealPos");
 	var rhsPos = rhs.callNodeFn("getRealPos");
 
+	var result = null;
+
 	if (lhsPos[1] == rhsPos[1]) { //BUGFIX: prevent z-fighting
 		if (lhsPos[0] == rhsPos[0]) {
-			return true;
+			result = true;
 		}
-		return lhsPos[0] < rhsPos[0];
+		else {
+			result = lhsPos[0] < rhsPos[0];
+		}
+	}
+	else {
+		result = lhsPos[1] < rhsPos[1];
 	}
 
-	return lhsPos[1] < rhsPos[1];
+	return result;
 }
 
 fn getCameraPos(node: opaque) {
