@@ -4,6 +4,7 @@ export TOY_OUTDIR = ../../$(OUTDIR)
 
 all: $(OUTDIR) toy box
 	$(MAKE) -j8 -C source
+	cp -r assets $(OUTDIR)
 
 toy: $(LIBDIR)
 	$(MAKE) -j8 -C Box/Toy/source
