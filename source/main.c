@@ -1,6 +1,3 @@
-//moved here for android shenanigans
-#define SDL_MAIN_HANDLED
-
 #include "box_engine.h"
 #include "toy_drive_system.h"
 
