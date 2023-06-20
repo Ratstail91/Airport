@@ -128,7 +128,7 @@ fn onDraw(node: opaque) {
 
 //gameplay functions
 fn runAI(node: opaque, rng: opaque) {
-	if ((stepAI++) >= 1) { //TODO: Toy bug here, something to do with precedence of postfix++?
+	if (stepAI++ >= 1) {
 		stepAI = 0;
 
 		var dir = rng.generateRandomNumber() % 4;
