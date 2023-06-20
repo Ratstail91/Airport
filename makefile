@@ -1,33 +1,18 @@
 export OUTDIR = out
-export LIBDIR = lib
-export TOY_OUTDIR = ../$(LIBDIR)
-export BOX_OUTDIR = ../$(LIBDIR)
+export BOX_OUTDIR = ../$(OUTDIR)
+export TOY_OUTDIR = ../../$(OUTDIR)
 
-all: $(OUTDIR) $(LIBDIR) toy box
+all: $(OUTDIR) toy box
 	$(MAKE) -j8 -C source
-ifeq ($(findstring CYGWIN, $(shell uname)),CYGWIN)
-	cp $(LIBDIR)/*.dll $(OUTDIR)
-else ifeq ($(shell uname),Linux)
-	cp $(LIBDIR)/*.so $(OUTDIR)
-else ifeq ($(OS),Windows_NT)
-	cp $(LIBDIR)/*.dll $(OUTDIR)
-endif
-
-test: clean $(OUTDIR) toy box
-	$(MAKE) -C test
 
 toy: $(LIBDIR)
-	$(MAKE) -j8 -C Toy/source
+	$(MAKE) -j8 -C Box/Toy/source
 
 box: $(LIBDIR)
-	$(MAKE) -j8 -C box repllibs
-	$(MAKE) -j8 -C box library
+	$(MAKE) -j8 -C Box/source
 
 $(OUTDIR):
 	mkdir $(OUTDIR)
-
-$(LIBDIR):
-	mkdir $(LIBDIR)
 
 .PHONY: clean
 
@@ -56,24 +41,3 @@ else
 endif
 
 rebuild: clean all
-
-
-#utils for the manual android build
-INCLUDEDIR=include
-
-SOURCEDIR=bundle
-
-$(INCLUDEDIR):
-	mkdir $(INCLUDEDIR)
-
-$(SOURCEDIR):
-	mkdir $(SOURCEDIR)
-
-sourcelist:
-	@echo $(addprefix ../airport/,$(wildcard Toy/source/*.c) $(wildcard box/*.c) $(wildcard source/*.c)) > source.list
-
-bundleincludes: $(INCLUDEDIR)
-	cp $(addprefix ../airport/,$(wildcard Toy/source/*.h) $(wildcard box/*.h) $(wildcard source/*.h)) $(INCLUDEDIR)
-
-bundlesource: $(SOURCEDIR)
-	cp $(addprefix ../airport/,$(wildcard Toy/source/*.c) $(wildcard box/*.c) $(wildcard source/*.c)) $(SOURCEDIR)
