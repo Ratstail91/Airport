@@ -1,11 +1,13 @@
 #include "box_engine.h"
 
-#include "lib_engine.h"
-#include "lib_input.h"
-#include "lib_node.h"
+#include "lib_about.h"
 #include "lib_standard.h"
 #include "lib_random.h"
 #include "lib_runner.h"
+#include "lib_engine.h"
+#include "lib_node.h"
+#include "lib_input.h"
+
 #include "repl_tools.h"
 
 #include "toy_memory.h"
@@ -62,6 +64,7 @@ void Box_initEngine() {
 
 	//init Toy
 	Toy_initInterpreter(&engine.interpreter);
+	Toy_injectNativeHook(&engine.interpreter, "about", Toy_hookAbout);
 	Toy_injectNativeHook(&engine.interpreter, "standard", Toy_hookStandard);
 	Toy_injectNativeHook(&engine.interpreter, "random", Toy_hookRandom);
 	Toy_injectNativeHook(&engine.interpreter, "runner", Toy_hookRunner);
@@ -72,6 +75,11 @@ void Box_initEngine() {
 	//run the init
 	size_t size = 0;
 	const unsigned char* source = Toy_readFile("./assets/scripts/init.toy", &size);
+
+	if (!source) {
+		fatalError("Couldn't read /assets/scripts/init.toy");
+	}
+
 	const unsigned char* tb = Toy_compileString((const char*)source, &size);
 	free((void*)source);
 

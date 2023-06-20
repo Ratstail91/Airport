@@ -35,7 +35,6 @@
     <None Include="assets\scripts\gameplay\text.toy" />
     <None Include="assets\scripts\gameplay\tilemap.toy" />
     <None Include="assets\scripts\init.toy" />
-    <None Include="assets\scripts\sorting_test.toy" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
