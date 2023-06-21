@@ -1,26 +1,11 @@
 import node;
 
 //constants
-var SPEED: int const = 5;
-
-//variables
-var parent: opaque = null; //cache the parent for quick access
-var posX: int = 50;
-var posY: int = 50;
+var SPEED: int const = 10;
 var WIDTH: int const = 143;
 var HEIGHT: int const = 75;
 
-var xspeed: int = 0;
-var yspeed: int = 0;
 
-//accessors - variables are private, functions are public
-fn getX(node: opaque) {
-	return posX;
-}
-
-fn getY(node: opaque) {
-	return posY;
-}
 
 //lifecycle functions
 fn onLoad(node: opaque) {
@@ -30,15 +15,11 @@ fn onLoad(node: opaque) {
 fn onInit(node: opaque) {
 	print "onInit() called";
 
-	parent = node.getParentNode();
 	node.loadNodeTexture("sprites:/little_plane.png");
 }
 
 fn onStep(node: opaque) {
-//	print "onStep() called";
-
-	posX += xspeed;
-	posY += yspeed;
+	//TODO: move
 }
 
 fn onFree(node: opaque) {
@@ -49,59 +30,61 @@ fn onFree(node: opaque) {
 
 fn onDraw(node: opaque) {
 //	print "onDraw() called";
+	var parent: opaque = node.getParentNode();
 
 	var px = 0;
 	var py = 0;
 
+	//TODO: get world position
 	if (parent != null) {
-		px = parent.callNodeFn("getX");
-		py = parent.callNodeFn("getY");
+		px = parent.getNodePositionX();
+		py = parent.getNodePositionY();
 	}
 
-	node.drawNode(posX + px, posY + py, WIDTH, HEIGHT);
+	node.drawNode(node.getNodePositionX() + px, node.getNodePositionY() + py, WIDTH, HEIGHT);
 }
 
 //event functions
 fn onKeyDown(node: opaque, event: string) {
 	if (event == "character_up") {
-		yspeed -= SPEED;
+		node.setNodeMotionY(-SPEED);
 		return;
 	}
 
 	if (event == "character_down") {
-		yspeed += SPEED;
+		node.setNodeMotionY(SPEED);
 		return;
 	}
 
 	if (event == "character_left") {
-		xspeed -= SPEED;
+		node.setNodeMotionX(-SPEED);
 		return;
 	}
 
 	if (event == "character_right") {
-		xspeed += SPEED;
+		node.setNodeMotionX(SPEED);
 		return;
 	}
 }
 
 fn onKeyUp(node: opaque, event: string) {
-	if (event == "character_up" && yspeed < 0) {
-		yspeed = 0;
+	if (event == "character_up" && node.getNodeMotionY() < 0) {
+		node.setNodeMotionY(0);
 		return;
 	}
 
-	if (event == "character_down" && yspeed > 0) {
-		yspeed = 0;
+	if (event == "character_down" && node.getNodeMotionY() > 0) {
+		node.setNodeMotionY(0);
 		return;
 	}
 
-	if (event == "character_left" && xspeed < 0) {
-		xspeed = 0;
+	if (event == "character_left" && node.getNodeMotionX() < 0) {
+		node.setNodeMotionX(0);
 		return;
 	}
 
-	if (event == "character_right" && xspeed > 0) {
-		xspeed = 0;
+	if (event == "character_right" && node.getNodeMotionX() > 0) {
+		node.setNodeMotionX(0);
 		return;
 	}
 }
@@ -114,8 +97,8 @@ fn onMouseButtonDown(node: opaque, x: int, y: int, button: string) {
 	// print "entity.toy:onMouseButtonDown(" + string x + ", " + string y + ", " + button + ")";
 
 	//jump to pos
-	posX = x - WIDTH / 2;
-	posY = y - HEIGHT / 2;
+	node.setNodePositionX(x - WIDTH / 2);
+	node.setNodePositionY(y - HEIGHT / 2);
 }
 
 fn onMouseButtonUp(node: opaque, x: int, y: int, button: string) {

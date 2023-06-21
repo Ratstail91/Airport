@@ -32,10 +32,10 @@
 
 
 	//this function must always be called, or the engine won't run
-	initWindow("Skyland", 32*16, 32*16 + 32, false); //TODO: custom FPS setting
+	initWindow("Airport", 800, 600, false); //TODO: custom FPS setting
 
 	//kick off the logic of the scene graph
-	loadRootNode("scripts:/gameplay/scene.toy");
+	loadRootNode("scripts:/airplane.toy");
 }
 
 //Globals go here
