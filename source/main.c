@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
 	Toy_setDrivePath("sprites", "assets/sprites");
 	Toy_setDrivePath("fonts", "assets/fonts");
 
-	Box_initEngine();
+	Box_initEngine("scripts:/init.toy");
 	Box_execEngine();
 	Box_freeEngine();
 
