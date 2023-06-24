@@ -1,19 +1,6 @@
-//Globals go here
-var TILE_PIXEL_WIDTH: int const = 16;
-var TILE_PIXEL_HEIGHT: int const = 16;
-
-var MAP_GRID_WIDTH: int const = 16;
-var MAP_GRID_HEIGHT: int const = 16;
-
-var CAMERA_SCALE_X: float const = 2.0;
-var CAMERA_SCALE_Y: float const = 2.0;
-
-
-
 //A quirk of the setup is that anything defined in the root of `init.toy` becomes a global object
 //To resolve that, the configuration is inside a block scope
 {
-	import standard;
 	import engine;
 	import input;
 
@@ -45,13 +32,11 @@ var CAMERA_SCALE_Y: float const = 2.0;
 
 
 	//this function must always be called, or the engine won't run
-	initWindow(
-		"Airport",
-		floor(TILE_PIXEL_WIDTH * MAP_GRID_WIDTH * CAMERA_SCALE_X),
-		floor(TILE_PIXEL_HEIGHT * MAP_GRID_HEIGHT * CAMERA_SCALE_Y) + 32, //32 is UI space
-		false);
-		//TODO: custom FPS setting
+	initWindow("Airport", 800, 600, false); //TODO: custom FPS setting
 
 	//kick off the logic of the scene graph
-	loadRootNode("scripts:/gameplay/scene.toy");
+	loadRootNode("scripts:/airplane.toy");
 }
+
+//Globals go here
+

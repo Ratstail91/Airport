@@ -2,45 +2,42 @@ import standard;
 import node;
 import random;
 
-//consts
-var TILE_WIDTH: int const = 32;
-var TILE_HEIGHT: int const = 32;
 
-var MAP_WIDTH: int const = 16;
-var MAP_HEIGHT: int const = 16;
-
-var CAMERA_X: int const = 0;
-var CAMERA_Y: int const = 32;
-
-
+//persistent members
 var tilemap: opaque = null;
-var player: opaque = null;
 var stepCounter: opaque = null;
+var player: opaque = null;
+var enemies: [opaque] = null;
 
-var enemies: [opaque] = [];
+var collisionDataCache: [bool] = null;
 
-var collisionMap: [bool] = null; //cache this, since it won't change during a level
-
-var rng: opaque = null;
-
+var rng: opaque = null; //TODO: does this have an opaque tag?
 
 //lifecycle functions
-fn onLoad(node: opaque) {
-	var empty = node.loadChild("scripts:/empty.toy");
-
-	tilemap = empty.loadChild("scripts:/gameplay/tilemap.toy");
-	stepCounter = empty.loadChild("scripts:/gameplay/step-counter.toy");
-
-	player = node.loadChild("scripts:/gameplay/lejana.toy");
-}
-
 fn onInit(node: opaque) {
-	node.generateLevel(clock().hash(), MAP_WIDTH, MAP_HEIGHT);
+	//load the map stuff
+	tilemap = node.loadChild("scripts:/gameplay/tilemap.toy");
+	node.generateScene(clock().hash(), MAP_GRID_WIDTH, MAP_GRID_HEIGHT);
+
+	//load and initialize the UI (depends on map stuff)
+	stepCounter = node.loadChild("scripts:/gameplay/step-counter.toy");
+	stepCounter.setNodeRect(
+		0,
+		0,
+		floor(TILE_PIXEL_WIDTH * MAP_GRID_WIDTH * tilemap.getNodeWorldScaleX()), //width - stretches along the top of the tilemap
+		stepCounter.getNodeRectH() //default height
+	);
 	stepCounter.callNodeFn("setMaxSteps", 100);
+
+	//offset the scene node, so it shows the map outside separate from the UI
+	node.setNodePositionY(16);
 }
 
 fn onFree(node: opaque) {
-	rng.freeRandomGenerator();
+	//cleanup
+	if (rng != null) {
+		rng.freeRandomGenerator();
+	}
 }
 
 //fn onStep(node: opaque) {
@@ -48,36 +45,32 @@ fn onFree(node: opaque) {
 //}
 
 fn onDraw(node: opaque) {
+	//use the onDraw to sort - skip too many steps
 	node.sortChildrenNode(depthComparator);
-	stepCounter.callNodeFn("customOnDraw", 0, 0, TILE_WIDTH * MAP_WIDTH, 32);
-}
-
-//utils - polyfills
-fn loadChild(parent: opaque, fname: string) {
-	var child: opaque = loadNode(fname);
-	parent.pushNode(child);
-	return child;
 }
 
 //gameplay functions
-fn generateLevel(node: opaque, seed: int, width: int, height: int) {
+fn generateScene(node: opaque, seed: int, width: int, height: int) {
 	//reset the array
 	enemies = [];
 	
-	if (rng != null) rng.freeRandomGenerator();
+	if (rng != null) {
+		rng.freeRandomGenerator();
+	}
 	rng = createRandomGenerator(seed);
 
-	//place player
-	player.callNodeFn("setGridPos", 1, 1);
-
 	//generate map
-	tilemap.callNodeFn("generateFromRng", rng, 16, 16);
-	collisionMap = tilemap.callNodeFn("getCollisionMap");
+	tilemap.callNodeFn("generateFromRng", rng, width, height);
+	collisionDataCache = tilemap.callNodeFn("getCollisionData");
+
+	//place player here, so drop dropping can avoid the player
+	player = node.loadChild("scripts:/gameplay/lejana.toy");
+	player.callNodeFn("setGridPosition", 1, 1);
 
 	//generate drones
 	var droneCount: int const = rng.generateRandomNumber() % 2 + 20;
 	for (var i = 0; i < droneCount; i++) {
-		var d = node.loadChild("scripts:/gameplay/drone.toy");
+		var d: opaque = node.loadChild("scripts:/gameplay/drone.toy");
 		d.initNode();
 
 		enemies.push(d);
@@ -86,36 +79,40 @@ fn generateLevel(node: opaque, seed: int, width: int, height: int) {
 		var y = 0;
 
 		//while generated spot is a collision, or too close to the player
-		while (x == 0 && y == 0 || node.getCollisionAt(x, y) == false || x < width / 6 * 2 && y < height / 6 * 2) {
+		while (x == 0 && y == 0 || node.getWalkableAt(x, y) == false || x < width / 6 * 2 && y < height / 6 * 2) {
 			x = rng.generateRandomNumber() % width;
 			y = rng.generateRandomNumber() % height;
 		}
 
-		d.callNodeFn("setGridPos", x, y);
-		d.callNodeFn("setRealPos", (width -1) * TILE_WIDTH, (height - 1) * TILE_HEIGHT);
+		d.callNodeFn("setGridPosition", x, y);
+		d.setNodePositionX(MAP_GRID_WIDTH * TILE_PIXEL_WIDTH);
+		d.setNodePositionY(MAP_GRID_HEIGHT * TILE_PIXEL_HEIGHT);
 	}
 }
 
-fn getCollisionAt(node: opaque, x: int, y: int) {
-	if (collisionMap == null || x == null || y == null) {
+fn getWalkableAt(node: opaque, x: int, y: int) {
+	if (collisionDataCache == null || x == null || y == null) {
 		return false;
 	}
 
 	//entities
-	var pos = player.callNodeFn("getGridPos");
-	if (x == pos[0] && y == pos[1]) {
+	if (x == player.callNodeFn("getGridPositionX") && y == player.callNodeFn("getGridPositionY")) {
 		return false;
 	}
 
 	for (var i = 0; i < enemies.length(); i++) {
-		var pos = enemies[i].callNodeFn("getGridPos");
-		if (x == pos[0] && y == pos[1]) {
+		if (x == enemies[i].callNodeFn("getGridPositionX") && y == enemies[i].callNodeFn("getGridPositionY")) {
 			return false;
 		}
 	}
 
+	//outside the grid
+	if (y * MAP_GRID_WIDTH + x < 0 || y * MAP_GRID_WIDTH + x >= collisionDataCache.length()) {
+		return false;
+	}
+
 	//default
-	return collisionMap[y * MAP_WIDTH + x];
+	return collisionDataCache[y * MAP_GRID_WIDTH + x];
 }
 
 fn runAI(node: opaque) {
@@ -126,21 +123,28 @@ fn runAI(node: opaque) {
 	stepCounter.callNodeFn("alterRemainingSteps", -1);
 }
 
-fn depthComparator(lhs: opaque, rhs: opaque) { //for sorting by depth
-	var lhsPos = lhs.callNodeFn("getRealPos");
-	var rhsPos = rhs.callNodeFn("getRealPos");
+//utils - polyfills
+fn loadChild(parent: opaque, fname: string) {
+	//TODO: add this to the API proper
+	var child: opaque = loadNode(fname);
+	parent.pushNode(child);
+	return child;
+}
 
-	if (lhsPos == null || rhsPos == null) { //BUGFIX: children without that function
+fn depthComparator(lhs: opaque, rhs: opaque) { //for sorting by depth
+	var lhsPositionY = lhs.getNodeWorldPositionY();
+	var rhsPositionY = rhs.getNodeWorldPositionY();
+
+	if (lhsPositionY == null || rhsPositionY == null) { //BUGFIX: children without that function
 		return true;
 	}
 
-	if (lhsPos[1] == rhsPos[1]) { //BUGFIX: prevent z-fighting
-		return lhsPos[0] <= rhsPos[0];
+	if (lhsPositionY == rhsPositionY) { //BUGFIX: prevent z-fighting
+		var lhsPositionX = lhs.getNodeWorldPositionX();
+		var rhsPositionX = rhs.getNodeWorldPositionX();
+
+		return lhsPositionX < rhsPositionX;
 	}
 
-	return lhsPos[1] < rhsPos[1];
-}
-
-fn getCameraPos(node: opaque) {
-	return [CAMERA_X, CAMERA_Y];
+	return lhsPositionY < rhsPositionY;
 }

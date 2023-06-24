@@ -1,43 +1,26 @@
 import standard;
 import node;
 
-//constants
-var SPEED: int const = 4;
-
-var SPRITE_WIDTH: int const = 64;
-var SPRITE_HEIGHT: int const = 64;
-
-var TILE_WIDTH: int const = 32;
-var TILE_HEIGHT: int const = 32;
-
-
-//variables
-var parent: opaque = null; //cache the parent for quick access
-
-var gridX: int = 1; //position on the game grid
-var gridY: int = 1;
-
-var realX: int = null; //will change until realX = gridX * SPRITE_WIDTH
-var realY: int = null;
-
-var motionX: int = 0; //normalized movement direction
-var motionY: int = 0;
+var gridPositionX: int = 1; //position on the game grid
+var gridPositionY: int = 1;
 
 var inputX: int = 0; //cache the keyboard input
 var inputY: int = 0;
 
 var direction: int = null; //BUGFIX: animation not looping properly
-var enableMovementCounter: int = 30 * 3; //BUGFIX: freeze while drones reach their starting spot
-var attackCounter: int = 0;
+var enableMovementCounter: int = 60 * 3; //BUGFIX: freeze while drones reach their starting spot
 
 //polyfills - animating different cycles on one image 
-var stepCount: int = 0;
+var walkAnimationCounter: int = 0;
+var attackAnimationCounter: int = 0;
 
+//utils for facing different directions (idling)
 fn faceDown(node: opaque) {
 	if (direction == 0) return;
 	direction = 0;
 	node.setNodeRect(0, 0, 32, 32);
 	node.setNodeFrames(4);
+	walkAnimationCounter = 12;
 }
 
 fn faceUp(node: opaque) {
@@ -45,6 +28,7 @@ fn faceUp(node: opaque) {
 	direction = 1;
 	node.setNodeRect(32 * 4, 0, 32, 32);
 	node.setNodeFrames(4);
+	walkAnimationCounter = 12;
 }
 
 fn faceRight(node: opaque) {
@@ -52,6 +36,7 @@ fn faceRight(node: opaque) {
 	direction = 2;
 	node.setNodeRect(32 * 8, 0, 32, 32);
 	node.setNodeFrames(4);
+	walkAnimationCounter = 12;
 }
 
 fn faceLeft(node: opaque) {
@@ -59,45 +44,33 @@ fn faceLeft(node: opaque) {
 	direction = 3;
 	node.setNodeRect(32 * 12, 0, 32, 32);
 	node.setNodeFrames(4);
+	walkAnimationCounter = 12;
 }
-
 
 //accessors & mutators
-fn setGridPos(node: opaque, x: int, y: int) {
-	gridX = x;
-	gridY = y;
+fn setGridPosition(node: opaque, x: int, y: int) {
+	gridPositionX = x;
+	gridPositionY = y;
 
-	if (realX == null) {
-		realX = gridX * TILE_WIDTH;
-	}
-
-	if (realY == null) {
-		realY = gridY * TILE_HEIGHT;
-	}
+	node.setNodePositionX(floor( gridPositionX * node.getNodeRectW() / node.getNodeScaleX() ));
+	node.setNodePositionY(floor( gridPositionY * node.getNodeRectH() / node.getNodeScaleY() ));
 }
 
-fn setRealPos(node: opaque, x: int, y: int) {
-	realX = x;
-	realY = y;
+fn getGridPositionX(node: opaque) {
+	return gridPositionX;
 }
 
-fn getGridPos(node: opaque) {
-	return [gridX, gridY];
+fn getGridPositionY(node: opaque) {
+	return gridPositionY;
 }
-
-fn getRealPos(node: opaque) {
-	return [realX, realY];
-}
-
 
 //lifecycle functions
 fn onLoad(node: opaque) {
-	node.loadNodeTexture("sprites:/lejana.png");
+	node.loadNodeTexture("sprites:/lejana.png"); //NOTE: all of this script is mapped to this sprite sheet
 	node.faceDown();
-}
 
-fn onInit(node: opaque) {
-	parent = node.getParentNode();
+	node.setNodeScaleX(CAMERA_SCALE_X);
+	node.setNodeScaleY(CAMERA_SCALE_Y);
 }
 
 fn onStep(node: opaque) {
@@ -106,91 +79,82 @@ fn onStep(node: opaque) {
 		enableMovementCounter--;
 		return;
 	}
-	
-	//process input when aligned to a grid
-	if (realX / TILE_WIDTH == gridX && realY / TILE_HEIGHT == gridY && motionX == 0 && motionY == 0) {
-		//facing
-		if (inputY > 0) {
-			node.faceDown();
-		}
 
-		if (inputY < 0) {
-			node.faceUp();
-		}
-
-		if (inputX > 0) {
-			node.faceRight();
-		}
-
-		if (inputX < 0) {
-			node.faceLeft();
-		}
-
-		//disallow wall phasing
-		if (inputX != 0 && parent.callNodeFn("getCollisionAt", gridX + inputX, gridY) != true) {
-			inputX = 0;
-		}
-
-		if (inputY != 0 && parent.callNodeFn("getCollisionAt", gridX, gridY + inputY) != true) {
-			inputY = 0;
-		}
-
-		//disallow diagonal movement
-		if (abs(inputX) != 0) {
-			gridX += inputX;
-		}
-		else {
-			gridY += inputY;
-		}
-
-		//trigger the world
-		if (inputX != 0 || inputY != 0) {
-			parent.callNodeFn("runAI");
-		}
-	}
-
-	//actually animate
-	if (++stepCount >= 5) {
-		if (motionX == 0 && motionY == 0 && inputX == 0 && inputY == 0) {
-			stepCount = 0;
-		}
-		
-		if (attackCounter > 0) {
-			attackCounter--;
-		}
-
-		node.incrementCurrentNodeFrame();
-	}
-
-	//animation - standing still
-	if (attackCounter == 0 && stepCount == 0) {
+	//animation - start idling
+	if (attackAnimationCounter == 0) {
 		//move to standing state
 		if (node.getNodeRectY() != 0) {
 			node.setNodeRect(direction * 32 * 4, 0, 32, 32);
 			node.setNodeFrames(4);
+			walkAnimationCounter = 12;
 		}
 	}
 
-	//animation - attacking
-	if (attackCounter > 0 && stepCount == 0) {
+	//animation - start attacking
+	if (--attackAnimationCounter >= 0) {
 		//move to attacking state
 		if (node.getNodeRectY() != 32) {
 			node.setNodeRect(direction * 32 * 4, 32, 32, 32);
 			node.setNodeFrames(3);
-			stepCount = 0;
 		}
+
+		if ((attackAnimationCounter+1) % 4 == 0) { //+1 for a bugfix
+			node.incrementCurrentNodeFrame();
+		}
+
+		//skip out
+		return;
 	}
 
-	//calc movement
-	var distX = gridX * TILE_WIDTH - realX;
-	var distY = gridY * TILE_HEIGHT - realY;
+	//facing
+	if (inputY > 0) {
+		node.faceDown();
+	}
 
-	motionX = normalize(distX);
-	motionY = normalize(distY);
+	else if (inputY < 0) {
+		node.faceUp();
+	}
 
-	//make movement
-	realX += abs(distX) > SPEED ? SPEED * motionX : distX;
-	realY += abs(distY) > SPEED ? SPEED * motionY : distY;
+	else if (inputX > 0) {
+		node.faceRight();
+	}
+
+	else if (inputX < 0) {
+		node.faceLeft();
+	}
+
+	//BUGFIX for smooth animation fo
+	var lesser = 0;
+	if ((inputX != 0 || inputY != 0) && attackAnimationCounter == 0) {
+		lesser = 6;
+	}
+
+	//actually animate
+	if (--walkAnimationCounter <= lesser) {
+		node.incrementCurrentNodeFrame();
+		walkAnimationCounter = 12;
+	}
+
+	var parent = node.getParentNode(); //check for collisions from the parent
+
+	if (parent.callNodeFn("getWalkableAt", gridPositionX + inputX, gridPositionY + inputY) && abs(inputX) != abs(inputY)) {
+		//calc movement
+		gridPositionX += inputX;
+		gridPositionY += inputY;
+
+		parent.callNodeFn("runAI");
+	}
+
+	//move in realspace
+	var distX = gridPositionX * TILE_PIXEL_WIDTH - node.getNodePositionX();
+	var distY = gridPositionY * TILE_PIXEL_HEIGHT - node.getNodePositionY();
+
+	node.setNodeMotionX( normalize(distX) );
+	node.setNodeMotionY( normalize(distY) );
+
+	//reset input
+	inputX = 0;
+	inputY = 0;
 }
 
 fn onFree(node: opaque) {
@@ -198,8 +162,22 @@ fn onFree(node: opaque) {
 }
 
 fn onDraw(node: opaque) {
-	var camera = parent.callNodeFn("getCameraPos");
-	node.drawNode(realX + camera[0] - SPRITE_WIDTH / 4, realY + camera[1] - SPRITE_HEIGHT / 2, SPRITE_WIDTH, SPRITE_HEIGHT);
+	var posX: int = node.getNodeWorldPositionX();
+	var posY: int = node.getNodeWorldPositionY();
+
+	var scaleX: float = node.getNodeWorldScaleX();
+	var scaleY: float = node.getNodeWorldScaleY();
+
+	//this offset is because the sprite cell for lejana is twice as big as the sprite cell for the floor tiles
+	var originOffsetX: int = node.getNodeRectW() * int scaleX / 4;
+	var originOffsetY: int = node.getNodeRectH() * int scaleY / 2;
+
+	node.drawNode(
+		floor(posX * scaleX) - originOffsetX,
+		floor(posY * scaleY) - originOffsetY,
+		floor(node.getNodeRectW() * scaleX),
+		floor(node.getNodeRectH() * scaleY)
+	);
 }
 
 
@@ -210,8 +188,14 @@ fn onKeyDown(node: opaque, event: string) {
 		return;
 	}
 
+	//enable attack
 	if (event == "character_attack" && inputX == 0 && inputY == 0) {
-		attackCounter = 3;
+		attackAnimationCounter = 12;
+		return;
+	}
+
+	//if moving, don't take any more input
+	if (node.getNodeMotionX() != 0 || node.getNodeMotionY() != 0) {
 		return;
 	}
 
@@ -257,7 +241,6 @@ fn onKeyUp(node: opaque, event: string) {
 		return;
 	}
 }
-
 
 //polyfills - move these to standard
 fn normalize(x): int {
