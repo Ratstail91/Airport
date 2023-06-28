@@ -1,16 +1,35 @@
+export CFLAGS+=-std=c18 -pedantic -Werror
+
 export OUTDIR = out
 export BOX_OUTDIR = ../$(OUTDIR)
 export TOY_OUTDIR = ../../$(OUTDIR)
 
-all: $(OUTDIR) toy box
+all: toy box game
+
+toy: $(OUTDIR)
+	$(MAKE) -j8 -C Box/Toy/source
+
+box: $(OUTDIR)
+	$(MAKE) -j8 -C Box/source
+
+game: $(OUTDIR)
 	$(MAKE) -j8 -C source
 	cp -r assets $(OUTDIR)
 
-toy: $(LIBDIR)
-	$(MAKE) -j8 -C Box/Toy/source
+#release
+toy-release: $(OUTDIR)
+	$(MAKE) -j8 -C Box/Toy/source library-release
 
-box: $(LIBDIR)
-	$(MAKE) -j8 -C Box/source
+box-release: $(OUTDIR)
+	$(MAKE) -j8 -C Box/source library-release
+
+game-release: $(OUTDIR)
+	$(MAKE) -j8 -C source game-release
+	cp -r assets $(OUTDIR)
+
+#distribution
+dist: export CFLAGS+=-O2 -mtune=native -march=native
+dist: toy-release box-release game-release
 
 $(OUTDIR):
 	mkdir $(OUTDIR)

@@ -10,8 +10,13 @@ OBJ = $(addprefix $(ODIR)/,$(SRC:.c=.o))
 
 OUT=../$(OUTDIR)/airport
 
-all: $(OBJ)
+all: game
+
+game: $(OBJ)
 	$(CC) $(CFLAGS) -o $(OUT) $(OBJ) -Wl,-rpath,. -L../$(OUTDIR) $(LIBS)
+
+game-release: game
+	strip $(OUT)
 
 $(OBJ): | $(ODIR)
 
