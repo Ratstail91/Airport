@@ -1,5 +1,4 @@
 #include "box_engine.h"
-#include "toy_drive_system.h"
 
 int main(int argc, char* argv[]) {
 	//debugging tools
@@ -8,9 +7,10 @@ int main(int argc, char* argv[]) {
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif//win32 && debug
 
-	//the drive system uses a LiteralDictionary, which must be initialized with this
+	//the drive system maps filepaths to "drives", which specifies which folders can be accessed by the scripts
 	Toy_initDriveSystem();
 
+	// Toy_setDrivePath("airport", "assets/airport-demo"); //DEBUG
 	Toy_setDrivePath("scripts", "assets/scripts");
 	Toy_setDrivePath("sprites", "assets/sprites");
 	Toy_setDrivePath("fonts", "assets/fonts");

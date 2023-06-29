@@ -41,6 +41,7 @@ fn alterRemainingSteps(node: opaque, increment: int) {
 fn loadChild(parent: opaque, fname: string) {
 	var child: opaque = loadNode(fname);
 	parent.pushNode(child);
+	child.setNodeLayer(parent.getNodeLayer());
 	return child;
 }
 

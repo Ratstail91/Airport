@@ -103,8 +103,8 @@ fn onDraw(node: opaque) {
 	var originOffsetY: int = node.getNodeRectH() * int scaleY / 2;
 
 	node.drawNode(
-		floor(posX * scaleX) - originOffsetX,
-		floor(posY * scaleY) - originOffsetY,
+		floor(posX * scaleX) - originOffsetX + globalCameraX,
+		floor(posY * scaleY) - originOffsetY + globalCameraY,
 		floor(node.getNodeRectW() * scaleX),
 		floor(node.getNodeRectH() * scaleY)
 	);

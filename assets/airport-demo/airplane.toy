@@ -15,12 +15,12 @@ fn onLoad(node: opaque) {
 fn onInit(node: opaque) {
 	print "onInit() called";
 
-	node.loadNodeTexture("sprites:/little_plane.png");
+	node.loadNodeTexture("airport:/little_plane.png");
 }
 
-fn onStep(node: opaque) {
-	//TODO: move
-}
+// fn onStep(node: opaque) {
+// 	//
+// }
 
 fn onFree(node: opaque) {
 	print "onFree() called";
@@ -30,18 +30,8 @@ fn onFree(node: opaque) {
 
 fn onDraw(node: opaque) {
 //	print "onDraw() called";
-	var parent: opaque = node.getParentNode();
 
-	var px = 0;
-	var py = 0;
-
-	//TODO: get world position
-	if (parent != null) {
-		px = parent.getNodePositionX();
-		py = parent.getNodePositionY();
-	}
-
-	node.drawNode(node.getNodePositionX() + px, node.getNodePositionY() + py, WIDTH, HEIGHT);
+	node.drawNode(node.getNodeWorldPositionX(), node.getNodeWorldPositionY(), WIDTH, HEIGHT);
 }
 
 //event functions

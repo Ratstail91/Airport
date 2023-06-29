@@ -28,14 +28,11 @@
 
 	mapInputEventToKeyDown("character_attack", "space"); //event, keysym
 
-	//TODO: escape to kill the game
-
-
 	//this function must always be called, or the engine won't run
-	initWindow("Airport", 800, 600, false); //TODO: custom FPS setting
+	initWindow("Airport", 800, 600, false);
 
 	//kick off the logic of the scene graph
-	loadRootNode("scripts:/airplane.toy");
+	loadRootNode("airport:/airplane.toy");
 }
 
 //Globals go here

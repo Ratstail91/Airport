@@ -169,12 +169,12 @@ fn onDraw(node: opaque) {
 	var scaleY: float = node.getNodeWorldScaleY();
 
 	//this offset is because the sprite cell for lejana is twice as big as the sprite cell for the floor tiles
-	var originOffsetX: int = node.getNodeRectW() * int scaleX / 4;
-	var originOffsetY: int = node.getNodeRectH() * int scaleY / 2;
+	var originOffsetX: int = player.getNodeRectW() / 2;
+	var originOffsetY: int = player.getNodeRectH();
 
 	node.drawNode(
-		floor(posX * scaleX) - originOffsetX,
-		floor(posY * scaleY) - originOffsetY,
+		floor(posX * scaleX) - originOffsetX + globalCameraX,
+		floor(posY * scaleY) - originOffsetY + globalCameraY,
 		floor(node.getNodeRectW() * scaleX),
 		floor(node.getNodeRectH() * scaleY)
 	);

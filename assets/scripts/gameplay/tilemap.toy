@@ -76,8 +76,8 @@ fn onDraw(node: opaque) {
 
 			//draw to the screen
 			node.drawNode(
-				floor((i * TILE_PIXEL_WIDTH  + posX) * scaleX),
-				floor((j * TILE_PIXEL_HEIGHT + posY) * scaleY),
+				floor((i * TILE_PIXEL_WIDTH  + posX) * scaleX) + globalCameraX,
+				floor((j * TILE_PIXEL_HEIGHT + posY) * scaleY) + globalCameraY,
 				floor(TILE_PIXEL_WIDTH * scaleX),
 				floor(TILE_PIXEL_HEIGHT * scaleY)
 			);
