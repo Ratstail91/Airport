@@ -18,6 +18,10 @@ fn onInit(node: opaque) {
 	node.loadNodeTexture("airport:/little_plane.png");
 }
 
+// fn onUpdate(node: opaque, delta: int) {
+// 	//
+// }
+
 // fn onStep(node: opaque) {
 // 	//
 // }

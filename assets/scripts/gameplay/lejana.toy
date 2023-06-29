@@ -73,6 +73,10 @@ fn onLoad(node: opaque) {
 	node.setNodeScaleY(CAMERA_SCALE_Y);
 }
 
+//fn onUpdate(node: opaque, delta: int) {
+//	//
+//}
+
 fn onStep(node: opaque) {
 	//initial freeze
 	if (enableMovementCounter > 0) {
