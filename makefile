@@ -14,7 +14,7 @@ box: $(OUTDIR)
 
 game: $(OUTDIR)
 	$(MAKE) -j8 -C source
-	cp -r assets $(OUTDIR)
+	ln -f -s ../assets -t $(OUTDIR)
 
 #release
 toy-release: $(OUTDIR)
@@ -28,6 +28,7 @@ game-release: $(OUTDIR)
 	cp -r assets $(OUTDIR)
 
 #distribution
+dist: clean
 dist: export CFLAGS+=-O2 -mtune=native -march=native
 dist: toy-release box-release game-release
 
