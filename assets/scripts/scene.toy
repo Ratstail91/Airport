@@ -22,7 +22,7 @@ fn onInit(node: opaque) {
 	generateLevel(rng);
 
 	//generate the child node to render the map
-	var child: opaque = node.loadChild("scripts:/tilemap/rendernode.toy");
+	var child: opaque = node.loadChild("scripts:/tilemap/renderer.toy");
 
 	child.callNodeFn("setTilemap", tilemap);
 }

@@ -1,3 +1,7 @@
+import standard;
+import engine;
+import node;
+
 //constants for generating maps
 var ROOM_MIN_WIDTH: int const = 4; //minimum safe value 4
 var ROOM_MIN_HEIGHT: int const = 4;
@@ -13,29 +17,23 @@ var CELL_COUNT_Y: int const = 3;
 
 var tilemap: [int] = null;
 
-fn setTilemap(node: opaque, t: [int]) {
-    tilemap = t;
-}
-
 //lifecycle functions
 fn onLoad(node: opaque) {
+	//load the atlas into this node
 	node.loadNodeTexture("sprites:/tileset.png");
-
-	node.setNodeScaleX(CAMERA_SCALE_X);
-	node.setNodeScaleY(CAMERA_SCALE_Y);
 }
 
-fn onDraw(node: opaque) {
-	assert tilemap, "tilemap is null";
+fn setTilemap(node: opaque, t: [int]) {
+	assert t, "provided tilemap is null (in setTilemap)";
 
-	var posX: int const = node.getNodeWorldPositionX();
-	var posY: int const = node.getNodeWorldPositionY();
+	tilemap = t;
 
-	//draw everything at twice the original size
-	var scaleX: float const = node.getNodeWorldScaleX();
-	var scaleY: float const = node.getNodeWorldScaleY();
+	//create a child as a render target
+	var child = node.loadChild("scripts:/tilemap/renderer-child.toy");
+	child.createNodeTexture(CELL_WIDTH * CELL_COUNT_X * TILE_PIXEL_WIDTH, CELL_HEIGHT * CELL_COUNT_Y * TILE_PIXEL_HEIGHT);
+	setRenderTarget(child);
 
-	//draw the tilemap
+	//draw the tilemap to the child
 	for (var j = 0; j < CELL_HEIGHT * CELL_COUNT_Y; j++) {
 		for (var i = 0; i < CELL_WIDTH * CELL_COUNT_X; i++) {
 			//don't render empty tiles
@@ -52,11 +50,22 @@ fn onDraw(node: opaque) {
 
 			//draw to the screen
 			node.drawNode(
-				floor((i * TILE_PIXEL_WIDTH  + posX) * scaleX) + globalCameraX,
-				floor((j * TILE_PIXEL_HEIGHT + posY) * scaleY) + globalCameraY,
-				floor(TILE_PIXEL_WIDTH * scaleX),
-				floor(TILE_PIXEL_HEIGHT * scaleY)
+				(i * TILE_PIXEL_WIDTH),
+				(j * TILE_PIXEL_HEIGHT),
+				TILE_PIXEL_WIDTH,
+				TILE_PIXEL_HEIGHT
 			);
 		}
 	}
+
+	//reset the render target to the screen
+	setRenderTarget(null);
+}
+
+//polyfills
+fn loadChild(parent: opaque, fname: string) {
+	//TODO: add this to the API proper
+	var child: opaque = loadNode(fname);
+	parent.pushNode(child);
+	return child;
 }

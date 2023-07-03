@@ -1,0 +1,28 @@
+//use this dummy child to actually draw to the screen
+import standard;
+import node;
+
+//lifecycle functions
+fn onLoad(node: opaque) {
+	node.setNodeScaleX(CAMERA_SCALE_X);
+	node.setNodeScaleY(CAMERA_SCALE_Y);
+}
+
+fn onDraw(node: opaque) {
+	var posX: int const = node.getNodeWorldPositionX();
+	var posY: int const = node.getNodeWorldPositionY();
+
+	//draw everything at twice the original size
+	var scaleX: float const = node.getNodeWorldScaleX();
+	var scaleY: float const = node.getNodeWorldScaleY();
+
+	var width: int const = node.getNodeRectW();
+	var height: int const = node.getNodeRectH();
+
+	node.drawNode(
+		floor(posX * scaleX) + globalCameraX,
+		floor(posY * scaleY) + globalCameraY,
+		floor(width * scaleX),
+		floor(height * scaleY)
+	);
+}
