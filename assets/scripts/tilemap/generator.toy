@@ -33,20 +33,6 @@ var themes: [string] const = [
 ];
 
 
-//constants for generating maps
-var ROOM_MIN_WIDTH: int const = 4; //minimum safe value 4
-var ROOM_MIN_HEIGHT: int const = 4;
-
-var ROOM_MAX_WIDTH: int const = 12;
-var ROOM_MAX_HEIGHT: int const = 12;
-
-var CELL_WIDTH: int const = 16; //minimum safe value ROOM_MAX_* + 4
-var CELL_HEIGHT: int const = 16;
-
-var CELL_COUNT_X: int const = 3;
-var CELL_COUNT_Y: int const = 3;
-
-
 //raw string data
 var tilemap: [int] = null;
 

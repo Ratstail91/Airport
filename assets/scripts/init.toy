@@ -1,16 +1,37 @@
 //Globals go here
+
+
+//constants for generating maps
+var ROOM_MIN_WIDTH: int const = 4; //minimum safe value 4
+var ROOM_MIN_HEIGHT: int const = 4;
+
+var ROOM_MAX_WIDTH: int const = 12;
+var ROOM_MAX_HEIGHT: int const = 12;
+
+var CELL_WIDTH: int const = 16; //minimum safe value ROOM_MAX_* + 4
+var CELL_HEIGHT: int const = 16;
+
+var CELL_COUNT_X: int const = 3;
+var CELL_COUNT_Y: int const = 3;
+
+
+//constants for rendering tiles
 var TILE_PIXEL_WIDTH: int const = 16;
 var TILE_PIXEL_HEIGHT: int const = 16;
 
+
+//camera controls
 var CAMERA_SCREEN_W: int const = 1080;
 var CAMERA_SCREEN_H: int const = 720;
 
 var CAMERA_SCALE_X: float const = 1.0;
 var CAMERA_SCALE_Y: float const = 1.0;
 
-//this is a very odd pattern...
+
+//this is a very bad habit...
 var globalCameraX: int = 0;
 var globalCameraY: int = 0;
+
 
 //A quirk of the setup is that anything defined in the root of `init.toy` becomes a global object
 //To resolve that, the configuration is inside a block scope
