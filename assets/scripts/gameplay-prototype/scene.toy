@@ -36,9 +36,9 @@ fn onFree(node: opaque) {
 	}
 }
 
-//fn onUpdate(node: opaque, delta: int) {
-//	//
-//}
+// fn onUpdate(node: opaque, delta: int) {
+// 	print "delta: " + string delta;
+// }
 
 //fn onStep(node: opaque) {
 //	//

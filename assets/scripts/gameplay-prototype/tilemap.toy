@@ -3,8 +3,10 @@ import node;
 
 //constants mapped to the given file "tileset.png"
 var tileset: [string : [int]] const = [
+	"empty": [-1. -1, -1],
+
 	"pillar": [0, 0, 0],
-	
+
 	"floor-0": [0, 1, 1],
 	"floor-1": [1, 1, 1],
 	"floor-2": [2, 1, 1],

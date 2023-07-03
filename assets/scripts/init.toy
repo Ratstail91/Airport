@@ -2,14 +2,11 @@
 var TILE_PIXEL_WIDTH: int const = 16;
 var TILE_PIXEL_HEIGHT: int const = 16;
 
-var MAP_GRID_WIDTH: int const = 16;
-var MAP_GRID_HEIGHT: int const = 16;
+var CAMERA_SCREEN_W: int const = 1080;
+var CAMERA_SCREEN_H: int const = 720;
 
-var CAMERA_SCREEN_W: int const = 800;
-var CAMERA_SCREEN_H: int const = 600;
-
-var CAMERA_SCALE_X: float const = 2.0;
-var CAMERA_SCALE_Y: float const = 2.0;
+var CAMERA_SCALE_X: float const = 1.0;
+var CAMERA_SCALE_Y: float const = 1.0;
 
 //this is a very odd pattern...
 var globalCameraX: int = 0;
@@ -53,5 +50,5 @@ var globalCameraY: int = 0;
 	initWindow("Skylands", CAMERA_SCREEN_W, CAMERA_SCREEN_H, false); //TODO: custom FPS setting
 
 	//kick off the logic of the scene graph
-	loadRootNode("scripts:/gameplay/scene.toy");
+	loadRootNode("scripts:/scene.toy");
 }

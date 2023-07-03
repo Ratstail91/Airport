@@ -1,0 +1,188 @@
+import standard;
+import random;
+
+//constants mapped to the given atlas file "tileset.png"
+var tileset: [string : [int]] const = [
+	"empty": [-1, -1, -1],
+
+	"temple-pillar": [0, 0, 0],
+
+	"temple-floor-0": [0, 1, 1],
+	"temple-floor-1": [1, 1, 1],
+	"temple-floor-2": [2, 1, 1],
+	"temple-floor-3": [3, 1, 1],
+
+	"temple-wall-t": [0, 2, 0],
+	"temple-wall-b": [1, 2, 0],
+	"temple-wall-l": [2, 2, 0],
+	"temple-wall-r": [3, 2, 0],
+
+	"temple-corner-tl": [0, 3, 0],
+	"temple-corner-tr": [1, 3, 0],
+	"temple-corner-bl": [2, 3, 0],
+	"temple-corner-br": [3, 3, 0],
+
+	"temple-edge-tl": [0, 4, 0],
+	"temple-edge-tr": [1, 4, 0],
+	"temple-edge-bl": [2, 4, 0],
+	"temple-edge-br": [3, 4, 0]
+];
+
+var themes: [string] const = [
+	"temple"
+];
+
+
+//constants for generating maps
+var ROOM_MIN_WIDTH: int const = 4; //minimum safe value 4
+var ROOM_MIN_HEIGHT: int const = 4;
+
+var ROOM_MAX_WIDTH: int const = 12;
+var ROOM_MAX_HEIGHT: int const = 12;
+
+var CELL_WIDTH: int const = 16; //minimum safe value ROOM_MAX_* + 4
+var CELL_HEIGHT: int const = 16;
+
+var CELL_COUNT_X: int const = 3;
+var CELL_COUNT_Y: int const = 3;
+
+
+//raw string data
+var tilemap: [int] = null;
+
+
+//public functions
+fn generateTilemapData(rng: opaque) {
+	//generate a grid filled with only empty tiles, as a starting point
+	tilemap = [];
+
+	for (var j: int = 0; j < CELL_COUNT_Y * CELL_HEIGHT; j++) {
+		for (var i: int = 0; i < CELL_COUNT_X * CELL_WIDTH; i++) {
+			tilemap.push(-1); //x
+			tilemap.push(-1); //y
+			tilemap.push(-1); //collision
+		}
+	}
+
+	//generate the metadata of each room
+	var data = [];
+
+	for (var i: int = 0; i < CELL_COUNT_X; i++) {
+
+		var inner = []; //inner decl
+
+		for (var j: int = 0; j < CELL_COUNT_Y; j++) {
+			var metadata = generateRoomMetadata(rng,
+				i * CELL_WIDTH + 1,
+				j * CELL_HEIGHT + 1,
+				CELL_WIDTH - 2,
+				CELL_HEIGHT - 2
+			);
+
+			inner.push(metadata); //BUG: see Toy #70
+		}
+
+		data.push(inner);
+	}
+
+	//etch each tile string into the tilemap
+	for (var j: int = 0; j < CELL_COUNT_Y; j++) {
+		for (var i: int = 0; i < CELL_COUNT_X; i++) {
+			etchRoom(rng, data[i][j]);
+		}
+	}
+
+	//TODO: etch corridors
+}
+
+fn generateRoomMetadata(rng: opaque, left: int, top: int, width: int, height: int) {
+	//I expected this line to break, but I must've fixed calls within indexes at some point
+	var theme: string = themes[rng.generateRandomNumber() % themes.length()];
+
+	var x: int = rng.generateRandomNumber() % (ROOM_MAX_WIDTH - width) + left;
+	var y: int = rng.generateRandomNumber() % (ROOM_MAX_HEIGHT - height) + top;
+	var w: int = rng.generateRandomNumber() % (ROOM_MAX_WIDTH - ROOM_MIN_WIDTH) + ROOM_MIN_WIDTH;
+	var h: int = rng.generateRandomNumber() % (ROOM_MAX_HEIGHT - ROOM_MIN_HEIGHT) + ROOM_MIN_HEIGHT;
+
+	var doorX: int = x + 1 + rng.generateRandomNumber() % (w - 2);
+	var doorY: int = y + 1 + rng.generateRandomNumber() % (h - 2);
+
+	var metadata: [string: any] = [
+		"theme" : theme,
+		"x" : x,
+		"y" : y,
+		"w" : w,
+		"h" : h,
+		"doorX": doorX,
+		"doorY": doorY
+	];
+
+	return metadata;
+}
+
+fn etchRoom(rng: opaque, metadata: [string: any]) {
+	//NOTE: using unrolled assignments in this function for speed reasons
+
+	var theme: string = metadata["theme"];
+	var x: int = metadata["x"];
+	var y: int = metadata["y"];
+	var w: int = metadata["w"];
+	var h: int = metadata["h"];
+
+	//etch the floor-space (1-tile margin)
+	for (var j: int = y + 1; j < y + h - 1; j++) {
+		for (var i: int = x + 1; i < x + w - 1; i++) {
+			var floorIndex = rng.generateRandomNumber() % 4; //NOTE: there might not always be only 4 floor sprites
+			tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 0] = tileset[theme + "-floor-" + string floorIndex][0];
+			tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 1] = tileset[theme + "-floor-" + string floorIndex][1];
+			tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 2] = tileset[theme + "-floor-" + string floorIndex][2];
+		}
+	}
+
+	//create the string constants here, so refstring can do it's job
+	var T_WALL: [int] const = tileset[ theme + "-wall-t" ];
+	var B_WALL: [int] const = tileset[ theme + "-wall-b" ];
+	var L_WALL: [int] const = tileset[ theme + "-wall-l" ];
+	var R_WALL: [int] const = tileset[ theme + "-wall-r" ];
+
+	//etch the walls of each room
+	for (var i: int = x; i < x + w; i++) {
+		tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 0] = T_WALL[0];
+		tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 1] = T_WALL[1];
+		tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 2] = T_WALL[2];
+
+		tilemap[(h + y - 1) * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 0] = B_WALL[0];
+		tilemap[(h + y - 1) * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 1] = B_WALL[1];
+		tilemap[(h + y - 1) * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 2] = B_WALL[2];
+	}
+
+	for (var j: int = y; j < y + h; j++) {
+		tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 0] = L_WALL[0];
+		tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 1] = L_WALL[1];
+		tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 2] = L_WALL[2];
+
+		tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + (x + w - 1) * 3 + 0] = R_WALL[0];
+		tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + (x + w - 1) * 3 + 1] = R_WALL[1];
+		tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + (x + w - 1) * 3 + 2] = R_WALL[2];
+	}
+
+	//etch the corners
+	tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 0] = tileset[ theme + "-corner-tl" ][0];
+	tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 1] = tileset[ theme + "-corner-tl" ][1];
+	tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 2] = tileset[ theme + "-corner-tl" ][2];
+
+	tilemap[(h + y - 1) * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 0] = tileset[ theme + "-corner-bl" ][0];
+	tilemap[(h + y - 1) * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 1] = tileset[ theme + "-corner-bl" ][1];
+	tilemap[(h + y - 1) * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 2] = tileset[ theme + "-corner-bl" ][2];
+
+
+	tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + (x + w - 1) * 3 + 0] = tileset[ theme + "-corner-tr" ][0];
+	tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + (x + w - 1) * 3 + 1] = tileset[ theme + "-corner-tr" ][1];
+	tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + (x + w - 1) * 3 + 2] = tileset[ theme + "-corner-tr" ][2];
+
+
+	tilemap[(h + y - 1) * CELL_WIDTH * CELL_COUNT_X * 3 + (x + w - 1) * 3 + 0] = tileset[ theme + "-corner-br" ][0];
+	tilemap[(h + y - 1) * CELL_WIDTH * CELL_COUNT_X * 3 + (x + w - 1) * 3 + 1] = tileset[ theme + "-corner-br" ][1];
+	tilemap[(h + y - 1) * CELL_WIDTH * CELL_COUNT_X * 3 + (x + w - 1) * 3 + 2] = tileset[ theme + "-corner-br" ][2];
+}
+

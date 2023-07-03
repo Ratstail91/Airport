@@ -1,0 +1,66 @@
+import standard;
+import random;
+import node;
+
+
+//persistent members of the scene node
+var rng: opaque = null;
+
+//map data (interleaved)
+var tilemap: [int] = null;
+
+
+//lifetime functions
+fn onInit(node: opaque) {
+	//init the rng with a seed (random)
+	if (rng != null) {
+		rng.freeRandomGenerator();
+	}
+	rng = createRandomGenerator(clock().hash());
+
+	//generate the level, filling out the data
+	generateLevel(rng);
+
+	//generate the child node to render the map
+	var child: opaque = node.loadChild("scripts:/tilemap/rendernode.toy");
+
+	child.callNodeFn("setTilemap", tilemap);
+}
+
+fn onFree(node: opaque) {
+	if (rng != null) {
+		rng.freeRandomGenerator();
+	}
+}
+
+
+//scene loading
+fn generateLevel(rng: opaque) {
+	import runner;
+
+	//load and run the generator script
+	var generatorScript: opaque = loadScript("scripts:/tilemap/generator.toy");
+	generatorScript.runScript();
+
+	//call the functions
+	generatorScript.callScriptFn("generateTilemapData", rng);
+
+	//get the resulting blobs of data for processing
+	tilemap = generatorScript.getScriptVar("tilemap");
+
+	//free
+	generatorScript.freeScript();
+}
+
+
+
+
+
+
+//polyfills
+fn loadChild(parent: opaque, fname: string) {
+	//TODO: add this to the API proper
+	var child: opaque = loadNode(fname);
+	parent.pushNode(child);
+	return child;
+}
