@@ -1,75 +1,36 @@
-//Globals go here
+import standard;
+import engine;
+import input;
 
 
-//constants for generating maps
-var ROOM_MIN_WIDTH: int const = 4; //minimum safe value 4
-var ROOM_MIN_HEIGHT: int const = 4;
+//input settings, mapping SDL2's virtual keys to event names
+mapInputEventToKeyDown("character_up",    "w"); //event, keysym
+mapInputEventToKeyDown("character_left",  "a"); //event, keysym
+mapInputEventToKeyDown("character_down",  "s"); //event, keysym
+mapInputEventToKeyDown("character_right", "d"); //event, keysym
 
-var ROOM_MAX_WIDTH: int const = 12;
-var ROOM_MAX_HEIGHT: int const = 12;
+mapInputEventToKeyUp("character_up",    "w"); //event, keysym
+mapInputEventToKeyUp("character_left",  "a"); //event, keysym
+mapInputEventToKeyUp("character_down",  "s"); //event, keysym
+mapInputEventToKeyUp("character_right", "d"); //event, keysym
 
-var CELL_WIDTH: int const = 16; //minimum safe value ROOM_MAX_* + 4
-var CELL_HEIGHT: int const = 16;
+mapInputEventToKeyDown("character_up",    "up"); //event, keysym
+mapInputEventToKeyDown("character_left",  "left"); //event, keysym
+mapInputEventToKeyDown("character_down",  "down"); //event, keysym
+mapInputEventToKeyDown("character_right", "right"); //event, keysym
 
-var CELL_COUNT_X: int const = 3;
-var CELL_COUNT_Y: int const = 3;
+mapInputEventToKeyUp("character_up",    "up"); //event, keysym
+mapInputEventToKeyUp("character_left",  "left"); //event, keysym
+mapInputEventToKeyUp("character_down",  "down"); //event, keysym
+mapInputEventToKeyUp("character_right", "right"); //event, keysym
 
+mapInputEventToKeyDown("character_attack", "space"); //event, keysym
 
-//constants for rendering tiles
-var TILE_PIXEL_WIDTH: int const = 16;
-var TILE_PIXEL_HEIGHT: int const = 16;
-
-
-//camera controls
-var CAMERA_SCREEN_W: int const = 1080;
-var CAMERA_SCREEN_H: int const = 720;
-
-var CAMERA_SCALE_X: float const = 1.0;
-var CAMERA_SCALE_Y: float const = 1.0;
-
-
-//this is a very bad habit...
-var globalCameraX: int = 0;
-var globalCameraY: int = 0;
+//TODO: escape to kill the game
 
 
-//A quirk of the setup is that anything defined in the root of `init.toy` becomes a global object
-//To resolve that, the configuration is inside a block scope
-{
-	import standard;
-	import engine;
-	import input;
+//this function must always be called, or the engine won't run
+initWindow("Skylands", 1080, 720, false); //TODO: custom FPS setting
 
-
-	//input settings, mapping SDL2's virtual keys to event names
-	mapInputEventToKeyDown("character_up",    "w"); //event, keysym
-	mapInputEventToKeyDown("character_left",  "a"); //event, keysym
-	mapInputEventToKeyDown("character_down",  "s"); //event, keysym
-	mapInputEventToKeyDown("character_right", "d"); //event, keysym
-
-	mapInputEventToKeyUp("character_up",    "w"); //event, keysym
-	mapInputEventToKeyUp("character_left",  "a"); //event, keysym
-	mapInputEventToKeyUp("character_down",  "s"); //event, keysym
-	mapInputEventToKeyUp("character_right", "d"); //event, keysym
-
-	mapInputEventToKeyDown("character_up",    "up"); //event, keysym
-	mapInputEventToKeyDown("character_left",  "left"); //event, keysym
-	mapInputEventToKeyDown("character_down",  "down"); //event, keysym
-	mapInputEventToKeyDown("character_right", "right"); //event, keysym
-
-	mapInputEventToKeyUp("character_up",    "up"); //event, keysym
-	mapInputEventToKeyUp("character_left",  "left"); //event, keysym
-	mapInputEventToKeyUp("character_down",  "down"); //event, keysym
-	mapInputEventToKeyUp("character_right", "right"); //event, keysym
-
-	mapInputEventToKeyDown("character_attack", "space"); //event, keysym
-
-	//TODO: escape to kill the game
-
-
-	//this function must always be called, or the engine won't run
-	initWindow("Skylands", CAMERA_SCREEN_W, CAMERA_SCREEN_H, false); //TODO: custom FPS setting
-
-	//kick off the logic of the scene graph
-	loadRootNode("scripts:/scene.toy");
-}
+//kick off the logic of the scene graph
+loadRootNode("scripts:/scene.toy");
