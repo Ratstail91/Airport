@@ -3,7 +3,7 @@ import random;
 
 //constants mapped to the given atlas file "tileset.png"
 var tileset: [string : [int]] const = [
-	"empty": [-1, -1, -1],
+	"empty": [-1, -1, 0],
 
 	"temple-pillar": [0, 0, 0],
 
@@ -65,7 +65,7 @@ fn generateTilemapData(rng: opaque) {
 	}
 
 	//generate the metadata of each room
-	var data = [];
+	var roomData = [];
 
 	for (var i: int = 0; i < CELL_COUNT_X; i++) {
 
@@ -82,17 +82,21 @@ fn generateTilemapData(rng: opaque) {
 			inner.push(metadata); //BUG: see Toy #70
 		}
 
-		data.push(inner);
+		roomData.push(inner);
 	}
+
+	//generate corridor metadata
+	var corridorData: any = generateCorridorData(rng);
 
 	//etch each tile string into the tilemap
 	for (var j: int = 0; j < CELL_COUNT_Y; j++) {
 		for (var i: int = 0; i < CELL_COUNT_X; i++) {
-			etchRoom(rng, data[i][j]);
+			etchRoom(rng, roomData[i][j]);
 		}
 	}
 
-	//TODO: etch corridors
+	//etch the corridors
+	etchCorridors(roomData, corridorData, rng);
 }
 
 fn generateRoomMetadata(rng: opaque, left: int, top: int, width: int, height: int) {
@@ -186,3 +190,226 @@ fn etchRoom(rng: opaque, metadata: [string: any]) {
 	tilemap[(h + y - 1) * CELL_WIDTH * CELL_COUNT_X * 3 + (x + w - 1) * 3 + 2] = tileset[ theme + "-corner-br" ][2];
 }
 
+fn generateCorridorData(rng: opaque) {
+	var result = [];
+
+	//generate the corridor graph
+	for (var i: int = 0; i < CELL_COUNT_X; i++) {
+		var inner = []; //inner decl
+		for (var j: int = 0; j < CELL_COUNT_Y; j++) {
+			inner.push([:]);
+		}
+		result.push(inner);
+	}
+
+	//while the corridors are incomplete
+	while (!checkCorridorsValid(result)) {
+		//randomly link two neighbouring rooms that aren't already linked
+		result = randomlyLinkTwoRooms(rng, result);
+	}
+
+	//finally
+	return result;
+}
+
+fn checkCorridorsValid(corridors) {
+	//mark all rooms connected to [0, 0]
+	fn markRoomAndFlood(x: int, y: int) {
+		//base case
+		if (corridors[x][y]["marked"] == true) {
+			return;
+		}
+
+		//this room is now marked
+		corridors[x][y]["marked"] = true;
+
+		//flood to neighbouring rooms
+		if (corridors[x][y]["-1,0"] == true) {
+			markRoomAndFlood(x-1, y);
+		}
+
+		if (corridors[x][y]["+1,0"] == true) {
+			markRoomAndFlood(x+1, y);
+		}
+
+		if (corridors[x][y]["0,-1"] == true) {
+			markRoomAndFlood(x, y-1);
+		}
+
+		if (corridors[x][y]["0,+1"] == true) {
+			markRoomAndFlood(x, y+1);
+		}
+	}
+
+	//kickoff
+	markRoomAndFlood(0, 0);
+
+	//look for any unmarked rooms
+	for (var i: int = 0; i < CELL_COUNT_X; i++) {
+		for (var j: int = 0; j < CELL_COUNT_Y; j++) {
+			if (corridors[i][j]["marked"] != true) {
+				return false;
+			}
+		}
+	}
+
+	//all rooms are connected
+	return true;
+}
+
+fn randomlyLinkTwoRooms(rng: opaque, corridors) {
+	//the number of corridors
+	var count: int = CELL_COUNT_X * (CELL_COUNT_Y - 1) + (CELL_COUNT_X - 1) * CELL_COUNT_Y;
+
+	//find a random corridor index
+	for (var index: int = rng.generateRandomNumber() % count; /* EMPTY */ ; index = (index + 1) % count) {
+		//determine where the corridor is
+		if (index < floor(count / 2)) {
+			var x: int = floor(index % (CELL_COUNT_X - 1));
+			var y: int = floor(index / (CELL_COUNT_Y - 1));
+
+			//left-right
+			if (corridors[x][y]["+1,0"] == true || corridors[x+1][y]["-1,0"] == true) {
+				continue;
+			}
+
+			corridors[x][y]["+1,0"] = true;
+			corridors[x+1][y]["-1,0"] = true;
+			break;
+		}
+		else {
+			var idx = index - floor(count / 2); //adjust
+			var x: int = floor(idx / (CELL_COUNT_X - 1));
+			var y: int = floor(idx % (CELL_COUNT_Y - 1));
+
+			//top-bottom
+			if (corridors[x][y]["0,+1"] == true || corridors[x][y+1]["0,-1"] == true) {
+				continue;
+			}
+
+			corridors[x][y]["0,+1"] = true;
+			corridors[x][y+1]["0,-1"] = true;
+			break;
+		}
+	}
+
+	//
+	return corridors;
+}
+
+fn etchCorridors(roomData, corridorData, rng) {
+	//for each room that has a corridor, etch that corridor
+	for (var i: int = 0; i < CELL_COUNT_X; i++) {
+		for (var j: int = 0; j < CELL_COUNT_Y; j++) {
+			if (corridorData[i][j]["+1,0"] == true) {
+				//mark me and my linked room as false, then etch our connection
+				corridorData[i][j]["+1,0"] = false;
+				corridorData[i+1][j]["-1,0"] = false;
+
+				etchOneCorridor(
+					roomData[i][j]["doorX"],
+					roomData[i][j]["doorY"],
+					roomData[i+1][j]["doorX"],
+					roomData[i+1][j]["doorY"],
+					roomData[i][j]["theme"],
+					rng
+				);
+			}
+
+			if (corridorData[i][j]["-1,0"] == true) {
+				//mark me and my linked room as false, then etch our connection
+				corridorData[i][j]["-1,0"] = false;
+				corridorData[i-1][j]["+1,0"] = false;
+
+				etchOneCorridor(
+					roomData[i][j]["doorX"],
+					roomData[i][j]["doorY"],
+					roomData[i-1][j]["doorX"],
+					roomData[i-1][j]["doorY"],
+					roomData[i][j]["theme"],
+					rng
+				);
+			}
+
+			if (corridorData[i][j]["0,+1"] == true) {
+				//mark me and my linked room as false, then etch our connection
+				corridorData[i][j]["0,+1"] = false;
+				corridorData[i][j+1]["0,-1"] = false;
+
+				etchOneCorridor(
+					roomData[i][j]["doorX"],
+					roomData[i][j]["doorY"],
+					roomData[i][j+1]["doorX"],
+					roomData[i][j+1]["doorY"],
+					roomData[i][j]["theme"],
+					rng
+				);
+			}
+
+			if (corridorData[i][j]["0,-1"] == true) {
+				//mark me and my linked room as false, then etch our connection
+				corridorData[i][j]["0,-1"] = false;
+				corridorData[i][j-1]["0,+1"] = false;
+
+				etchOneCorridor(
+					roomData[i][j]["doorX"],
+					roomData[i][j]["doorY"],
+					roomData[i][j-1]["doorX"],
+					roomData[i][j-1]["doorY"],
+					roomData[i][j]["theme"],
+					rng
+				);
+			}
+		}
+	}
+}
+
+fn etchOneCorridor(x1, y1, x2, y2, theme, rng) {
+	//determine longest path, with a deliberate kink in the middle
+	if (x2 - x1 > y2 - y1) {
+		//determine half-length
+		var xdir = floor((x2 - x1) / 2);
+
+		//etch
+		etchLine(x1, y1, xdir, 0, theme, rng);
+		etchLine(x1 + xdir, y1, 0, y2-y1, theme, rng);
+		etchLine(x1 + xdir, y2, (x2 - x1) - xdir, 0, theme, rng);
+	}
+	else {
+		//determine half-length
+		var ydir = floor((y2 - y1) / 2);
+
+		//etch
+		etchLine(x1, y1, 0, ydir, theme, rng);
+		etchLine(x1, y1 + ydir, x2-x1, 0, theme, rng);
+		etchLine(x2, y1 + ydir, 0, (y2 - y1) - ydir, theme, rng);
+	}
+}
+
+fn etchLine(x: int, y: int, xLength: int, yLength: int, theme: string, rng: opaque) {
+	//lengths can be negative, so handle it
+	while (abs(xLength) > 0 || abs(yLength) > 0) {
+		//etch floor at this position
+		var floorIndex = rng.generateRandomNumber() % 4; //NOTE: there might not always be only 4 floor sprites
+		tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 0] = tileset[theme + "-floor-" + string floorIndex][0];
+		tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 1] = tileset[theme + "-floor-" + string floorIndex][1];
+		tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 2] = tileset[theme + "-floor-" + string floorIndex][2];
+
+		//tick down
+		if (abs(xLength) > 0) {
+			xLength -= sign(xLength);
+			x += sign(xLength);
+		}
+
+		if (abs(yLength) > 0) {
+			yLength -= sign(yLength);
+			y += sign(yLength);
+		}
+	}
+}
+
+//polyfill
+fn sign(x) {
+	if (x > 0) return 1;
+	return -1;
+}
