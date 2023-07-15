@@ -29,14 +29,18 @@ Make sure the program can see the `assets` folder (symbolic links can help), and
 
 # License
 
-This source code is covered by the zlib license (see [LICENSE.md](LICENSE.md)).
+The source code for this project, not including the contents of Box, is covered by the zlib license (see [LICENSE.md](LICENSE.md)).
+
+The art assets are covered by creative commons license CC BY Evan Hartshorn.
+
+The font assets are used with permission, links to the relevant licenses are provided below.
 
 ## Credits
 
 * Art - Evan Hartshorn
 * Coding - Kayne Ruse
-* Font - Ancient God (Koczman B�lint)
-* Font - AlphaBeta (Brian Kent)
+* Font - Ancient God (Koczman B�lint) - https://www.dafont.com/ancient-god.font
+* Font - AlphaBeta (Brian Kent) - https://www.fontpalace.com/font-download/alpha-beta/
 
 # Patrons via Patreon
 
