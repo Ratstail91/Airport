@@ -1,14 +1,20 @@
 import standard;
 import random;
+import runner;
 import node;
 
 
 //persistent members of the scene node
 var rng: opaque = null;
 
-//map data (interleaved)
+//map data
 var tilemap: [int] = null;
+var metadata: [[[string: any]]] = null;
+var mapGridWidth: int = null;
+var mapGridHeight: int = null;
 
+//entities
+var player: opaque = null;
 
 //lifetime functions
 fn onInit(node: opaque) {
@@ -18,13 +24,27 @@ fn onInit(node: opaque) {
 	}
 	rng = createRandomGenerator(clock().hash());
 
-	//generate the level, filling out the data
-	generateLevel(rng);
+
+	//generate the level, filling out the entity data
+	node.generateLevel(rng);
 
 	//generate the child node to render the map
-	var child: opaque = node.loadChild("scripts:/tilemap/renderer.toy");
+	var renderer: opaque = node.loadChild("scripts:/tilemap/renderer.toy");
+	renderer.callNodeFn("setTilemap", tilemap);
+}
 
-	child.callNodeFn("setTilemap", tilemap);
+fn onStep(node: opaque) {
+	for (var i: int = 0; i < node.getChildNodeCount(); i++) {
+		var child = node.getChildNode(i);
+
+		if (child != null) {
+			if (child.callNodeFn("isRequestingFree") == true) {
+				node.freeChildNode(i);
+			}
+		}
+	}
+
+	node.sortChildrenNode(depthComparator);
 }
 
 fn onFree(node: opaque) {
@@ -35,9 +55,7 @@ fn onFree(node: opaque) {
 
 
 //scene loading
-fn generateLevel(rng: opaque) {
-	import runner;
-
+fn generateLevel(node: opaque, rng: opaque) {
 	//load and run the generator script
 	var generatorScript: opaque = loadScript("scripts:/tilemap/generator.toy");
 	generatorScript.runScript();
@@ -47,14 +65,114 @@ fn generateLevel(rng: opaque) {
 
 	//get the resulting blobs of data for processing
 	tilemap = generatorScript.getScriptVar("tilemap");
+	metadata = generatorScript.getScriptVar("metadata");
+	mapGridWidth = generatorScript.getScriptVar("MAP_GRID_WIDTH"); //cache these for lookups
+	mapGridHeight = generatorScript.getScriptVar("MAP_GRID_HEIGHT");
 
-	//free
+	//free the generator
 	generatorScript.freeScript();
+
+
+	//spawn && position the player
+	player = node.loadChild("scripts:/entities/player.toy");
+
+	var w: int const = metadata.length();
+	var h: int const = metadata[0].length();
+
+	var room = metadata[rng.generateRandomNumber() % w][rng.generateRandomNumber() % h];
+
+	player.callNodeFn("setGridPosition", room["doorX"], room["doorY"]);
+
+
+	//spawn && position the enemies
+	for (var i: int = 0; i < 20; /* EMPTY */) {
+		//get random position within a room random room
+		var room = metadata[rng.generateRandomNumber() % w][rng.generateRandomNumber() % h];
+
+		var x = rng.generateRandomNumber() % room["w"];
+		var y = rng.generateRandomNumber() % room["h"];
+
+		if (!node.getWalkableAt(room["x"] + x, room["y"] + y)) {
+			continue;
+		}
+
+		var drone: opaque = node.loadChild("scripts:/entities/drone.toy");
+		drone.callNodeFn("setGridPosition", room["x"] + x, room["y"] + y);
+
+		//increment here
+		i++;
+	}
 }
 
 
+//to allow the game to progress
+fn runAI(node: opaque) {
+	//player attacking the drones
+	var attackPositionX: int = player.callNodeFn("getAttackPositionX");
+	var attackPositionY: int = player.callNodeFn("getAttackPositionY");
+
+	//if the player is attacking...
+	if (attackPositionX != null && attackPositionY != null) {
+		//for each child node
+		for (var i = 0; i < node.getChildNodeCount(); i++) {
+			var child = node.getChildNode(i);
+
+			//find the target
+			if (child.callNodeFn("getGridPositionX") == attackPositionX && child.callNodeFn("getGridPositionY") == attackPositionY) {
+				child.callNodeFn("applyDamage", 1); //just 1 damage for now
+			}
+		}
+	}
+
+	//run normal routines
+	for (var i: int = 0; i < node.getChildNodeCount(); i++) {
+		node.getChildNode(i).callNodeFn("runAI", rng);
+	}
+}
 
 
+//for collisions
+fn getWalkableAt(node: opaque, x: int, y: int) {
+	if (tilemap == null || x == null || y == null) {
+		return false;
+	}
+
+	//entities
+	if (x == player.callNodeFn("getGridPositionX") && y == player.callNodeFn("getGridPositionY")) {
+		return false;
+	}
+
+	for (var i = 0; i < node.getChildNodeCount(); i++) {
+		var child = node.getChildNode(i);
+
+		if (x == child.callNodeFn("getGridPositionX") && y == child.callNodeFn("getGridPositionY")) {
+			return false;
+		}
+	}
+
+	//default
+	return tilemap[y * mapGridWidth * 3 + x * 3 + 2] == 1; // 1 = walkable
+}
+
+
+//for sorting by depth
+fn depthComparator(lhs: opaque, rhs: opaque) {
+	var lhsPositionY = lhs.getNodeWorldPositionY();
+	var rhsPositionY = rhs.getNodeWorldPositionY();
+
+	if (lhsPositionY == null || rhsPositionY == null) { //BUGFIX: children without that function
+		return true;
+	}
+
+	if (lhsPositionY == rhsPositionY) { //BUGFIX: prevent z-fighting
+		var lhsPositionX = lhs.getNodeWorldPositionX();
+		var rhsPositionX = rhs.getNodeWorldPositionX();
+
+		return lhsPositionX < rhsPositionX;
+	}
+
+	return lhsPositionY < rhsPositionY;
+}
 
 
 //polyfills

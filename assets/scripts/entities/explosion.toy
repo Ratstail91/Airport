@@ -1,0 +1,79 @@
+import standard;
+import node;
+
+
+//constants
+var TILE_PIXEL_WIDTH: int const = 16;
+var TILE_PIXEL_HEIGHT: int const = 16;
+
+
+//variables
+var gridPositionX: int = null;
+var gridPositionY: int = null;
+
+//polyfills - animating different cycles on one image
+var walkAnimationCounter: int = 0;
+var ticksToDeath: int = 4 * 8 - 1;
+
+
+//accessors & mutators
+fn setGridPosition(node: opaque, x: int, y: int) {
+	gridPositionX = x;
+	gridPositionY = y;
+
+	node.setNodePositionX(floor( gridPositionX * TILE_PIXEL_WIDTH / node.getNodeScaleX() ));
+	node.setNodePositionY(floor( gridPositionY * TILE_PIXEL_HEIGHT / node.getNodeScaleY() ));
+}
+
+fn getGridPositionX(node: opaque) {
+	return gridPositionX;
+}
+
+fn getGridPositionY(node: opaque) {
+	return gridPositionY;
+}
+
+fn isRequestingFree(node: opaque) {
+	return ticksToDeath <= 0;
+}
+
+
+//lifecycle functions
+fn onLoad(node: opaque) {
+	node.loadNodeTexture("sprites:/explosion.png");
+
+	node.setNodeRect(0, 0, 32, 32);
+	node.setNodeFrames(8);
+}
+
+fn onStep(node: opaque) {
+	if (++walkAnimationCounter >= 4) {
+		node.incrementCurrentNodeFrame();
+		walkAnimationCounter = 0;
+	}
+	ticksToDeath--;
+}
+
+fn onFree(node: opaque) {
+	node.freeNodeTexture();
+}
+
+fn onDraw(node: opaque) {
+	var posX: int = node.getNodeWorldPositionX();
+	var posY: int = node.getNodeWorldPositionY();
+
+	var scaleX: float = node.getNodeWorldScaleX();
+	var scaleY: float = node.getNodeWorldScaleY();
+
+	//this offset is because the sprite cell for lejana is twice as big as the sprite cell for the floor tiles
+	var originOffsetX: int = node.getNodeRectW() * int scaleX / 4;
+	var originOffsetY: int = node.getNodeRectH() * int scaleY / 2;
+
+	node.drawNode(
+		floor(posX * scaleX) - originOffsetX /* + globalCameraX */,
+		floor(posY * scaleY) - originOffsetY /* + globalCameraY */,
+		floor(node.getNodeRectW() * scaleX),
+		floor(node.getNodeRectH() * scaleY)
+	);
+}
+

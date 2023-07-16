@@ -3,7 +3,7 @@ import standard;
 import node;
 
 //lifecycle functions
-fn onLoad(node: opaque) {
+fn onInit(node: opaque) {
 	// node.setNodeScaleX(CAMERA_SCALE_X);
 	// node.setNodeScaleY(CAMERA_SCALE_Y);
 }

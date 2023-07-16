@@ -1,0 +1,276 @@
+import standard;
+import node;
+
+
+//constants
+var TILE_PIXEL_WIDTH: int const = 16;
+var TILE_PIXEL_HEIGHT: int const = 16;
+
+var DIRECTION_DOWN: int const = 0;
+var DIRECTION_UP: int const = 1;
+var DIRECTION_RIGHT: int const = 2;
+var DIRECTION_LEFT: int const = 3;
+
+
+//position on the game grid
+var gridPositionX: int = 1;
+var gridPositionY: int = 1;
+
+//cache the keyboard input
+var inputX: int = 0;
+var inputY: int = 0;
+
+var direction: int = null; //BUGFIX: animation not looping properly
+
+var attackPositionX: int = null;
+var attackPositionY: int = null;
+
+//polyfills - animating different cycles on one image 
+var walkAnimationCounter: int = 0;
+var attackAnimationCounter: int = 0;
+
+
+//accessors & mutators
+fn setGridPosition(node: opaque, x: int, y: int) {
+	gridPositionX = x;
+	gridPositionY = y;
+
+	node.setNodePositionX(floor( gridPositionX * TILE_PIXEL_WIDTH / node.getNodeScaleX() ));
+	node.setNodePositionY(floor( gridPositionY * TILE_PIXEL_HEIGHT / node.getNodeScaleY() ));
+}
+
+fn getGridPositionX(node: opaque) {
+	return gridPositionX;
+}
+
+fn getGridPositionY(node: opaque) {
+	return gridPositionY;
+}
+
+fn setAttackPosition(node: opaque, x: int, y: int) {
+	attackPositionX = x;
+	attackPositionY = y;
+}
+
+fn getAttackPositionX(node: opaque) {
+	return attackPositionX;
+}
+
+fn getAttackPositionY(node: opaque) {
+	return attackPositionY;
+}
+
+
+//lifecycle functions
+fn onLoad(node: opaque) {
+	node.loadNodeTexture("sprites:/parvati.png"); //NOTE: all of this script is mapped to this sprite sheet
+	node.faceDirection(DIRECTION_DOWN);
+}
+
+//fn onUpdate(node: opaque, delta: int) {
+//	//
+//}
+
+fn onStep(node: opaque) {
+	//animation - start idling
+	if (attackAnimationCounter == 0) {
+		//move to standing state, from any other animation state
+		if (node.getNodeRectY() != 0) {
+			node.setNodeRect(direction * 32 * 4, 0, 32, 32);
+			node.setNodeFrames(4);
+			walkAnimationCounter = 12;
+		}
+	}
+
+	//animation - start attacking
+	if (attackAnimationCounter-- > 0) {
+		//move to attacking state, from any other animation state
+		if (node.getNodeRectY() != 32) {
+			node.setNodeRect(direction * 32 * 4, 32, 32, 32);
+			node.setNodeFrames(3);
+		}
+
+		if ((attackAnimationCounter+1) % 4 == 0) { //+1 for a bugfix
+			node.incrementCurrentNodeFrame();
+		}
+
+		//skip out
+		return;
+	}
+
+	//make sure you're facing the right direction
+	if (inputY > 0) {
+		node.faceDirection(DIRECTION_DOWN);
+	}
+
+	else if (inputY < 0) {
+		node.faceDirection(DIRECTION_UP);
+	}
+
+	else if (inputX > 0) {
+		node.faceDirection(DIRECTION_RIGHT);
+	}
+
+	else if (inputX < 0) {
+		node.faceDirection(DIRECTION_LEFT);
+	}
+
+	//BUGFIX: for smooth animations?
+	var lesser = 0;
+	if ((inputX != 0 || inputY != 0) && attackAnimationCounter == 0) {
+		lesser = 6;
+	}
+
+	//actually animate
+	if (walkAnimationCounter-- < lesser) {
+		node.incrementCurrentNodeFrame();
+		walkAnimationCounter = 12;
+	}
+
+	var parent = node.getParentNode(); //check for collisions from the parent
+
+	if (abs(inputX) != abs(inputY) && parent.callNodeFn("getWalkableAt", gridPositionX + inputX, gridPositionY + inputY)) {
+		//calc movement
+		gridPositionX += inputX;
+		gridPositionY += inputY;
+
+		parent.callNodeFn("runAI");
+	}
+
+	//if you attacked
+	else if (attackPositionX != null || attackPositionY != null) {
+		parent.callNodeFn("runAI");
+
+		attackPositionX = null;
+		attackPositionY = null;
+	}
+
+	//move in realspace
+	var distX = gridPositionX * TILE_PIXEL_WIDTH - node.getNodePositionX();
+	var distY = gridPositionY * TILE_PIXEL_HEIGHT - node.getNodePositionY();
+
+	node.setNodeMotionX( normalize(distX) );
+	node.setNodeMotionY( normalize(distY) );
+
+	//reset input
+	inputX = 0;
+	inputY = 0;
+}
+
+fn onFree(node: opaque) {
+	node.freeNodeTexture();
+}
+
+fn onDraw(node: opaque) {
+	var posX: int = node.getNodeWorldPositionX();
+	var posY: int = node.getNodeWorldPositionY();
+
+	var scaleX: float = node.getNodeWorldScaleX();
+	var scaleY: float = node.getNodeWorldScaleY();
+
+	//this offset is because the sprite cell for parvati.png is twice as big as the sprite cell for the floor tiles
+	var originOffsetX: int = player.getNodeRectW() / 4;
+	var originOffsetY: int = player.getNodeRectH() / 2;
+
+	node.drawNode(
+		floor(posX * scaleX) - originOffsetX /* + globalCameraX */,
+		floor(posY * scaleY) - originOffsetY /* + globalCameraY */,
+		floor(node.getNodeRectW() * scaleX),
+		floor(node.getNodeRectH() * scaleY)
+	);
+}
+
+
+//event functions
+fn onKeyDown(node: opaque, event: string) {
+	//enable attack
+	if (event == "character_attack" && inputX == 0 && inputY == 0) {
+		attackAnimationCounter = 12;
+
+		if (direction == DIRECTION_DOWN) {
+			node.setAttackPosition(gridPositionX, gridPositionY + 1);
+		}
+
+		else if (direction == DIRECTION_UP) {
+			node.setAttackPosition(gridPositionX, gridPositionY - 1);
+		}
+
+		else if (direction == DIRECTION_RIGHT) {
+			node.setAttackPosition(gridPositionX + 1, gridPositionY);
+		}
+
+		else if (direction == DIRECTION_LEFT) {
+			node.setAttackPosition(gridPositionX - 1, gridPositionY);
+		}
+
+		return;
+	}
+
+	//if moving, don't take any more input
+	if (node.getNodeMotionX() != 0 || node.getNodeMotionY() != 0) {
+		return;
+	}
+
+	if (event == "character_up") {
+		inputY -= 1;
+		return;
+	}
+
+	if (event == "character_down") {
+		inputY += 1;
+		return;
+	}
+
+	if (event == "character_left") {
+		inputX -= 1;
+		return;
+	}
+
+	if (event == "character_right") {
+		inputX += 1;
+		return;
+	}
+}
+
+fn onKeyUp(node: opaque, event: string) {
+	if (event == "character_up" && inputY < 0) {
+		inputY = 0;
+		return;
+	}
+
+	if (event == "character_down" && inputY > 0) {
+		inputY = 0;
+		return;
+	}
+
+	if (event == "character_left" && inputX < 0) {
+		inputX = 0;
+		return;
+	}
+
+	if (event == "character_right" && inputX > 0) {
+		inputX = 0;
+		return;
+	}
+}
+
+
+//utils for facing different directions (idling)
+fn faceDirection(node: opaque, dir: int) {
+	if (direction == dir) return;
+	direction = dir;
+	node.setNodeRect(32 * 4 * dir, 0, 32, 32);
+	node.setNodeFrames(4);
+	walkAnimationCounter = 12;
+}
+
+//polyfills - move these to standard
+fn normalize(x): int {
+	if (x > 0) {
+		return 1;
+	}
+	if (x < 0) {
+		return -1;
+	}
+	return 0;
+}

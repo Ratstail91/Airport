@@ -46,10 +46,15 @@ var CELL_HEIGHT: int const = 16;
 var CELL_COUNT_X: int const = 3;
 var CELL_COUNT_Y: int const = 3;
 
+var MAP_GRID_WIDTH: int const = CELL_WIDTH * CELL_COUNT_X;
+var MAP_GRID_HEIGHT: int const = CELL_HEIGHT * CELL_COUNT_Y;
+
 
 //raw interleaved tile data
 var tilemap: [int] = null;
 
+//room metadata for placing entities
+var metadata: [[[string: any]]] = null;
 
 //public functions
 fn generateTilemapData(rng: opaque) {
@@ -87,7 +92,7 @@ fn generateTilemapData(rng: opaque) {
 	}
 
 	//generate corridor metadata
-	var corridorData: any = generateCorridorData(rng);
+	var corridorData = generateCorridorData(rng);
 
 	//etch each tile string into the tilemap
 	for (var j: int = 0; j < CELL_COUNT_Y; j++) {
@@ -100,6 +105,9 @@ fn generateTilemapData(rng: opaque) {
 	etchCorridors(roomData, corridorData, rng);
 
 	//TODO: etch the walls with a filter, based on the room's themes
+
+	//save the metadata for later retrieval
+	metadata = roomData;
 }
 
 fn generateRoomMetadata(rng: opaque, left: int, top: int, width: int, height: int) {
