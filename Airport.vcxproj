@@ -113,19 +113,20 @@
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SDL2Dir)\include;$(SDL2ImageDir)\include;$(SDL2TTFDir)\include;$(SolutionDir)Box/source;$(SolutionDir)Box/Toy/source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SDL2Dir)\include;$(SDL2ImageDir)\include;$(SDL2MixerDir)\include;$(SDL2TTFDir)\include;$(SolutionDir)Box/source;$(SolutionDir)Box/Toy/source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;SDL2_ttf.lib;Toy.lib;Box.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SDL2Dir)\lib\x64;$(SDL2ImageDir)\lib\x64;$(SDL2TTFDir)\lib\x64;$(SolutionDir)out\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SDL2Dir)\lib\x64;$(SDL2ImageDir)\lib\x64;$(SDL2MixerDir)\lib\x64;$(SDL2TTFDir)\lib\x64;$(SolutionDir)out\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
     </Link>
     <PostBuildEvent />
     <PostBuildEvent>
       <Command>xcopy "$(SDL2Dir)\lib\x64\SDL2.dll" "$(OutDir)" /Y /I /E
 xcopy "$(SDL2ImageDir)\lib\x64\SDL2_image.dll" "$(OutDir)" /Y /I /E
+xcopy "$(SDL2MixerDir)\lib\x64\SDL2_mixer.dll" "$(OutDir)" /Y /I /E
 xcopy "$(SDL2TTFDir)\lib\x64\SDL2_ttf.dll" "$(OutDir)" /Y /I /E</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -138,7 +139,7 @@ xcopy "$(SDL2TTFDir)\lib\x64\SDL2_ttf.dll" "$(OutDir)" /Y /I /E</Command>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SDL2Dir)\include;$(SDL2ImageDir)\include;$(SDL2TTFDir)\include;$(SolutionDir)Box/source;$(SolutionDir)Box/Toy/source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SDL2Dir)\include;$(SDL2ImageDir)\include;$(SDL2MixerDir)\include;$(SDL2TTFDir)\include;$(SolutionDir)Box/source;$(SolutionDir)Box/Toy/source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>None</DebugInformationFormat>
     </ClCompile>
     <Link>
@@ -147,13 +148,14 @@ xcopy "$(SDL2TTFDir)\lib\x64\SDL2_ttf.dll" "$(OutDir)" /Y /I /E</Command>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;SDL2_ttf.lib;Toy.lib;Box.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SDL2Dir)\lib\x64;$(SDL2ImageDir)\lib\x64;$(SDL2TTFDir)\lib\x64;$(SolutionDir)out\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SDL2Dir)\lib\x64;$(SDL2ImageDir)\lib\x64;$(SDL2MixerDir)\lib\x64;$(SDL2TTFDir)\lib\x64;$(SolutionDir)out\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
     </Link>
     <PostBuildEvent />
     <PostBuildEvent>
       <Command>xcopy "$(SDL2Dir)\lib\x64\SDL2.dll" "$(OutDir)" /Y /I /E
 xcopy "$(SDL2ImageDir)\lib\x64\SDL2_image.dll" "$(OutDir)" /Y /I /E
+xcopy "$(SDL2MixerDir)\lib\x64\SDL2_mixer.dll" "$(OutDir)" /Y /I /E
 xcopy "$(SDL2TTFDir)\lib\x64\SDL2_ttf.dll" "$(OutDir)" /Y /I /E</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
