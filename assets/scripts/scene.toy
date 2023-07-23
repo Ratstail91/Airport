@@ -79,8 +79,6 @@ fn onKeyDown(node: opaque, event: string) {
 	if (event == "music_down") {
 		setMusicVolume(getMusicVolume() - 16);
 	}
-
-	print getMusicVolume();
 }
 
 
