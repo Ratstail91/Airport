@@ -71,12 +71,16 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)out\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)out\</OutDir>
     <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)out\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)out\</OutDir>
     <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -119,16 +123,23 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;SDL2_ttf.lib;Toy.lib;Box.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SDL2Dir)\lib\x64;$(SDL2ImageDir)\lib\x64;$(SDL2MixerDir)\lib\x64;$(SDL2TTFDir)\lib\x64;$(SolutionDir)out\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <AdditionalLibraryDirectories>$(SDL2Dir)\lib\x64;$(SDL2ImageDir)\lib\x64;$(SDL2MixerDir)\lib\x64;$(SDL2TTFDir)\lib\x64;$(SolutionDir)out;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>$(Outdir)$(TargetName)$(TargetExt)</OutputFile>
     </Link>
     <PostBuildEvent />
     <PostBuildEvent>
       <Command>xcopy "$(SDL2Dir)\lib\x64\SDL2.dll" "$(OutDir)" /Y /I /E
 xcopy "$(SDL2ImageDir)\lib\x64\SDL2_image.dll" "$(OutDir)" /Y /I /E
 xcopy "$(SDL2MixerDir)\lib\x64\SDL2_mixer.dll" "$(OutDir)" /Y /I /E
-xcopy "$(SDL2TTFDir)\lib\x64\SDL2_ttf.dll" "$(OutDir)" /Y /I /E</Command>
+xcopy "$(SDL2TTFDir)\lib\x64\SDL2_ttf.dll" "$(OutDir)" /Y /I /E
+del "$(OutDir)$(ProjectName).exp"
+del "$(OutDir)$(ProjectName).pdb"
+rmdir "$(OutDir)optional"
+xcopy "$(ProjectDir)assets" "$(Outdir)assets" /Y /I /E</Command>
     </PostBuildEvent>
+    <Bscmake>
+      <OutputFile>$(Platform)\$(Configuration)\$(TargetName).bsc</OutputFile>
+    </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -148,16 +159,23 @@ xcopy "$(SDL2TTFDir)\lib\x64\SDL2_ttf.dll" "$(OutDir)" /Y /I /E</Command>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;SDL2_ttf.lib;Toy.lib;Box.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SDL2Dir)\lib\x64;$(SDL2ImageDir)\lib\x64;$(SDL2MixerDir)\lib\x64;$(SDL2TTFDir)\lib\x64;$(SolutionDir)out\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <AdditionalLibraryDirectories>$(SDL2Dir)\lib\x64;$(SDL2ImageDir)\lib\x64;$(SDL2MixerDir)\lib\x64;$(SDL2TTFDir)\lib\x64;$(SolutionDir)out;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>$(Outdir)$(TargetName)$(TargetExt)</OutputFile>
     </Link>
     <PostBuildEvent />
     <PostBuildEvent>
       <Command>xcopy "$(SDL2Dir)\lib\x64\SDL2.dll" "$(OutDir)" /Y /I /E
 xcopy "$(SDL2ImageDir)\lib\x64\SDL2_image.dll" "$(OutDir)" /Y /I /E
 xcopy "$(SDL2MixerDir)\lib\x64\SDL2_mixer.dll" "$(OutDir)" /Y /I /E
-xcopy "$(SDL2TTFDir)\lib\x64\SDL2_ttf.dll" "$(OutDir)" /Y /I /E</Command>
+xcopy "$(SDL2TTFDir)\lib\x64\SDL2_ttf.dll" "$(OutDir)" /Y /I /E
+del "$(OutDir)$(ProjectName).exp"
+del "$(OutDir)$(ProjectName).pdb"
+rmdir "$(OutDir)optional"
+xcopy "$(ProjectDir)assets" "$(Outdir)assets" /Y /I /E</Command>
     </PostBuildEvent>
+    <Bscmake>
+      <OutputFile>$(Platform)\$(Configuration)\$(TargetName).bsc</OutputFile>
+    </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="source\main.c" />
