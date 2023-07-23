@@ -1,5 +1,6 @@
 import standard;
 import node;
+import sound;
 
 
 //constants
@@ -28,6 +29,9 @@ var attackPositionY: int = null;
 //polyfills - animating different cycles on one image 
 var walkAnimationCounter: int = 0;
 var attackAnimationCounter: int = 0;
+
+//audio utils
+var kickSound: opaque = null;
 
 
 //accessors & mutators
@@ -65,6 +69,8 @@ fn getAttackPositionY(node: opaque) {
 fn onLoad(node: opaque) {
 	node.loadNodeTexture("sprites:/parvati.png"); //NOTE: all of this script is mapped to this sprite sheet
 	node.faceDirection(DIRECTION_DOWN);
+
+	kickSound = loadSound("sound:/attack.ogg");
 }
 
 //fn onUpdate(node: opaque, delta: int) {
@@ -159,6 +165,7 @@ fn onStep(node: opaque) {
 
 fn onFree(node: opaque) {
 	node.freeNodeTexture();
+	kickSound.freeSound();
 }
 
 fn onDraw(node: opaque) {
@@ -202,6 +209,8 @@ fn onKeyDown(node: opaque, event: string) {
 		else if (direction == DIRECTION_LEFT) {
 			node.setAttackPosition(gridPositionX - 1, gridPositionY);
 		}
+
+		kickSound.playSound();
 
 		return;
 	}
