@@ -63,7 +63,7 @@ fn onFree(node: opaque) {
 //debugging
 fn onKeyDown(node: opaque, event: string) {
 	//test the music
-	if (event == "trigger_music") {
+	if (event == "music_toggle") {
 		if (checkMusicPaused() == false) {
 			pauseMusic();
 		}
@@ -71,6 +71,16 @@ fn onKeyDown(node: opaque, event: string) {
 			unpauseMusic();
 		}
 	}
+
+	if (event == "music_up") {
+		setMusicVolume(getMusicVolume() + 16);
+	}
+
+	if (event == "music_down") {
+		setMusicVolume(getMusicVolume() - 16);
+	}
+
+	print getMusicVolume();
 }
 
 
