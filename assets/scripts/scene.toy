@@ -2,7 +2,7 @@ import standard;
 import random;
 import runner;
 import node;
-
+import music;
 
 //persistent members of the scene node
 var rng: opaque = null;
@@ -31,6 +31,10 @@ fn onInit(node: opaque) {
 	//generate the child node to render the map
 	var renderer: opaque = node.loadChild("scripts:/tilemap/renderer.toy");
 	renderer.callNodeFn("setTilemap", tilemap);
+
+	//load the music
+	loadMusic("music:/Music_Skylands_placeholder.ogg");
+	playMusic();
 }
 
 fn onStep(node: opaque) {
@@ -50,6 +54,22 @@ fn onStep(node: opaque) {
 fn onFree(node: opaque) {
 	if (rng != null) {
 		rng.freeRandomGenerator();
+	}
+
+	freeMusic();
+}
+
+
+//debugging
+fn onKeyDown(node: opaque, event: string) {
+	//test the music
+	if (event == "trigger_music") {
+		if (checkMusicPaused() == false) {
+			pauseMusic();
+		}
+		else {
+			unpauseMusic();
+		}
 	}
 }
 
