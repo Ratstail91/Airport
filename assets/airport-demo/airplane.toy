@@ -6,7 +6,6 @@ var WIDTH: int const = 143;
 var HEIGHT: int const = 75;
 
 
-
 //lifecycle functions
 fn onLoad(node: opaque) {
 	print "onLoad() called";
@@ -18,7 +17,15 @@ fn onInit(node: opaque) {
 	node.loadNodeTexture("airport:/little_plane.png");
 }
 
+// fn onFrameStart(node: opaque) {
+// 	//
+// }
+
 // fn onUpdate(node: opaque, delta: int) {
+// 	//
+// }
+
+// fn onFrameEnd(node: opaque) {
 // 	//
 // }
 
