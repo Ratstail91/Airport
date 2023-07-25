@@ -24,8 +24,8 @@ var tileset: [string : [int]] const = [
 
 	"temple-edge-tl": [0, 4, 0],
 	"temple-edge-tr": [1, 4, 0],
-	"temple-edge-bl": [2, 4, 0],
-	"temple-edge-br": [3, 4, 0]
+	"temple-edge-bl": [3, 4, 0], //would be great if these were the right way around...
+	"temple-edge-br": [2, 4, 0]
 ];
 
 var themes: [string] const = [
@@ -104,7 +104,8 @@ fn generateTilemapData(rng: opaque) {
 	//etch the corridors
 	etchCorridors(roomData, corridorData, rng);
 
-	//TODO: etch the walls with a filter, based on the room's themes
+	//etch the walls with marching squares, based on the room's themes
+	etchWalls(roomData);
 
 	//save the metadata for later retrieval
 	metadata = roomData;
@@ -153,52 +154,6 @@ fn etchRoom(rng: opaque, metadata: [string: any]) {
 			tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 2] = tileset[theme + "-floor-" + string floorIndex][2];
 		}
 	}
-
-	// //create the string constants here, so refstring can do it's job
-	// var T_WALL: [int] const = tileset[ theme + "-wall-t" ];
-	// var B_WALL: [int] const = tileset[ theme + "-wall-b" ];
-	// var L_WALL: [int] const = tileset[ theme + "-wall-l" ];
-	// var R_WALL: [int] const = tileset[ theme + "-wall-r" ];
-
-	// //etch the walls of each room
-	// for (var i: int = x; i < x + w; i++) {
-	// 	tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 0] = T_WALL[0];
-	// 	tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 1] = T_WALL[1];
-	// 	tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 2] = T_WALL[2];
-
-	// 	tilemap[(h + y - 1) * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 0] = B_WALL[0];
-	// 	tilemap[(h + y - 1) * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 1] = B_WALL[1];
-	// 	tilemap[(h + y - 1) * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 2] = B_WALL[2];
-	// }
-
-	// for (var j: int = y; j < y + h; j++) {
-	// 	tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 0] = L_WALL[0];
-	// 	tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 1] = L_WALL[1];
-	// 	tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 2] = L_WALL[2];
-
-	// 	tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + (x + w - 1) * 3 + 0] = R_WALL[0];
-	// 	tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + (x + w - 1) * 3 + 1] = R_WALL[1];
-	// 	tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + (x + w - 1) * 3 + 2] = R_WALL[2];
-	// }
-
-	// //etch the corners
-	// tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 0] = tileset[ theme + "-corner-tl" ][0];
-	// tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 1] = tileset[ theme + "-corner-tl" ][1];
-	// tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 2] = tileset[ theme + "-corner-tl" ][2];
-
-	// tilemap[(h + y - 1) * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 0] = tileset[ theme + "-corner-bl" ][0];
-	// tilemap[(h + y - 1) * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 1] = tileset[ theme + "-corner-bl" ][1];
-	// tilemap[(h + y - 1) * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 2] = tileset[ theme + "-corner-bl" ][2];
-
-
-	// tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + (x + w - 1) * 3 + 0] = tileset[ theme + "-corner-tr" ][0];
-	// tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + (x + w - 1) * 3 + 1] = tileset[ theme + "-corner-tr" ][1];
-	// tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + (x + w - 1) * 3 + 2] = tileset[ theme + "-corner-tr" ][2];
-
-
-	// tilemap[(h + y - 1) * CELL_WIDTH * CELL_COUNT_X * 3 + (x + w - 1) * 3 + 0] = tileset[ theme + "-corner-br" ][0];
-	// tilemap[(h + y - 1) * CELL_WIDTH * CELL_COUNT_X * 3 + (x + w - 1) * 3 + 1] = tileset[ theme + "-corner-br" ][1];
-	// tilemap[(h + y - 1) * CELL_WIDTH * CELL_COUNT_X * 3 + (x + w - 1) * 3 + 2] = tileset[ theme + "-corner-br" ][2];
 }
 
 fn generateCorridorData(rng: opaque) {
@@ -417,6 +372,189 @@ fn etchLine(x: int, y: int, xLength: int, yLength: int, theme: string, rng: opaq
 			y += sign(yLength);
 		}
 	}
+}
+
+fn etchWalls(roomData) {
+	//zero'd signals
+	var signals: [string] = [];
+
+	for (var j: int = 0; j < CELL_COUNT_Y * CELL_HEIGHT; j++) {
+		for (var i: int = 0; i < CELL_COUNT_X * CELL_WIDTH; i++) {
+			signals.push(""); //empty
+		}
+	}
+
+	//determine the walls' layout from the tilemap
+	for (var i: int = 0; i < MAP_GRID_WIDTH; i++) {
+		for (var j: int = 0; j < MAP_GRID_HEIGHT; j++) {
+			signals[j * MAP_GRID_WIDTH + i] = parseTilemapAt(i, j);
+		}
+	}
+
+	//etch the walls into the tilemap, based on the room theme
+	for (var i: int = 0; i < MAP_GRID_WIDTH; i++) {
+		for (var j: int = 0; j < MAP_GRID_HEIGHT; j++) {
+			if (signals[j * MAP_GRID_WIDTH + i] == "") {
+				continue;
+			}
+
+			var theme = roomData[floor(i / CELL_WIDTH)][floor(j / CELL_HEIGHT)]["theme"];
+			tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 0] = tileset[theme + "-" + signals[j * MAP_GRID_WIDTH + i]][0];
+			tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 1] = tileset[theme + "-" + signals[j * MAP_GRID_WIDTH + i]][1];
+			tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 2] = tileset[theme + "-" + signals[j * MAP_GRID_WIDTH + i]][2];
+		}
+	}
+}
+
+/*
+//lets say snapshot looks like this
+snapshot:
+
+0, 0, 1
+0, 0, 1
+0, 0, 1
+
+result should be "wall-l",
+
+//lets say filter looks like this
+filter:
+
+1 1 1 1 1
+1 0 0 0 1
+1 0 0 0 1
+1 0 0 0 1
+1 1 1 1 1
+
+find the position within the filter, that gives the result "wall-l"
+
+//lets say result looks like this
+
+"edge-br" "wall-b" "edge-bl"
+"wall-r"  "pillar" "wall-l"
+"edge-tr" "wall-t" "edge-tl"
+
+let's try this...
+
+*/
+
+/* 9x9
+var marchingFilter: [int] const = [
+	1, 1, 1, 1, 1, 1, 1, 1, 1,
+	1, 0, 0, 0, 0, 0, 0, 0, 1,
+	1, 0, 0, 0, 0, 0, 0, 0, 1,
+	1, 0, 0, 1, 1, 1, 0, 0, 1,
+	1, 0, 0, 1, 1, 1, 0, 0, 1,
+	1, 0, 0, 1, 1, 1, 0, 0, 1,
+	1, 0, 0, 0, 0, 0, 0, 0, 1,
+	1, 0, 0, 0, 0, 0, 0, 0, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 1
+];
+
+var marchingFilterResult: [string] const = [
+"", "", "", "", "", "", "", "", "", 
+"", "edge-tr", "wall-b", "wall-b", "wall-b", "wall-b", "wall-b", "edge-tl", "", 
+"", "wall-r", "corner-tl", "wall-t", "wall-t", "wall-t", "corner-tr", "wall-l", "", 
+"", "wall-r", "wall-l", "", "", "", "wall-r", "wall-l", "", 
+"", "wall-r", "wall-l", "", "", "", "wall-r", "wall-l", "", 
+"", "wall-r", "wall-l", "", "", "", "wall-r", "wall-l", "", 
+"", "wall-r", "corner-bl", "wall-b", "wall-b", "wall-b", "corner-br", "wall-l", "", 
+"", "edge-br", "wall-t", "wall-t", "wall-t", "wall-t", "wall-t", "edge-bl", "", 
+"", "", "", "", "", "", "", "", ""
+];
+*/
+
+
+//this is a nightmare
+var marchingFilter: [int] const = [
+1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1,
+1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1,
+1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1,
+1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1,
+1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1,
+1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1,
+1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1,
+1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1,
+1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+];
+
+var marchingFilterResult: [string] const = [
+""          ,""          ,""          ,""          ,""          ,""          ,""          ,""          ,""          ,""          ,""          ,""          ,
+""          ,""          ,"edge-tl"   ,"wall-b"    ,"wall-b"    ,"wall-b"    ,"wall-b"    ,"wall-b"    ,"wall-b"    ,"edge-tr"   ,""          ,""          ,
+""          ,"edge-tl"   ,"corner-br" ,""          ,"corner-tl" ,"wall-t"    ,"wall-t"    ,"corner-tr" ,""          ,"corner-bl" ,"edge-tr"   ,""          ,
+""          ,"wall-r"    ,""          ,""          ,"wall-l"    ,""          ,""          ,"wall-r"    ,""          ,""          ,"wall-l"    ,""          ,
+""          ,"wall-r"    ,"corner-tl" ,"wall-t"    ,"edge-br"   ,""          ,""          ,"edge-bl"   ,"wall-t"    ,"corner-tr" ,"wall-l"    ,""          ,
+""          ,"wall-r"    ,"wall-l"    ,""          ,""          ,""          ,""          ,""          ,""          ,"wall-r"    ,"wall-l"    ,""          ,
+""          ,"wall-r"    ,"wall-l"    ,""          ,""          ,""          ,""          ,""          ,""          ,"wall-r"    ,"wall-l"    ,""          ,
+""          ,"wall-r"    ,"corner-bl" ,"wall-b"    ,"edge-tr"   ,""          ,""          ,"edge-tl"   ,"wall-b"    ,"corner-br" ,"wall-l"    ,""          ,
+""          ,"wall-r"    ,""          ,""          ,"wall-l"    ,""          ,""          ,"wall-r"    ,""          ,""          ,"wall-l"    ,""          ,
+""          ,"edge-bl"   ,"corner-tr" ,""          ,"corner-bl" ,"wall-b"    ,"wall-b"    ,"corner-br" ,""          ,"corner-tl" ,"edge-br"   ,""          ,
+""          ,""          ,"edge-bl"   ,"wall-t"    ,"wall-t"    ,"wall-t"    ,"wall-t"    ,"wall-t"    ,"wall-t"    ,"edge-br"   ,""          ,""          ,
+""          ,""          ,""          ,""          ,""          ,""          ,""          ,""          ,""          ,""          ,""          ,""
+];
+
+
+//if walkable is below, then return top, etc.
+fn parseTilemapAt(x: int, y: int) {
+	//parse based on walkability, for now
+	if (tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 2] != 0) {
+		return ""; //empty
+	}
+
+	//generate the snapshot of the current position
+	var snapshot = generateSnapshotAt(x, y);
+
+	//find the snapshot's position within the filter
+	for (var i: int = 0; i < 12 -2; i++) {
+		for (var j: int = 0; j < 12 -2; j++) {
+			if (
+				marchingFilter[(j + 0) * 12 + (i + 0)] == snapshot[0 * 3 + 0] &&
+				marchingFilter[(j + 0) * 12 + (i + 1)] == snapshot[0 * 3 + 1] &&
+				marchingFilter[(j + 0) * 12 + (i + 2)] == snapshot[0 * 3 + 2] &&
+
+				marchingFilter[(j + 1) * 12 + (i + 0)] == snapshot[1 * 3 + 0] &&
+				marchingFilter[(j + 1) * 12 + (i + 1)] == snapshot[1 * 3 + 1] &&
+				marchingFilter[(j + 1) * 12 + (i + 2)] == snapshot[1 * 3 + 2] &&
+
+				marchingFilter[(j + 2) * 12 + (i + 0)] == snapshot[2 * 3 + 0] &&
+				marchingFilter[(j + 2) * 12 + (i + 1)] == snapshot[2 * 3 + 1] &&
+				marchingFilter[(j + 2) * 12 + (i + 2)] == snapshot[2 * 3 + 2]
+				)
+			{
+				return marchingFilterResult[(j+1) * 12 + (i+1)];
+			}
+		}
+	}
+
+	//anything else, just plop down a pillar
+	fn nonZero(key: int, value: int) {
+		return value != 0;
+	}
+
+	if (snapshot.some(nonZero)) {
+		return "pillar";
+	}
+
+	return "";
+}
+
+fn generateSnapshotAt(x: int, y: int) {
+	var result: [int] = [];
+
+	for (var j: int = -1; j < 2; j++) {
+		for (var i: int = -1; i < 2; i++) {
+			if (x + i < 0 || y + j < 0 || x + i >= MAP_GRID_WIDTH || y + j >= MAP_GRID_HEIGHT) {
+				result.push(0);
+			}
+			else {
+				result.push(tilemap[(y+j) * CELL_WIDTH * CELL_COUNT_X * 3 + (x+i) * 3 + 2] != 0 ? 1 : 0); //walkable
+			}
+		}
+	}
+
+	return result;
 }
 
 //polyfill
