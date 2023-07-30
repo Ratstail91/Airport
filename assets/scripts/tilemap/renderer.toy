@@ -19,6 +19,9 @@ var CELL_HEIGHT: int const = 16;
 var CELL_COUNT_X: int const = 3;
 var CELL_COUNT_Y: int const = 3;
 
+var MAP_GRID_WIDTH: int const = CELL_WIDTH * CELL_COUNT_X;
+var MAP_GRID_HEIGHT: int const = CELL_HEIGHT * CELL_COUNT_Y;
+
 
 //lifecycle functions
 fn onLoad(node: opaque) {
@@ -27,29 +30,31 @@ fn onLoad(node: opaque) {
 
 	//create a child as a render target
 	var child: opaque = node.loadChildNode("scripts:/tilemap/renderer-child.toy");
-	child.createNodeTexture(CELL_WIDTH * CELL_COUNT_X * TILE_PIXEL_WIDTH, CELL_HEIGHT * CELL_COUNT_Y * TILE_PIXEL_HEIGHT);
+	child.createNodeTexture(MAP_GRID_WIDTH * TILE_PIXEL_WIDTH, MAP_GRID_HEIGHT * TILE_PIXEL_HEIGHT);
 }
 
+//TODO: lazily render
 fn setTilemap(node: opaque, tilemap: [int]) {
 	assert tilemap, "provided tilemap is null (in setTilemap)";
-
-	print "start setting tilemap";
 
 	var child: opaque = node.getChildNode(0);
 	setRenderTarget(child);
 
 	//draw the tilemap to the child
-	for (var j = 0; j < CELL_HEIGHT * CELL_COUNT_Y; j++) {
-		for (var i = 0; i < CELL_WIDTH * CELL_COUNT_X; i++) {
+	for (var j = 0; j < MAP_GRID_HEIGHT; j++) {
+		for (var i = 0; i < MAP_GRID_WIDTH; i++) {
+			//don't recalculate this every time
+			var ITERATION: int const = j * MAP_GRID_WIDTH * 3 + i * 3;
+
 			//don't render empty tiles
-			if (tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3] < 0) {
+			if (tilemap[ITERATION] < 0 || tilemap[ITERATION + 1] < 0) {
 				continue;
 			}
 
 			//set the rect of the node on the tilesheet - the "tilemap" var is a single blob of data
 			node.setNodeRect(
-				tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3]     * TILE_PIXEL_WIDTH,
-				tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 1] * TILE_PIXEL_HEIGHT,
+				tilemap[ITERATION]     * TILE_PIXEL_WIDTH,
+				tilemap[ITERATION + 1] * TILE_PIXEL_HEIGHT,
 				TILE_PIXEL_WIDTH, TILE_PIXEL_HEIGHT
 			);
 
@@ -65,6 +70,4 @@ fn setTilemap(node: opaque, tilemap: [int]) {
 
 	//reset the render target to the screen
 	setRenderTarget(null);
-
-	print "finished setting tilemap";
 }

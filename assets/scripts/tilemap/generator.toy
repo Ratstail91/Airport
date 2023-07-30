@@ -61,8 +61,8 @@ fn generateTilemapData(rng: opaque) {
 	//generate a grid filled with only empty tiles, as a starting point
 	tilemap = [];
 
-	for (var j: int = 0; j < CELL_COUNT_Y * CELL_HEIGHT; j++) {
-		for (var i: int = 0; i < CELL_COUNT_X * CELL_WIDTH; i++) {
+	for (var j: int = 0; j < MAP_GRID_HEIGHT; j++) {
+		for (var i: int = 0; i < MAP_GRID_WIDTH; i++) {
 			tilemap.push(-1); //x
 			tilemap.push(-1); //y
 			tilemap.push(0); //collision
@@ -148,10 +148,12 @@ fn etchRoom(rng: opaque, metadata: [string: any]) {
 	//etch the floor-space
 	for (var j: int = y; j < y + h; j++) {
 		for (var i: int = x; i < x + w; i++) {
-			var floorIndex = rng.generateRandomNumber() % 4; //NOTE: there might not always be only 4 floor sprites
-			tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 0] = tileset[theme + "-floor-" + string floorIndex][0];
-			tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 1] = tileset[theme + "-floor-" + string floorIndex][1];
-			tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 2] = tileset[theme + "-floor-" + string floorIndex][2];
+			var ITERATION: int const = j * MAP_GRID_WIDTH * 3 + i * 3;
+			var r = rng.generateRandomNumber() % 4; //BUG: see Toy#67
+			var floorIndex: string const = theme + "-floor-" + string r; //NOTE: there might not always be only 4 floor sprites
+			tilemap[ITERATION + 0] = tileset[floorIndex][0];
+			tilemap[ITERATION + 1] = tileset[floorIndex][1];
+			tilemap[ITERATION + 2] = tileset[floorIndex][2];
 		}
 	}
 }
@@ -356,10 +358,12 @@ fn etchLine(x: int, y: int, xLength: int, yLength: int, theme: string, rng: opaq
 	//lengths can be negative, so handle it
 	while (abs(xLength) > 0 || abs(yLength) > 0) {
 		//etch floor at this position
-		var floorIndex = rng.generateRandomNumber() % 4; //NOTE: there might not always be only 4 floor sprites
-		tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 0] = tileset[theme + "-floor-" + string floorIndex][0];
-		tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 1] = tileset[theme + "-floor-" + string floorIndex][1];
-		tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 2] = tileset[theme + "-floor-" + string floorIndex][2];
+		var ITERATION: int const = y * MAP_GRID_WIDTH * 3 + x * 3;
+		var r = rng.generateRandomNumber() % 4;
+		var floorIndex: string const = theme + "-floor-" + string r; //NOTE: there might not always be only 4 floor sprites
+		tilemap[ITERATION + 0] = tileset[floorIndex][0];
+		tilemap[ITERATION + 1] = tileset[floorIndex][1];
+		tilemap[ITERATION + 2] = tileset[floorIndex][2];
 
 		//tick down
 		if (abs(xLength) > 0) {
@@ -398,10 +402,13 @@ fn etchWalls(roomData) {
 				continue;
 			}
 
+			var ITERATION: int const = j * MAP_GRID_WIDTH * 3 + i * 3;
 			var theme = roomData[floor(i / CELL_WIDTH)][floor(j / CELL_HEIGHT)]["theme"];
-			tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 0] = tileset[theme + "-" + signals[j * MAP_GRID_WIDTH + i]][0];
-			tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 1] = tileset[theme + "-" + signals[j * MAP_GRID_WIDTH + i]][1];
-			tilemap[j * CELL_WIDTH * CELL_COUNT_X * 3 + i * 3 + 2] = tileset[theme + "-" + signals[j * MAP_GRID_WIDTH + i]][2];
+			var index: string const = theme + "-" + signals[j * MAP_GRID_WIDTH + i];
+
+			tilemap[ITERATION + 0] = tileset[index][0];
+			tilemap[ITERATION + 1] = tileset[index][1];
+			tilemap[ITERATION + 2] = tileset[index][2];
 		}
 	}
 }
@@ -499,7 +506,7 @@ var marchingFilterResult: [string] const = [
 //if walkable is below, then return top, etc.
 fn parseTilemapAt(x: int, y: int) {
 	//parse based on walkability, for now
-	if (tilemap[y * CELL_WIDTH * CELL_COUNT_X * 3 + x * 3 + 2] != 0) {
+	if (tilemap[y * MAP_GRID_WIDTH * 3 + x * 3 + 2] != 0) {
 		return ""; //empty
 	}
 
@@ -510,9 +517,9 @@ fn parseTilemapAt(x: int, y: int) {
 	for (var i: int = 0; i < 12 -2; i++) {
 		for (var j: int = 0; j < 12 -2; j++) {
 			if (
-				marchingFilter[(j + 0) * 12 + (i + 0)] == snapshot[0 * 3 + 0] &&
-				marchingFilter[(j + 0) * 12 + (i + 1)] == snapshot[0 * 3 + 1] &&
-				marchingFilter[(j + 0) * 12 + (i + 2)] == snapshot[0 * 3 + 2] &&
+				marchingFilter[j * 12 + (i + 0)] == snapshot[0 * 3 + 0] &&
+				marchingFilter[j * 12 + (i + 1)] == snapshot[0 * 3 + 1] &&
+				marchingFilter[j * 12 + (i + 2)] == snapshot[0 * 3 + 2] &&
 
 				marchingFilter[(j + 1) * 12 + (i + 0)] == snapshot[1 * 3 + 0] &&
 				marchingFilter[(j + 1) * 12 + (i + 1)] == snapshot[1 * 3 + 1] &&
@@ -540,6 +547,7 @@ fn parseTilemapAt(x: int, y: int) {
 	return "";
 }
 
+//TODO: can this be optimized out?
 fn generateSnapshotAt(x: int, y: int) {
 	var result: [int] = [];
 
@@ -549,7 +557,7 @@ fn generateSnapshotAt(x: int, y: int) {
 				result.push(0);
 			}
 			else {
-				result.push(tilemap[(y+j) * CELL_WIDTH * CELL_COUNT_X * 3 + (x+i) * 3 + 2] != 0 ? 1 : 0); //walkable
+				result.push(tilemap[(y+j) * MAP_GRID_WIDTH * 3 + (x+i) * 3 + 2] != 0 ? 1 : 0); //walkable
 			}
 		}
 	}

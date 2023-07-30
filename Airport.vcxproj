@@ -132,9 +132,6 @@
 xcopy "$(SDL2ImageDir)\lib\x64\SDL2_image.dll" "$(OutDir)" /Y /I /E
 xcopy "$(SDL2MixerDir)\lib\x64\SDL2_mixer.dll" "$(OutDir)" /Y /I /E
 xcopy "$(SDL2TTFDir)\lib\x64\SDL2_ttf.dll" "$(OutDir)" /Y /I /E
-del "$(OutDir)$(ProjectName).exp"
-del "$(OutDir)$(ProjectName).pdb"
-rmdir "$(OutDir)optional"
 xcopy "$(ProjectDir)assets" "$(Outdir)assets" /Y /I /E</Command>
     </PostBuildEvent>
     <Bscmake>
@@ -168,9 +165,6 @@ xcopy "$(ProjectDir)assets" "$(Outdir)assets" /Y /I /E</Command>
 xcopy "$(SDL2ImageDir)\lib\x64\SDL2_image.dll" "$(OutDir)" /Y /I /E
 xcopy "$(SDL2MixerDir)\lib\x64\SDL2_mixer.dll" "$(OutDir)" /Y /I /E
 xcopy "$(SDL2TTFDir)\lib\x64\SDL2_ttf.dll" "$(OutDir)" /Y /I /E
-del "$(OutDir)$(ProjectName).exp"
-del "$(OutDir)$(ProjectName).pdb"
-rmdir "$(OutDir)optional"
 xcopy "$(ProjectDir)assets" "$(Outdir)assets" /Y /I /E</Command>
     </PostBuildEvent>
     <Bscmake>

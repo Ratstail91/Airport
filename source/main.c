@@ -2,12 +2,22 @@
 
 #include "drive_system.h"
 
+#include "toy_memory.h"
+
+//modified allocator
+void* speedyMemoryAllocator(void* pointer, size_t oldSize, size_t newSize) {
+	return realloc(pointer, newSize);
+}
+
 int main(int argc, char* argv[]) {
 	//debugging tools
 #ifdef _DEBUG
 	// Memory Leak Detection during Debug Builds (MSVC only)
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif//win32 && debug
+
+	//set the memory allocator
+	Toy_setMemoryAllocator(speedyMemoryAllocator);
 
 	//the drive system maps filepaths to "drives", which specifies which folders can be accessed by the scripts
 	Toy_initDriveSystem();
