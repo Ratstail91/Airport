@@ -29,7 +29,7 @@ fn onInit(node: opaque) {
 	node.generateLevel(rng);
 
 	//generate the child node to render the map
-	var renderer: opaque = node.loadChild("scripts:/tilemap/renderer.toy");
+	var renderer: opaque = node.loadChildNode("scripts:/tilemap/renderer.toy");
 	renderer.callNodeFn("setTilemap", tilemap);
 
 	//load the music
@@ -102,7 +102,7 @@ fn generateLevel(node: opaque, rng: opaque) {
 
 
 	//spawn && position the player
-	player = node.loadChild("scripts:/entities/player.toy");
+	player = node.loadChildNode("scripts:/entities/player.toy");
 
 	var w: int const = metadata.length();
 	var h: int const = metadata[0].length();
@@ -124,7 +124,7 @@ fn generateLevel(node: opaque, rng: opaque) {
 			continue;
 		}
 
-		var drone: opaque = node.loadChild("scripts:/entities/drone.toy");
+		var drone: opaque = node.loadChildNode("scripts:/entities/drone.toy");
 		drone.callNodeFn("setGridPosition", room["x"] + x, room["y"] + y);
 
 		//increment here
@@ -200,13 +200,4 @@ fn depthComparator(lhs: opaque, rhs: opaque) {
 	}
 
 	return lhsPositionY < rhsPositionY;
-}
-
-
-//polyfills
-fn loadChild(parent: opaque, fname: string) {
-	//TODO: add this to the API proper
-	var child: opaque = loadNode(fname);
-	parent.pushNode(child);
-	return child;
 }

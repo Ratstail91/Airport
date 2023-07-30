@@ -34,7 +34,7 @@ fn setTilemap(node: opaque, t: [int]) {
 	tilemap = t;
 
 	//create a child as a render target
-	var child = node.loadChild("scripts:/tilemap/renderer-child.toy");
+	var child = node.loadChildNode("scripts:/tilemap/renderer-child.toy");
 	child.createNodeTexture(CELL_WIDTH * CELL_COUNT_X * TILE_PIXEL_WIDTH, CELL_HEIGHT * CELL_COUNT_Y * TILE_PIXEL_HEIGHT);
 	setRenderTarget(child);
 
@@ -65,12 +65,4 @@ fn setTilemap(node: opaque, t: [int]) {
 
 	//reset the render target to the screen
 	setRenderTarget(null);
-}
-
-//polyfills
-fn loadChild(parent: opaque, fname: string) {
-	//TODO: add this to the API proper
-	var child: opaque = loadNode(fname);
-	parent.pushNode(child);
-	return child;
 }

@@ -1,39 +1,32 @@
-//A quirk of the setup is that anything defined in the root of `init.toy` becomes a global object
-//To resolve that, the configuration is inside a block scope
-{
-	import engine;
-	import input;
+import engine;
+import input;
 
 
-	//input settings, mapping SDL2's virtual keys to event names
-	mapInputEventToKeyDown("character_up",    "w"); //event, keysym
-	mapInputEventToKeyDown("character_left",  "a"); //event, keysym
-	mapInputEventToKeyDown("character_down",  "s"); //event, keysym
-	mapInputEventToKeyDown("character_right", "d"); //event, keysym
+//input settings, mapping SDL2's virtual keys to event names
+mapInputEventToKeyDown("character_up",    "w"); //event, keysym
+mapInputEventToKeyDown("character_left",  "a"); //event, keysym
+mapInputEventToKeyDown("character_down",  "s"); //event, keysym
+mapInputEventToKeyDown("character_right", "d"); //event, keysym
 
-	mapInputEventToKeyUp("character_up",    "w"); //event, keysym
-	mapInputEventToKeyUp("character_left",  "a"); //event, keysym
-	mapInputEventToKeyUp("character_down",  "s"); //event, keysym
-	mapInputEventToKeyUp("character_right", "d"); //event, keysym
+mapInputEventToKeyUp("character_up",    "w"); //event, keysym
+mapInputEventToKeyUp("character_left",  "a"); //event, keysym
+mapInputEventToKeyUp("character_down",  "s"); //event, keysym
+mapInputEventToKeyUp("character_right", "d"); //event, keysym
 
-	mapInputEventToKeyDown("character_up",    "up"); //event, keysym
-	mapInputEventToKeyDown("character_left",  "left"); //event, keysym
-	mapInputEventToKeyDown("character_down",  "down"); //event, keysym
-	mapInputEventToKeyDown("character_right", "right"); //event, keysym
+mapInputEventToKeyDown("character_up",    "up"); //event, keysym
+mapInputEventToKeyDown("character_left",  "left"); //event, keysym
+mapInputEventToKeyDown("character_down",  "down"); //event, keysym
+mapInputEventToKeyDown("character_right", "right"); //event, keysym
 
-	mapInputEventToKeyUp("character_up",    "up"); //event, keysym
-	mapInputEventToKeyUp("character_left",  "left"); //event, keysym
-	mapInputEventToKeyUp("character_down",  "down"); //event, keysym
-	mapInputEventToKeyUp("character_right", "right"); //event, keysym
+mapInputEventToKeyUp("character_up",    "up"); //event, keysym
+mapInputEventToKeyUp("character_left",  "left"); //event, keysym
+mapInputEventToKeyUp("character_down",  "down"); //event, keysym
+mapInputEventToKeyUp("character_right", "right"); //event, keysym
 
-	mapInputEventToKeyDown("character_attack", "space"); //event, keysym
+mapInputEventToKeyDown("character_attack", "space"); //event, keysym
 
-	//this function must always be called, or the engine won't run
-	initWindow("Airport", 800, 600, false);
+//this function must always be called, or the engine won't run
+initWindow("Airport", 800, 600, false);
 
-	//kick off the logic of the scene graph
-	loadRootNode("airport:/airplane.toy");
-}
-
-//Globals go here
-
+//kick off the logic of the scene graph
+loadRootNode("airport:/airplane.toy");
