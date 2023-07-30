@@ -20,22 +20,22 @@ var CELL_COUNT_X: int const = 3;
 var CELL_COUNT_Y: int const = 3;
 
 
-var tilemap: [int] = null;
-
 //lifecycle functions
 fn onLoad(node: opaque) {
 	//load the atlas into this node
 	node.loadNodeTexture("sprites:/tileset.png");
-}
-
-fn setTilemap(node: opaque, t: [int]) {
-	assert t, "provided tilemap is null (in setTilemap)";
-
-	tilemap = t;
 
 	//create a child as a render target
-	var child = node.loadChildNode("scripts:/tilemap/renderer-child.toy");
+	var child: opaque = node.loadChildNode("scripts:/tilemap/renderer-child.toy");
 	child.createNodeTexture(CELL_WIDTH * CELL_COUNT_X * TILE_PIXEL_WIDTH, CELL_HEIGHT * CELL_COUNT_Y * TILE_PIXEL_HEIGHT);
+}
+
+fn setTilemap(node: opaque, tilemap: [int]) {
+	assert tilemap, "provided tilemap is null (in setTilemap)";
+
+	print "start setting tilemap";
+
+	var child: opaque = node.getChildNode(0);
 	setRenderTarget(child);
 
 	//draw the tilemap to the child
@@ -65,4 +65,6 @@ fn setTilemap(node: opaque, t: [int]) {
 
 	//reset the render target to the screen
 	setRenderTarget(null);
+
+	print "finished setting tilemap";
 }

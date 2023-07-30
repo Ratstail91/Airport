@@ -12,7 +12,6 @@ fn onDraw(node: opaque) {
 	var posX: int const = node.getNodeWorldPositionX();
 	var posY: int const = node.getNodeWorldPositionY();
 
-	//draw everything at twice the original size
 	var scaleX: float const = node.getNodeWorldScaleX();
 	var scaleY: float const = node.getNodeWorldScaleY();
 
