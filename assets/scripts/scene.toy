@@ -84,6 +84,8 @@ fn onKeyDown(node: opaque, event: string) {
 
 //scene loading
 fn generateLevel(node: opaque, rng: opaque) {
+	print clock() + " - begin generating level";
+
 	//load and run the generator script
 	var generatorScript: opaque = loadScript("scripts:/tilemap/generator.toy");
 	generatorScript.runScript();
@@ -130,6 +132,8 @@ fn generateLevel(node: opaque, rng: opaque) {
 		//increment here
 		i++;
 	}
+
+	print clock() + " - end generating level";
 }
 
 

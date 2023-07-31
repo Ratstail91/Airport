@@ -58,6 +58,8 @@ var metadata: [[[string: any]]] = null;
 
 //public functions
 fn generateTilemapData(rng: opaque) {
+	print clock() + " - generating tilemap data";
+
 	//generate a grid filled with only empty tiles, as a starting point
 	tilemap = [];
 
@@ -68,6 +70,8 @@ fn generateTilemapData(rng: opaque) {
 			tilemap.push(0); //collision
 		}
 	}
+
+	print clock() + " - generating room metadata";
 
 	//generate the metadata of each room
 	var roomData = [];
@@ -91,8 +95,12 @@ fn generateTilemapData(rng: opaque) {
 		roomData.push(inner);
 	}
 
+	print clock() + " - generating corridor metadata";
+
 	//generate corridor metadata
 	var corridorData = generateCorridorData(rng);
+
+	print clock() + " - etching rooms";
 
 	//etch each tile string into the tilemap
 	for (var j: int = 0; j < CELL_COUNT_Y; j++) {
@@ -101,13 +109,19 @@ fn generateTilemapData(rng: opaque) {
 		}
 	}
 
+	print clock() + " - etching corridors";
+
 	//etch the corridors
 	etchCorridors(roomData, corridorData, rng);
+
+	print clock() + " - etching walls";
 
 	//etch the walls with marching squares, based on the room's themes
 	etchWalls(roomData);
 
-	//save the metadata for later retrieval
+	print clock() + " - finished tilemap generation";
+
+	//save the room metadata for later retrieval
 	metadata = roomData;
 }
 
@@ -377,21 +391,19 @@ fn etchLine(x: int, y: int, xLength: int, yLength: int, theme: string, rng: opaq
 }
 
 fn etchWalls(roomData) {
-	//zero'd signals
+	//signal the wall to use
 	var signals: [string] = [];
 
-	for (var j: int = 0; j < CELL_COUNT_Y * CELL_HEIGHT; j++) {
-		for (var i: int = 0; i < CELL_COUNT_X * CELL_WIDTH; i++) {
-			signals.push(""); //empty
+	print clock() + " -> parse the tilemap at each position";
+
+	//determine the walls' layout from the tilemap
+	for (var j: int = 0; j < MAP_GRID_HEIGHT; j++) {
+		for (var i: int = 0; i < MAP_GRID_WIDTH; i++) {
+			signals.push(parseTilemapAt(i, j));
 		}
 	}
 
-	//determine the walls' layout from the tilemap
-	for (var i: int = 0; i < MAP_GRID_WIDTH; i++) {
-		for (var j: int = 0; j < MAP_GRID_HEIGHT; j++) {
-			signals[j * MAP_GRID_WIDTH + i] = parseTilemapAt(i, j);
-		}
-	}
+	print clock() + " -> etch the signals into the tilemap";
 
 	//etch the walls into the tilemap, based on the room theme
 	for (var i: int = 0; i < MAP_GRID_WIDTH; i++) {
@@ -409,65 +421,9 @@ fn etchWalls(roomData) {
 			tilemap[ITERATION + 2] = tileset[index][2];
 		}
 	}
+
+	print clock() + " -> finished";
 }
-
-/*
-//lets say snapshot looks like this
-snapshot:
-
-0, 0, 1
-0, 0, 1
-0, 0, 1
-
-result should be "wall-l",
-
-//lets say filter looks like this
-filter:
-
-1 1 1 1 1
-1 0 0 0 1
-1 0 0 0 1
-1 0 0 0 1
-1 1 1 1 1
-
-find the position within the filter, that gives the result "wall-l"
-
-//lets say result looks like this
-
-"edge-br" "wall-b" "edge-bl"
-"wall-r"  "pillar" "wall-l"
-"edge-tr" "wall-t" "edge-tl"
-
-let's try this...
-
-*/
-
-/* 9x9
-var marchingFilter: [int] const = [
-	1, 1, 1, 1, 1, 1, 1, 1, 1,
-	1, 0, 0, 0, 0, 0, 0, 0, 1,
-	1, 0, 0, 0, 0, 0, 0, 0, 1,
-	1, 0, 0, 1, 1, 1, 0, 0, 1,
-	1, 0, 0, 1, 1, 1, 0, 0, 1,
-	1, 0, 0, 1, 1, 1, 0, 0, 1,
-	1, 0, 0, 0, 0, 0, 0, 0, 1,
-	1, 0, 0, 0, 0, 0, 0, 0, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1
-];
-
-var marchingFilterResult: [string] const = [
-"", "", "", "", "", "", "", "", "", 
-"", "edge-tr", "wall-b", "wall-b", "wall-b", "wall-b", "wall-b", "edge-tl", "", 
-"", "wall-r", "corner-tl", "wall-t", "wall-t", "wall-t", "corner-tr", "wall-l", "", 
-"", "wall-r", "wall-l", "", "", "", "wall-r", "wall-l", "", 
-"", "wall-r", "wall-l", "", "", "", "wall-r", "wall-l", "", 
-"", "wall-r", "wall-l", "", "", "", "wall-r", "wall-l", "", 
-"", "wall-r", "corner-bl", "wall-b", "wall-b", "wall-b", "corner-br", "wall-l", "", 
-"", "edge-br", "wall-t", "wall-t", "wall-t", "wall-t", "wall-t", "edge-bl", "", 
-"", "", "", "", "", "", "", "", ""
-];
-*/
-
 
 //this is a nightmare
 var marchingFilter: [int] const = [
@@ -504,7 +460,7 @@ var marchingFilterResult: [string] const = [
 //if walkable is below, then return top, etc.
 fn parseTilemapAt(x: int, y: int) {
 	//parse based on walkability, for now
-	if (tilemap[y * MAP_GRID_WIDTH * 3 + x * 3 + 2] != 0) {
+	if (tilemap[y * MAP_GRID_WIDTH * 3 + x * 3 + 2] > 0) {
 		return ""; //empty
 	}
 
@@ -555,7 +511,7 @@ fn generateSnapshotAt(x: int, y: int) {
 				result.push(0);
 			}
 			else {
-				result.push(tilemap[(y+j) * MAP_GRID_WIDTH * 3 + (x+i) * 3 + 2] != 0 ? 1 : 0); //walkable
+				result.push(tilemap[(y+j) * MAP_GRID_WIDTH * 3 + (x+i) * 3 + 2]); //walkable
 			}
 		}
 	}

@@ -37,6 +37,8 @@ fn onLoad(node: opaque) {
 fn setTilemap(node: opaque, tilemap: [int]) {
 	assert tilemap, "provided tilemap is null (in setTilemap)";
 
+	print clock() + " - begin rendering map";
+
 	var child: opaque = node.getChildNode(0);
 	setRenderTarget(child);
 
@@ -70,4 +72,6 @@ fn setTilemap(node: opaque, tilemap: [int]) {
 
 	//reset the render target to the screen
 	setRenderTarget(null);
+
+	print clock() + " - end rendering map";
 }
