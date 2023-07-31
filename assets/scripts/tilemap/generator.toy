@@ -149,8 +149,7 @@ fn etchRoom(rng: opaque, metadata: [string: any]) {
 	for (var j: int = y; j < y + h; j++) {
 		for (var i: int = x; i < x + w; i++) {
 			var ITERATION: int const = j * MAP_GRID_WIDTH * 3 + i * 3;
-			var r = rng.generateRandomNumber() % 4; //BUG: see Toy#67
-			var floorIndex: string const = theme + "-floor-" + string r; //NOTE: there might not always be only 4 floor sprites
+			var floorIndex: string const = theme + "-floor-" + string(rng.generateRandomNumber() % 4); //NOTE: there might not always be only 4 floor sprites
 			tilemap[ITERATION + 0] = tileset[floorIndex][0];
 			tilemap[ITERATION + 1] = tileset[floorIndex][1];
 			tilemap[ITERATION + 2] = tileset[floorIndex][2];
@@ -359,8 +358,7 @@ fn etchLine(x: int, y: int, xLength: int, yLength: int, theme: string, rng: opaq
 	while (abs(xLength) > 0 || abs(yLength) > 0) {
 		//etch floor at this position
 		var ITERATION: int const = y * MAP_GRID_WIDTH * 3 + x * 3;
-		var r = rng.generateRandomNumber() % 4;
-		var floorIndex: string const = theme + "-floor-" + string r; //NOTE: there might not always be only 4 floor sprites
+		var floorIndex: string const = theme + "-floor-" + string(rng.generateRandomNumber() % 4); //NOTE: there might not always be only 4 floor sprites
 		tilemap[ITERATION + 0] = tileset[floorIndex][0];
 		tilemap[ITERATION + 1] = tileset[floorIndex][1];
 		tilemap[ITERATION + 2] = tileset[floorIndex][2];
