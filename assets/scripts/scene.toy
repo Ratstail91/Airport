@@ -15,26 +15,30 @@ var mapGridHeight: int = null;
 
 //entities
 var player: opaque = null;
+var renderer: opaque = null;
 
 //lifetime functions
-fn onInit(node: opaque) {
+fn onLoad(node: opaque) {
 	//init the rng with a seed (random)
 	if (rng != null) {
 		rng.freeRandomGenerator();
 	}
 	rng = createRandomGenerator(clock().hash());
 
-
-	//generate the level, filling out the entity data
-	node.generateLevel(rng);
-
 	//generate the child node to render the map
-	var renderer: opaque = node.loadChildNode("scripts:/tilemap/renderer.toy");
-	renderer.callNodeFn("setTilemap", tilemap);
+	renderer = node.loadChildNode("scripts:/tilemap/renderer.toy");
 
 	//load the music
 	loadMusic("music:/Music_Skylands_placeholder.ogg");
 	playMusic();
+}
+
+fn onInit(node: opaque) {
+	//generate the level, filling out the entity data
+	node.generateLevel(rng);
+
+	//update the visible area from the player's perspective
+	updateVisible();
 }
 
 fn onStep(node: opaque) {
@@ -162,6 +166,14 @@ fn runAI(node: opaque) {
 	}
 }
 
+//update the visible portions of the map
+fn updateVisible() {
+	var playerX: int = player.callNodeFn("getGridPositionX");
+	var playerY: int = player.callNodeFn("getGridPositionY");
+
+	renderer.callNodeFn("updateVisble", playerX, playerY, tilemap);
+}
+
 
 //for collisions
 fn getWalkableAt(node: opaque, x: int, y: int) {
@@ -205,3 +217,4 @@ fn depthComparator(lhs: opaque, rhs: opaque) {
 
 	return lhsPositionY < rhsPositionY;
 }
+

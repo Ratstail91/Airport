@@ -1,6 +1,7 @@
 import standard;
 import engine;
 import node;
+import math;
 
 
 //constants for generating maps
@@ -23,6 +24,9 @@ var MAP_GRID_WIDTH: int const = CELL_WIDTH * CELL_COUNT_X;
 var MAP_GRID_HEIGHT: int const = CELL_HEIGHT * CELL_COUNT_Y;
 
 
+var tilemapCache = [];
+
+
 //lifecycle functions
 fn onLoad(node: opaque) {
 	//load the atlas into this node
@@ -31,47 +35,171 @@ fn onLoad(node: opaque) {
 	//create a child as a render target
 	var child: opaque = node.loadChildNode("scripts:/tilemap/renderer-child.toy");
 	child.createNodeTexture(MAP_GRID_WIDTH * TILE_PIXEL_WIDTH, MAP_GRID_HEIGHT * TILE_PIXEL_HEIGHT);
+
+	//generate a grid filled with only empty tiles, as a starting point
+	for (var j: int = 0; j < MAP_GRID_HEIGHT; j++) {
+		for (var i: int = 0; i < MAP_GRID_WIDTH; i++) {
+			tilemapCache.push(-1); //x
+			tilemapCache.push(-1); //y
+			// tilemapCache.push(0); //collision
+		}
+	}
 }
 
-//TODO: lazily render
-fn setTilemap(node: opaque, tilemap: [int]) {
-	assert tilemap, "provided tilemap is null (in setTilemap)";
-
-	print clock() + " - begin rendering map";
-
+//lazily render
+fn updateVisble(node: opaque, x: int, y: int, tilemap) {
+	print clock() + " - start updateVisible()";
 	var child: opaque = node.getChildNode(0);
 	setRenderTarget(child);
 
-	//draw the tilemap to the child
-	for (var j = 0; j < MAP_GRID_HEIGHT; j++) {
-		for (var i = 0; i < MAP_GRID_WIDTH; i++) {
-			//don't recalculate this every time
-			var ITERATION: int const = j * MAP_GRID_WIDTH * 3 + i * 3;
-
-			//don't render empty tiles
-			if (tilemap[ITERATION] < 0 || tilemap[ITERATION + 1] < 0) {
-				continue;
-			}
-
-			//set the rect of the node on the tilesheet - the "tilemap" var is a single blob of data
-			node.setNodeRect(
-				tilemap[ITERATION]     * TILE_PIXEL_WIDTH,
-				tilemap[ITERATION + 1] * TILE_PIXEL_HEIGHT,
-				TILE_PIXEL_WIDTH, TILE_PIXEL_HEIGHT
-			);
-
-			//draw to the screen
-			node.drawNode(
-				(i * TILE_PIXEL_WIDTH),
-				(j * TILE_PIXEL_HEIGHT),
-				TILE_PIXEL_WIDTH,
-				TILE_PIXEL_HEIGHT
-			);
-		}
-	}
+	//divide the regions into octants & determine what is visible
+	node.shadowCastOctant(x, y, 1, 1, 10, tilemap);
+	node.shadowCastOctant(x, y, -1, 1, 10, tilemap);
+	node.shadowCastOctant(x, y, 1, -1, 10, tilemap);
+	node.shadowCastOctant(x, y, -1, -1, 10, tilemap);
 
 	//reset the render target to the screen
 	setRenderTarget(null);
 
-	print clock() + " - end rendering map";
+	print clock() + " - end updateVisible()";
+}
+
+fn shadowCastOctant(node: opaque, x: int, y: int, dirX: int, dirY: int, depth: int, tilemap) {
+	var shadows = [];
+
+	//for each tile, cast its shadow, and see if its already obscured
+	for (var j: int = 0; abs(j) < depth; j += dirY) {
+		for (var i: int = 0; abs(i) < depth; i += dirX) {
+			//make sure this tile can actually cast a shadow
+			var CACHE_ITERATION: int const = (y + j) * MAP_GRID_WIDTH * 2 + (x + i) * 2;
+			var ITERATION: int const = (y + j) * MAP_GRID_WIDTH * 3 + (x + i) * 3;
+
+			//don't render empty tiles
+			if (ITERATION < 0 || ITERATION >= MAP_GRID_WIDTH * MAP_GRID_HEIGHT * 3 || tilemap[ITERATION] < 0 || tilemap[ITERATION + 1] < 0) {
+				continue; //break?
+			}
+
+			//don't re-render already drawn tiles
+			if (tilemapCache[CACHE_ITERATION] == tilemap[ITERATION] && tilemapCache[CACHE_ITERATION + 1] == tilemap[ITERATION + 1]) {
+				continue;
+			}
+
+			//cast the shadow
+			var shadow = shadowCastTile(i + x, j + y, dirX, dirY, depth);
+
+			//merge shadows if needed
+			var index: int = 0;
+
+			//find the insertion point
+			for (; index < shadows.length(); index++) {
+				if (shadows[index][0] >= shadow[0]) break;
+			}
+
+			print shadows.toString() + " " + string index;
+
+			//check to see if the tile should be rendered (prev iterations would have merged shadows)
+			if (shadows.length() == 0 || (shadows.length() > index && (index == 0 || shadows[index-1][1] <= shadow[1])) || (shadows.length() > index && (shadows.length() == index + 1 || shadows[index][0] >= shadow[0]) )) {
+				print "first bracket";
+				tilemapCache[CACHE_ITERATION] = tilemap[ITERATION];
+				tilemapCache[CACHE_ITERATION + 1] = tilemap[ITERATION + 1];
+
+				//set the rect of the node on the tilesheet - the "tilemap" var is a single blob of data
+				node.setNodeRect(
+					tilemap[ITERATION]     * TILE_PIXEL_WIDTH,
+					tilemap[ITERATION + 1] * TILE_PIXEL_HEIGHT,
+					TILE_PIXEL_WIDTH, TILE_PIXEL_HEIGHT
+				);
+
+				print string((x + i) * TILE_PIXEL_WIDTH) + ", " + string((y + j) * TILE_PIXEL_HEIGHT);
+
+				//draw to the screen
+				node.drawNode(
+					((x + i) * TILE_PIXEL_WIDTH),
+					((y + j) * TILE_PIXEL_HEIGHT),
+					TILE_PIXEL_WIDTH,
+					TILE_PIXEL_HEIGHT
+				);
+			}
+
+			var overlapping = false;
+
+			//see if the new shadow overlaps the previous
+			if (index > 0 && shadows.length() > index && shadows[index -1][1] > shadow[0]) {
+				print "second bracket";
+				overlapping = true;
+				shadows[index-1][1] = shadow[1]; //extend the prev shadow
+
+				//see if the newly extended prev overlaps the shadow at "index"
+				if (shadows[index-1][1] >= shadows[index][0]) {
+					//merge the two
+					shadows[index-1][1] = shadows[index][1];
+					shadows = shadows.remove(index);
+				}
+			}
+
+			//see if the new shadow overlaps the one at "index"
+			else if (shadows.length() > index && shadows[index][1] <= shadow[0]) {
+				print "third bracket";
+				overlapping = true;
+				//extend the next shadow
+				shadows[index][1] = shadow[0];
+			}
+
+			if (!overlapping) {
+				print "fourth bracket";
+				//insert at this position
+				shadows = shadows.insert(index, shadow);
+			}
+		}
+	}
+}
+
+fn shadowCastTile(x: int, y: int, dirX: int, dirY: int, depth: int) {
+	//top-left corner & bottom-right corner forms a triangle with the player
+
+	//top-left = x & y
+	//bottom-right = x + sign(dirX) & y + sign(dirY)
+
+	var start = abs(shadowCastPoint(x, y, depth));
+	var end = abs(shadowCastPoint(x + sign(dirX), y + sign(dirY), depth));
+
+	return [start, end];
+}
+
+fn shadowCastPoint(x: float, y: float, depth: int) {
+//	if (y == 0) {
+//		return sin(tan(INFINITY));
+//	}
+	return sin(tan(x/y)) * depth;
+}
+
+//polyfill the insert function
+fn insert(self, k, v) {
+	//eew
+	var tmp1 = v;
+	var tmp2;
+	for (var i = k; i < self.length(); i++) {
+		tmp2 = self[i];
+		self[i] = tmp1;
+		tmp1 = tmp2;
+	}
+
+	self.push(tmp1);
+	return self;
+}
+
+//polyfill the remove function
+fn remove(self, k) {
+	//double eew
+	var result = [];
+
+	for (var i = 0; i <= k - 1; i++) {
+		result.push( self[i] );
+	}
+
+	for (var i = k + 1; i < self.length(); i++) {
+		result.push( self[i] );
+	}
+
+	return result;
 }
