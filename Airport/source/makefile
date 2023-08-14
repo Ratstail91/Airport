@@ -8,12 +8,12 @@ ODIR = obj
 SRC = $(wildcard *.c)
 OBJ = $(addprefix $(ODIR)/,$(SRC:.c=.o))
 
-OUT=../$(OUTDIR)/airport
+OUT=../../$(OUTDIR)/airport
 
 all: game
 
 game: $(OBJ)
-	$(CC) $(CFLAGS) -o $(OUT) $(OBJ) -Wl,-rpath,. -L../$(OUTDIR) $(LIBS)
+	$(CC) $(CFLAGS) -o $(OUT) $(OBJ) -Wl,-rpath,. -L../../$(OUTDIR) $(LIBS)
 
 game-release: game
 	strip $(OUT)

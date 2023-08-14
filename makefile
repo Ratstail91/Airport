@@ -1,30 +1,30 @@
 export CFLAGS+=-std=c18 -pedantic -Werror
 
 export OUTDIR = out
-export BOX_OUTDIR = ../$(OUTDIR)
-export TOY_OUTDIR = ../../$(OUTDIR)
+export BOX_OUTDIR = ../../$(OUTDIR)
+export TOY_OUTDIR = ../../../$(OUTDIR)
 
 all: toy box game
 
 toy: $(OUTDIR)
-	$(MAKE) -j8 -C Box/Toy/source
+	$(MAKE) -j8 -C Airport/Box/Toy/source
 
 box: $(OUTDIR)
-	$(MAKE) -j8 -C Box/source
+	$(MAKE) -j8 -C Airport/Box/source
 
 game: $(OUTDIR)
-	$(MAKE) -j8 -C source
+	$(MAKE) -j8 -C Airport/source
 	ln -f -s ../assets -t $(OUTDIR)
 
 #release
 toy-release: $(OUTDIR)
-	$(MAKE) -j8 -C Box/Toy/source library-release
+	$(MAKE) -j8 -C Airport/Box/Toy/source library-release
 
 box-release: $(OUTDIR)
-	$(MAKE) -j8 -C Box/source library-release
+	$(MAKE) -j8 -C Airport/Box/source library-release
 
 game-release: $(OUTDIR)
-	$(MAKE) -j8 -C source game-release
+	$(MAKE) -j8 -C Airport/source game-release
 	cp -r assets $(OUTDIR)
 
 #distribution
