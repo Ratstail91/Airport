@@ -117,7 +117,7 @@
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SDL2Dir)\include;$(SDL2ImageDir)\include;$(SDL2MixerDir)\include;$(SDL2TTFDir)\include;$(SolutionDir)Box/source;$(SolutionDir)Box/Toy/source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SDL2Dir)\include;$(SDL2ImageDir)\include;$(SDL2MixerDir)\include;$(SDL2TTFDir)\include;$(ProjectDir)Box/source;$(ProjectDir)Box/Toy/source</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -131,8 +131,7 @@
       <Command>xcopy "$(SDL2Dir)\lib\x64\SDL2.dll" "$(OutDir)" /Y /I /E
 xcopy "$(SDL2ImageDir)\lib\x64\SDL2_image.dll" "$(OutDir)" /Y /I /E
 xcopy "$(SDL2MixerDir)\lib\x64\SDL2_mixer.dll" "$(OutDir)" /Y /I /E
-xcopy "$(SDL2TTFDir)\lib\x64\SDL2_ttf.dll" "$(OutDir)" /Y /I /E
-xcopy "$(ProjectDir)assets" "$(Outdir)assets" /Y /I /E</Command>
+xcopy "$(SDL2TTFDir)\lib\x64\SDL2_ttf.dll" "$(OutDir)" /Y /I /E</Command>
     </PostBuildEvent>
     <Bscmake>
       <OutputFile>$(Platform)\$(Configuration)\$(TargetName).bsc</OutputFile>
@@ -147,7 +146,7 @@ xcopy "$(ProjectDir)assets" "$(Outdir)assets" /Y /I /E</Command>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SDL2Dir)\include;$(SDL2ImageDir)\include;$(SDL2MixerDir)\include;$(SDL2TTFDir)\include;$(SolutionDir)Box/source;$(SolutionDir)Box/Toy/source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SDL2Dir)\include;$(SDL2ImageDir)\include;$(SDL2MixerDir)\include;$(SDL2TTFDir)\include;$(ProjectDir)Box/source;$(ProjectDir)Box/Toy/source</AdditionalIncludeDirectories>
       <DebugInformationFormat>None</DebugInformationFormat>
     </ClCompile>
     <Link>
@@ -164,8 +163,7 @@ xcopy "$(ProjectDir)assets" "$(Outdir)assets" /Y /I /E</Command>
       <Command>xcopy "$(SDL2Dir)\lib\x64\SDL2.dll" "$(OutDir)" /Y /I /E
 xcopy "$(SDL2ImageDir)\lib\x64\SDL2_image.dll" "$(OutDir)" /Y /I /E
 xcopy "$(SDL2MixerDir)\lib\x64\SDL2_mixer.dll" "$(OutDir)" /Y /I /E
-xcopy "$(SDL2TTFDir)\lib\x64\SDL2_ttf.dll" "$(OutDir)" /Y /I /E
-xcopy "$(ProjectDir)assets" "$(Outdir)assets" /Y /I /E</Command>
+xcopy "$(SDL2TTFDir)\lib\x64\SDL2_ttf.dll" "$(OutDir)" /Y /I /E</Command>
     </PostBuildEvent>
     <Bscmake>
       <OutputFile>$(Platform)\$(Configuration)\$(TargetName).bsc</OutputFile>
